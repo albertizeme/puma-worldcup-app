@@ -1,0 +1,186 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { buttonStyles } from "@/lib/ui";
+
+type PredictionFormProps = {
+  matchId: string;
+  userId: string;
+  matchDatetime: string | null;
+  initialHomeScore?: number | null;
+  initialAwayScore?: number | null;
+};
+
+export default function PredictionForm({
+  matchId,
+  userId,
+  matchDatetime,
+  initialHomeScore = null,
+  initialAwayScore = null,
+}: PredictionFormProps) {
+  const supabase = getSupabaseBrowserClient();
+  const router = useRouter();
+
+  const [homeScore, setHomeScore] = useState(
+    initialHomeScore !== null ? String(initialHomeScore) : ""
+  );
+  const [awayScore, setAwayScore] = useState(
+    initialAwayScore !== null ? String(initialAwayScore) : ""
+  );
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHomeScore(initialHomeScore !== null ? String(initialHomeScore) : "");
+    setAwayScore(initialAwayScore !== null ? String(initialAwayScore) : "");
+  }, [initialHomeScore, initialAwayScore]);
+
+  const isLocked = matchDatetime
+    ? new Date(matchDatetime).getTime() <= Date.now()
+    : false;
+
+  const isEditing =
+    initialHomeScore !== null || initialAwayScore !== null;
+
+  async function handleSave() {
+    setMessage(null);
+    setError(null);
+
+    if (isLocked) {
+      setError("Las predicciones se cerraron al comenzar el partido.");
+      return;
+    }
+
+    if (homeScore === "" || awayScore === "") {
+      setError("Debes indicar ambos marcadores.");
+      return;
+    }
+
+    const parsedHome = Number(homeScore);
+    const parsedAway = Number(awayScore);
+
+    if (
+      Number.isNaN(parsedHome) ||
+      Number.isNaN(parsedAway) ||
+      !Number.isInteger(parsedHome) ||
+      !Number.isInteger(parsedAway) ||
+      parsedHome < 0 ||
+      parsedAway < 0
+    ) {
+      setError("Los marcadores deben ser números enteros válidos mayores o iguales a 0.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error: upsertError } = await supabase
+        .from("predictions")
+        .upsert(
+          {
+            user_id: userId,
+            match_id: matchId,
+            home_score_pred: parsedHome,
+            away_score_pred: parsedAway,
+          },
+          {
+            onConflict: "user_id,match_id",
+          }
+        );
+
+      if (upsertError) {
+        setError(`No se pudo guardar la predicción: ${upsertError.message}`);
+        return;
+      }
+
+      setMessage(
+        isEditing
+          ? "Predicción actualizada correctamente."
+          : "Predicción guardada correctamente."
+      );
+
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-lg">
+      <div className="mb-5 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          Tu predicción
+        </p>
+        <h2 className="mt-2 text-2xl font-bold text-slate-900">
+          ¿Cómo quedará el partido?
+        </h2>
+      </div>
+
+      <div className="flex items-center justify-center gap-4">
+        <input
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          value={homeScore}
+          onChange={(e) => setHomeScore(e.target.value)}
+          disabled={isLocked || loading}
+          className="w-20 rounded-xl border border-slate-300 bg-white px-3 py-3 text-center text-2xl font-bold text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+          placeholder="0"
+        />
+
+        <span className="text-2xl font-bold text-slate-400">-</span>
+
+        <input
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          value={awayScore}
+          onChange={(e) => setAwayScore(e.target.value)}
+          disabled={isLocked || loading}
+          className="w-20 rounded-xl border border-slate-300 bg-white px-3 py-3 text-center text-2xl font-bold text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+          placeholder="0"
+        />
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={loading || isLocked}
+          className={`${buttonStyles.primary} px-6 py-3 text-sm font-semibold disabled:opacity-60`}
+        >
+          {isLocked
+            ? "Predicción cerrada"
+            : loading
+            ? "Guardando..."
+            : isEditing
+            ? "Actualizar predicción"
+            : "Guardar predicción"}
+        </button>
+      </div>
+
+      {isLocked && (
+        <p className="mt-4 text-center text-sm font-medium text-red-600">
+          Las predicciones se cerraron al comenzar el partido.
+        </p>
+      )}
+
+      {message && (
+        <p className="mt-4 text-center text-sm font-medium text-green-600">
+          {message}
+        </p>
+      )}
+
+      {error && (
+        <p className="mt-4 text-center text-sm font-medium text-red-600">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}

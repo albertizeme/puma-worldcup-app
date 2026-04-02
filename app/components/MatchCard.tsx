@@ -1,42 +1,105 @@
-import type { Match } from '../types/match'
+"use client";
+
+import { useRouter } from "next/navigation";
+import CountryFlag from "@/components/CountryFlag";
+import { Match } from "@/types/match";
 
 type MatchCardProps = {
-  match: Match
+  match: Match;
+};
+
+function formatMatchDate(value: string | null | undefined) {
+  if (!value) return "Fecha pendiente";
+
+  const date = new Date(value);
+
+  if (isNaN(date.getTime())) return "Fecha por confirmar";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 export default function MatchCard({ match }: MatchCardProps) {
-  return (
-    <div className="rounded-3xl border border-black/5 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between text-xs text-black/45">
-        <span>{match.stage}</span>
-        <span>{match.match_time || '--:--'}</span>
-      </div>
+  const router = useRouter();
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <p className="text-base font-bold">
-            {match.home_flag || '🏳️'} {match.home_team}
-          </p>
-          <p className="text-sm text-black/55">
-            vs {match.away_flag || '🏳️'} {match.away_team}
-          </p>
-        </div>
+  const goToDetail = () => {
+    router.push(`/match/${match.id}`);
+  };
+
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={goToDetail}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goToDetail();
+        }
+      }}
+      className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {match.stage && (
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+            {match.stage}
+          </span>
+        )}
 
         {match.is_puma_match && (
-          <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-red-600">
-            PUMA Match
+          <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
+            🐆 PUMA Match
           </span>
         )}
       </div>
 
-      <div className="mt-4 flex gap-2">
-        <button className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-sm font-bold text-white">
-          Predict
-        </button>
-        <button className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold">
-          Stats
-        </button>
+      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <CountryFlag
+                code={match.home_flag}
+                teamName={match.home_team}
+                alt={match.home_team}
+              />
+              <span className="truncate text-lg font-bold text-slate-900 md:text-xl">
+                {match.home_team}
+              </span>
+            </div>
+
+            <div className="pl-12 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
+              VS
+            </div>
+
+            <div className="flex items-center gap-3">
+              <CountryFlag
+                code={match.away_flag}
+                teamName={match.away_team}
+                alt={match.away_team}
+              />
+              <span className="truncate text-lg font-bold text-slate-900 md:text-xl">
+                {match.away_team}
+              </span>
+            </div>
+          </div>
+
+          <p className="mt-4 pl-12 text-sm text-slate-500">
+            {formatMatchDate(match.match_datetime)}
+          </p>
+        </div>
+
+        <div className="shrink-0 md:self-center">
+          <span className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-orange-600">
+            Ver detalle
+          </span>
+        </div>
       </div>
-    </div>
-  )
+    </article>
+  );
 }

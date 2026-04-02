@@ -53,8 +53,8 @@ export default function MatchCard({ match }: MatchCardProps) {
         )}
 
         {match.is_puma_match && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
-            🐆 PUMA Match
+          <span className="inline-flex items-center rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
+            PUMA Match
           </span>
         )}
       </div>
@@ -95,10 +95,10 @@ export default function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="shrink-0 md:self-center">
-          <span className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition group-hover:bg-orange-600">
-            Ver detalle
-          </span>
-        </div>
+  <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
+    Ver detalle
+  </span>
+</div>
       </div>
     </article>
   );

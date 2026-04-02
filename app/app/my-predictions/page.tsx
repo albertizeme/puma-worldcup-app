@@ -24,8 +24,13 @@ type MyPredictionRow = {
   exact_hit: boolean | null;
 };
 
+type PredictionSectionKey = "pending" | "closed" | "resolved";
+
+const DEADLINE_BUFFER_HOURS = 1;
+
 function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -34,22 +39,56 @@ function formatDate(dateString: string) {
   }).format(new Date(dateString));
 }
 
-function getPredictionStatus(row: MyPredictionRow) {
-  const hasResult = row.home_score !== null && row.away_score !== null;
-  if (hasResult) return "resuelto";
+function getPredictionDeadline(dateString: string) {
+  const matchDate = new Date(dateString);
 
-  const matchTime = new Date(row.match_datetime).getTime();
-  const now = Date.now();
+  if (Number.isNaN(matchDate.getTime())) return null;
 
-  if (now >= matchTime) return "cerrada";
-  return "pendiente";
+  return new Date(
+    matchDate.getTime() - DEADLINE_BUFFER_HOURS * 60 * 60 * 1000,
+  );
 }
 
-function getStatusClasses(status: string) {
+function getPredictionStatus(row: MyPredictionRow) {
+  const hasResult = row.home_score !== null && row.away_score !== null;
+  if (hasResult) return "resolved" as const;
+
+  const deadline = getPredictionDeadline(row.match_datetime);
+  if (!deadline) return "closed" as const;
+
+  const now = Date.now();
+
+  if (now >= deadline.getTime()) return "closed" as const;
+  return "pending" as const;
+}
+
+function getStatusLabel(status: PredictionSectionKey) {
   switch (status) {
-    case "resuelto":
-      return "border-green-200 bg-green-50 text-green-700";
-    case "cerrada":
+    case "pending":
+      return "Por completar";
+    case "closed":
+      return "Esperando resultado";
+    case "resolved":
+      return "Resueltas";
+  }
+}
+
+function getStatusChipLabel(status: PredictionSectionKey) {
+  switch (status) {
+    case "pending":
+      return "Editable";
+    case "closed":
+      return "Cerrada";
+    case "resolved":
+      return "Resuelta";
+  }
+}
+
+function getStatusClasses(status: PredictionSectionKey) {
+  switch (status) {
+    case "resolved":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    case "closed":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
       return "border-amber-200 bg-amber-50 text-amber-700";
@@ -82,7 +121,7 @@ function getResolutionText(row: MyPredictionRow) {
 function getResolutionClasses(row: MyPredictionRow) {
   const hasResult = row.home_score !== null && row.away_score !== null;
   if (!hasResult) return "border border-amber-200 bg-amber-50 text-amber-700";
-  if (row.exact_hit) return "border border-green-200 bg-green-50 text-green-700";
+  if (row.exact_hit) return "border border-emerald-200 bg-emerald-50 text-emerald-700";
   if (isTendencyHit(row)) return "border border-violet-200 bg-violet-50 text-violet-700";
   return "border border-slate-200 bg-slate-50 text-slate-700";
 }
@@ -94,54 +133,161 @@ function getStatCardClasses(type: "total" | "pending" | "closed" | "points") {
     case "closed":
       return "border-rose-200 bg-rose-50 text-rose-900";
     case "points":
-      return "border-0 bg-gradient-to-b from-violet-500 via-fuchsia-500 to-orange-400 text-white";
+      return "border-0 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white";
     default:
       return "border-slate-200 bg-white text-slate-900";
   }
 }
 
-function groupByStage(rows: MyPredictionRow[]) {
-  return rows.reduce((acc, row) => {
-    const key = row.stage ?? "Otros";
-
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-
-    acc[key].push(row);
-    return acc;
-  }, {} as Record<string, MyPredictionRow[]>);
+function sortRowsByDateAsc(a: MyPredictionRow, b: MyPredictionRow) {
+  return new Date(a.match_datetime).getTime() - new Date(b.match_datetime).getTime();
 }
 
-const stageOrder = [
-  "Group A",
-  "Group B",
-  "Group C",
-  "Group D",
-  "Group E",
-  "Group F",
-  "Group G",
-  "Group H",
-  "Group I",
-  "Group J",
-  "Group K",
-  "Group L",
-  "Round of 32",
-  "Round of 16",
-  "Quarter-finals",
-  "Semi-finals",
-  "Final",
-  "Otros",
-];
+function sortRowsByDateDesc(a: MyPredictionRow, b: MyPredictionRow) {
+  return new Date(b.match_datetime).getTime() - new Date(a.match_datetime).getTime();
+}
 
-function sortStages(a: string, b: string) {
-  const indexA = stageOrder.indexOf(a);
-  const indexB = stageOrder.indexOf(b);
+function groupRowsByStatus(rows: MyPredictionRow[]) {
+  const groups: Record<PredictionSectionKey, MyPredictionRow[]> = {
+    pending: [],
+    closed: [],
+    resolved: [],
+  };
 
-  const safeIndexA = indexA === -1 ? Number.MAX_SAFE_INTEGER : indexA;
-  const safeIndexB = indexB === -1 ? Number.MAX_SAFE_INTEGER : indexB;
+  for (const row of rows) {
+    const status = getPredictionStatus(row);
+    groups[status].push(row);
+  }
 
-  return safeIndexA - safeIndexB;
+  groups.pending.sort(sortRowsByDateAsc);
+  groups.closed.sort(sortRowsByDateAsc);
+  groups.resolved.sort(sortRowsByDateDesc);
+
+  return groups;
+}
+
+function PredictionCard({
+  row,
+  status,
+}: {
+  row: MyPredictionRow;
+  status: PredictionSectionKey;
+}) {
+  return (
+    <Link
+      href={`/match/${row.match_id}`}
+      className="group block rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            {row.stage ? (
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                {row.stage}
+              </span>
+            ) : null}
+
+            {row.is_puma_match ? (
+              <span className="inline-flex items-center rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
+                PUMA Match
+              </span>
+            ) : null}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <CountryFlag
+                code={row.home_flag}
+                teamName={row.home_team}
+                alt={row.home_team}
+                className="h-6 w-6"
+              />
+              <span className="text-lg font-bold text-slate-900 md:text-xl">
+                {row.home_team}
+              </span>
+            </div>
+
+            <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+              VS
+            </span>
+
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-slate-900 md:text-xl">
+                {row.away_team}
+              </span>
+              <CountryFlag
+                code={row.away_flag}
+                teamName={row.away_team}
+                alt={row.away_team}
+                className="h-6 w-6"
+              />
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm text-slate-500">{formatDate(row.match_datetime)}</p>
+        </div>
+
+        <div className="flex flex-col items-end gap-2">
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusClasses(
+              status,
+            )}`}
+          >
+            {getStatusChipLabel(status)}
+          </span>
+
+          {status === "resolved" ? (
+            <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
+              {row.points ?? 0} pts
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl bg-slate-50 p-4 text-center">
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Tu predicción
+          </div>
+          <div className="mt-2 text-2xl font-extrabold text-slate-900">
+            {row.home_score_pred ?? "-"} - {row.away_score_pred ?? "-"}
+          </div>
+        </div>
+
+        <div
+          className={`rounded-2xl p-4 text-center ${
+            row.home_score !== null && row.away_score !== null
+              ? "bg-slate-100"
+              : "border border-amber-200 bg-amber-50"
+          }`}
+        >
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Resultado real
+          </div>
+          <div className="mt-2 text-2xl font-extrabold text-slate-900">
+            {row.home_score !== null && row.away_score !== null
+              ? `${row.home_score} - ${row.away_score}`
+              : "-"}
+          </div>
+        </div>
+
+        <div
+          className={`rounded-2xl p-4 text-center ${getResolutionClasses(row)}`}
+        >
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
+            Estado
+          </div>
+          <div className="mt-2 text-sm font-bold">{getResolutionText(row)}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-end">
+        <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
+          Ver detalle
+        </span>
+      </div>
+    </Link>
+  );
 }
 
 export default async function MyPredictionsPage() {
@@ -178,14 +324,15 @@ export default async function MyPredictionsPage() {
 
   const rows = (data ?? []) as MyPredictionRow[];
 
+  const groupedByStatus = groupRowsByStatus(rows);
+
   const total = rows.length;
-  const pending = rows.filter((r) => getPredictionStatus(r) === "pendiente").length;
-  const closed = rows.filter((r) => getPredictionStatus(r) === "cerrada").length;
-  const resolved = rows.filter((r) => getPredictionStatus(r) === "resuelto").length;
+  const pending = groupedByStatus.pending.length;
+  const closed = groupedByStatus.closed.length;
+  const resolved = groupedByStatus.resolved.length;
   const totalPoints = rows.reduce((acc, row) => acc + (row.points ?? 0), 0);
 
-  const groupedRows = groupByStage(rows);
-  const orderedStages = Object.keys(groupedRows).sort(sortStages);
+  const sections: PredictionSectionKey[] = ["pending", "closed", "resolved"];
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -200,7 +347,7 @@ export default async function MyPredictionsPage() {
                 Mis predicciones
               </h1>
               <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
-                Consulta tus pronósticos, revisa resultados y controla los puntos que llevas acumulados.
+                Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.
               </p>
             </div>
 
@@ -215,45 +362,109 @@ export default async function MyPredictionsPage() {
           </div>
         </section>
 
-        {rows.length > 0 && (
-          <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("total")}`}>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-                Total
+        {rows.length > 0 ? (
+          <>
+            <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div
+                className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("total")}`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+                  Total
+                </div>
+                <div className="mt-2 text-3xl font-extrabold">{total}</div>
+                <div className="mt-1 text-xs opacity-70">Predicciones registradas</div>
               </div>
-              <div className="mt-2 text-3xl font-extrabold">{total}</div>
-              <div className="mt-1 text-xs opacity-70">Predicciones registradas</div>
-            </div>
 
-            <div className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("pending")}`}>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-                Pendientes
+              <div
+                className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("pending")}`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+                  Editables
+                </div>
+                <div className="mt-2 text-3xl font-extrabold">{pending}</div>
+                <div className="mt-1 text-xs opacity-70">Aún puedes cambiarlas</div>
               </div>
-              <div className="mt-2 text-3xl font-extrabold">{pending}</div>
-              <div className="mt-1 text-xs opacity-70">Aún editables</div>
-            </div>
 
-            <div className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("closed")}`}>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
-                Cerradas
+              <div
+                className={`rounded-2xl border p-4 shadow-sm ${getStatCardClasses("closed")}`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
+                  En juego
+                </div>
+                <div className="mt-2 text-3xl font-extrabold">{closed}</div>
+                <div className="mt-1 text-xs opacity-70">Esperando resultado</div>
               </div>
-              <div className="mt-2 text-3xl font-extrabold">{closed}</div>
-              <div className="mt-1 text-xs opacity-70">Esperando resultado</div>
-            </div>
 
-            <div className={`rounded-2xl p-4 shadow-sm ${getStatCardClasses("points")}`}>
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
-                Puntos
+              <div
+                className={`rounded-2xl p-4 shadow-sm ${getStatCardClasses("points")}`}
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+                  Puntos
+                </div>
+                <div className="mt-2 text-3xl font-extrabold text-white">
+                  {totalPoints}
+                </div>
+                <div className="mt-1 text-xs text-white/80">
+                  {resolved} partidos resueltos
+                </div>
               </div>
-              <div className="mt-2 text-3xl font-extrabold text-white">{totalPoints}</div>
-              <div className="mt-1 text-xs text-white/80">
-                {resolved} partidos resueltos
-              </div>
-            </div>
-          </section>
-        )}
+            </section>
 
-        {rows.length === 0 ? (
+            <section className="space-y-4">
+              {sections.map((sectionKey, index) => {
+                const sectionRows = groupedByStatus[sectionKey];
+
+                if (sectionRows.length === 0) return null;
+
+                return (
+                  <details
+                    key={sectionKey}
+                    open={index === 0}
+                    className="group rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[1.5rem] px-5 py-4">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900 md:text-xl">
+                          {getStatusLabel(sectionKey)}
+                        </h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {sectionRows.length} partido
+                          {sectionRows.length !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClasses(
+                            sectionKey,
+                          )}`}
+                        >
+                          {sectionRows.length}
+                        </span>
+
+                        <span className="text-sm font-medium text-slate-400 transition duration-200 group-open:rotate-180">
+                          ▼
+                        </span>
+                      </div>
+                    </summary>
+
+                    <div className="border-t border-slate-100 px-4 pb-4 pt-4 md:px-5">
+                      <div className="space-y-4">
+                        {sectionRows.map((row) => (
+                          <PredictionCard
+                            key={row.prediction_id}
+                            row={row}
+                            status={sectionKey}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </details>
+                );
+              })}
+            </section>
+          </>
+        ) : (
           <section className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-sm">
             <h2 className="mb-2 text-lg font-semibold text-slate-900">
               Aún no has hecho predicciones
@@ -264,172 +475,6 @@ export default async function MyPredictionsPage() {
             <Link href="/" className={buttonStyles.primary}>
               Ir a partidos
             </Link>
-          </section>
-        ) : (
-          <section className="space-y-4">
-            {orderedStages.map((stage, index) => {
-              const stageRows = groupedRows[stage];
-              const pendingInStage = stageRows.filter(
-                (row) => getPredictionStatus(row) === "pendiente"
-              ).length;
-
-              return (
-                <details
-                  key={stage}
-                  open={index === 0}
-                  className="group rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[1.5rem] px-5 py-4">
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900 md:text-xl">
-                        {stage}
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {stageRows.length} partido{stageRows.length !== 1 ? "s" : ""}
-                        {pendingInStage > 0
-                          ? ` · ${pendingInStage} pendiente${pendingInStage !== 1 ? "s" : ""}`
-                          : ""}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {pendingInStage > 0 && (
-                        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                          {pendingInStage} pendientes
-                        </span>
-                      )}
-
-                      <span className="text-sm font-medium text-slate-400 transition duration-200 group-open:rotate-180">
-                        ▼
-                      </span>
-                    </div>
-                  </summary>
-
-                  <div className="border-t border-slate-100 px-4 pb-4 pt-4 md:px-5">
-                    <div className="space-y-4">
-                      {stageRows.map((row) => {
-                        const status = getPredictionStatus(row);
-
-                        return (
-                          <Link
-                            key={row.prediction_id}
-                            href={`/match/${row.match_id}`}
-                            className="group block rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <div className="flex flex-wrap items-center gap-3">
-  <div className="flex items-center gap-2">
-    <CountryFlag
-      code={row.home_flag}
-      teamName={row.home_team}
-      alt={row.home_team}
-      className="h-6 w-6"
-    />
-    <span className="text-lg font-bold text-slate-900 md:text-xl">
-      {row.home_team}
-    </span>
-  </div>
-
-  <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
-    VS
-  </span>
-
-  <div className="flex items-center gap-2">
-    <span className="text-lg font-bold text-slate-900 md:text-xl">
-      {row.away_team}
-    </span>
-    <CountryFlag
-      code={row.away_flag}
-      teamName={row.away_team}
-      alt={row.away_team}
-      className="h-6 w-6"
-    />
-  </div>
-</div>
-
-                                  {row.is_puma_match && (
-                                    <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-orange-700">
-                                      🐆 PUMA Match
-                                    </span>
-                                  )}
-                                </div>
-
-                                <p className="mt-2 text-sm text-slate-500">
-                                  {formatDate(row.match_datetime)}
-                                </p>
-                              </div>
-
-                              <div className="flex flex-col items-end gap-2">
-                                <span
-                                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusClasses(
-                                    status
-                                  )}`}
-                                >
-                                  {status}
-                                </span>
-
-                                {status === "resuelto" && (
-                                  <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
-                                    {row.points ?? 0} pts
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="mt-4 grid gap-3 md:grid-cols-3">
-                              <div className="rounded-2xl bg-slate-50 p-4 text-center">
-                                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                  Tu predicción
-                                </div>
-                                <div className="mt-2 text-2xl font-extrabold text-slate-900">
-                                  {row.home_score_pred ?? "-"} - {row.away_score_pred ?? "-"}
-                                </div>
-                              </div>
-
-                              <div
-                                className={`rounded-2xl p-4 text-center ${
-                                  row.home_score !== null && row.away_score !== null
-                                    ? "bg-slate-100"
-                                    : "border border-amber-200 bg-amber-50"
-                                }`}
-                              >
-                                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                  Resultado real
-                                </div>
-                                <div className="mt-2 text-2xl font-extrabold text-slate-900">
-                                  {row.home_score !== null && row.away_score !== null
-                                    ? `${row.home_score} - ${row.away_score}`
-                                    : "-"}
-                                </div>
-                              </div>
-
-                              <div
-                                className={`rounded-2xl p-4 text-center ${getResolutionClasses(
-                                  row
-                                )}`}
-                              >
-                                <div className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
-                                  Estado
-                                </div>
-                                <div className="mt-2 text-sm font-bold">
-                                  {getResolutionText(row)}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center justify-end text-sm font-medium text-slate-400 transition group-hover:text-slate-700">
-                              Ver detalle del partido →
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </details>
-              );
-            })}
           </section>
         )}
       </div>

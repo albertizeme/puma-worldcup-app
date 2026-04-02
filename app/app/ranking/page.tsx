@@ -15,6 +15,25 @@ type RankedRow = RankingRow & {
   position: number;
 };
 
+type SnapshotMetaRow = {
+  snapshot_key: string;
+  snapshot_label: string | null;
+  created_at: string;
+};
+
+type SnapshotRow = {
+  user_id: string;
+  position: number | null;
+  total_points: number | null;
+};
+
+type MovementInfo = {
+  positionChange: number | null;
+  pointsChange: number | null;
+  movementLabel: string;
+  isNew: boolean;
+};
+
 function getDisplayName(row: RankingRow) {
   return row.display_name?.trim() || "Usuario";
 }
@@ -109,6 +128,119 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
   return null;
 }
 
+function getMovementInfo(
+  row: RankedRow,
+  previousSnapshotMap: Map<string, { user_id: string; position: number; total_points: number }>
+): MovementInfo {
+  const previous = previousSnapshotMap.get(row.user_id);
+
+  if (!previous) {
+    return {
+      positionChange: null,
+      pointsChange: null,
+      movementLabel: "Nuevo en el ranking",
+      isNew: true,
+    };
+  }
+
+  const currentPosition = row.position;
+  const previousPosition = previous.position;
+  const currentPoints = row.total_points ?? 0;
+  const previousPoints = previous.total_points ?? 0;
+
+  const positionDelta = previousPosition - currentPosition;
+  const pointsDelta = currentPoints - previousPoints;
+
+  let movementLabel = "→ Se mantiene";
+
+  if (positionDelta > 0) {
+    movementLabel = `↑ Sube ${positionDelta} ${positionDelta === 1 ? "puesto" : "puestos"}`;
+  } else if (positionDelta < 0) {
+    const fallen = Math.abs(positionDelta);
+    movementLabel = `↓ Baja ${fallen} ${fallen === 1 ? "puesto" : "puestos"}`;
+  }
+
+  return {
+    positionChange: positionDelta,
+    pointsChange: pointsDelta,
+    movementLabel,
+    isNew: false,
+  };
+}
+
+function getMovementTextClass(positionChange: number | null, isNew: boolean) {
+  if (isNew) return "text-sky-700";
+  if (positionChange === null || positionChange === 0) return "text-neutral-500";
+  if (positionChange > 0) return "text-emerald-700";
+  return "text-rose-700";
+}
+
+function getMovementPillClass(positionChange: number | null, isNew: boolean) {
+  if (isNew) {
+    return "border-amber-200 bg-amber-300 text-neutral-900";
+  }
+
+  if (positionChange === null || positionChange === 0) {
+    return "border-neutral-200 bg-white text-neutral-900";
+  }
+
+  if (positionChange > 0) {
+    return "border-amber-300 bg-amber-400 text-neutral-950";
+  }
+
+  return "border-orange-300 bg-orange-500 text-white";
+}
+
+function getMovementSummaryTextClass(positionChange: number | null, isNew: boolean) {
+  if (isNew) return "text-amber-200";
+  if (positionChange === null || positionChange === 0) return "text-amber-100";
+  if (positionChange > 0) return "text-amber-200";
+  return "text-orange-200";
+}
+
+function getPointsChangeTextClass(pointsChange: number | null) {
+  if (pointsChange === null || pointsChange === 0) return "text-white/80";
+  if (pointsChange > 0) return "text-amber-100";
+  return "text-orange-100";
+}
+
+function getMovementSummaryText(movement: MovementInfo, snapshotReference: string | null) {
+  const reference = snapshotReference ?? "el último corte";
+
+  if (movement.isNew) {
+    return "Has entrado en el ranking desde el último corte.";
+  }
+
+  if (movement.positionChange === null || movement.positionChange === 0) {
+    return `Mantienes tu posición desde ${reference}.`;
+  }
+
+  if (movement.positionChange > 0) {
+    return `Has subido ${movement.positionChange} ${
+      movement.positionChange === 1 ? "puesto" : "puestos"
+    } desde ${reference}.`;
+  }
+
+  const fallen = Math.abs(movement.positionChange);
+  return `Has bajado ${fallen} ${fallen === 1 ? "puesto" : "puestos"} desde ${reference}.`;
+}
+
+function getPointsChangeSummaryText(movement: MovementInfo, snapshotReference: string | null) {
+  if (movement.pointsChange === null) return null;
+
+  const reference = snapshotReference ?? "el último corte";
+
+  if (movement.pointsChange === 0) {
+    return `Sin variación de puntos respecto a ${reference}.`;
+  }
+
+  if (movement.pointsChange > 0) {
+    return `+${movement.pointsChange} pts respecto a ${reference}.`;
+  }
+
+  return `${movement.pointsChange} pts respecto a ${reference}.`;
+}
+
 export default async function RankingPage() {
   const supabaseServer = await getSupabaseServerClient();
 
@@ -180,6 +312,41 @@ export default async function RankingPage() {
     };
   });
 
+  const { data: latestSnapshotMetaData } = await supabaseServer
+    .from("ranking_snapshots")
+    .select("snapshot_key, snapshot_label, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const latestSnapshotMeta = (latestSnapshotMetaData?.[0] as SnapshotMetaRow | undefined) ?? null;
+  const latestSnapshotKey = latestSnapshotMeta?.snapshot_key ?? null;
+  const latestSnapshotLabel = latestSnapshotMeta?.snapshot_label ?? null;
+  const snapshotReference = latestSnapshotLabel || latestSnapshotKey;
+
+  const previousSnapshotRowsResponse = latestSnapshotKey
+    ? await supabaseServer
+        .from("ranking_snapshots")
+        .select("user_id, position, total_points")
+        .eq("snapshot_key", latestSnapshotKey)
+    : null;
+
+  const previousSnapshotRows: SnapshotRow[] =
+    (previousSnapshotRowsResponse?.data as SnapshotRow[] | null) ?? [];
+
+  const previousSnapshotMap = new Map<
+    string,
+    { user_id: string; position: number; total_points: number }
+  >(
+    previousSnapshotRows.map((row) => [
+      row.user_id,
+      {
+        user_id: row.user_id,
+        position: row.position ?? 0,
+        total_points: row.total_points ?? 0,
+      },
+    ])
+  );
+
   const currentUserRow = rankedRows.find((row) => row.user_id === user.id);
   const totalParticipants = rankedRows.length;
   const leader = rankedRows[0];
@@ -204,8 +371,18 @@ export default async function RankingPage() {
 
   const percentileAhead =
     currentUserRow && totalParticipants > 1 && currentUserSequentialIndex >= 0
-      ? Math.round(((totalParticipants - (currentUserSequentialIndex + 1)) / (totalParticipants - 1)) * 100)
+      ? Math.round(
+          ((totalParticipants - (currentUserSequentialIndex + 1)) / (totalParticipants - 1)) * 100
+        )
       : 0;
+
+  const currentUserMovement = currentUserRow
+    ? getMovementInfo(currentUserRow, previousSnapshotMap)
+    : null;
+
+  const currentUserMovementPillClass = currentUserMovement
+    ? getMovementPillClass(currentUserMovement.positionChange, currentUserMovement.isNew)
+    : "";
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -217,6 +394,12 @@ export default async function RankingPage() {
           <p className="mt-1 max-w-2xl text-sm text-neutral-600">
             Tu posición actual y la clasificación completa del torneo.
           </p>
+          {latestSnapshotKey && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Comparativa respecto a{" "}
+              <span className="font-semibold text-neutral-700">{snapshotReference}</span>
+            </p>
+          )}
         </div>
 
         <Link
@@ -231,9 +414,31 @@ export default async function RankingPage() {
         <>
           <section className="mb-3 overflow-hidden rounded-3xl border border-violet-900 bg-gradient-to-br from-violet-700 via-fuchsia-700 to-neutral-950 text-white shadow-xl">
             <div className="px-5 py-5 sm:px-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
-                Tu situación
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
+                    Tu situación
+                  </p>
+
+                  {latestSnapshotKey && currentUserMovement && (
+                    <div
+                      className={`mt-3 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide shadow-sm animate-fade-in-up animate-soft-pulse ${currentUserMovementPillClass}`}
+                    >
+                      <span aria-hidden="true">
+                        {currentUserMovement.isNew
+                          ? "✦"
+                          : currentUserMovement.positionChange === null ||
+                            currentUserMovement.positionChange === 0
+                          ? "→"
+                          : currentUserMovement.positionChange > 0
+                          ? "↑"
+                          : "↓"}
+                      </span>
+                      <span>{currentUserMovement.movementLabel.replace(/^[↑↓→]\s*/, "")}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <div className="mt-4 flex items-end justify-between gap-4">
                 <div>
@@ -242,9 +447,7 @@ export default async function RankingPage() {
                     <span className="text-4xl font-black leading-none sm:text-5xl">
                       #{currentUserRow.position}
                     </span>
-                    <span className="pb-1 text-sm text-white/75">
-                      de {totalParticipants}
-                    </span>
+                    <span className="pb-1 text-sm text-white/75">de {totalParticipants}</span>
                   </div>
                 </div>
 
@@ -263,6 +466,27 @@ export default async function RankingPage() {
                   ? "Ahora mismo estás en posiciones de premio."
                   : `Estás por delante del ${percentileAhead}% de participantes.`}
               </p>
+
+              {latestSnapshotKey && currentUserMovement && (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 px-4 py-3 backdrop-blur-sm shadow-sm animate-fade-in-up">
+                  <p
+                    className={`text-sm font-semibold leading-snug ${getMovementSummaryTextClass(
+                      currentUserMovement.positionChange,
+                      currentUserMovement.isNew
+                    )}`}
+                  >
+                    {getMovementSummaryText(currentUserMovement, snapshotReference)}
+                  </p>
+
+                  <p
+                    className={`mt-1 text-xs font-medium ${getPointsChangeTextClass(
+                      currentUserMovement.pointsChange
+                    )}`}
+                  >
+                    {getPointsChangeSummaryText(currentUserMovement, snapshotReference)}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 bg-white/95 px-4 py-4 text-neutral-900 sm:px-6 xl:grid-cols-4">
@@ -305,9 +529,7 @@ export default async function RankingPage() {
                   Tendencias
                 </p>
                 <p className="mt-2 text-xl font-black">{currentUserRow.tendency_hits ?? 0}</p>
-                <p className="mt-1 text-xs text-neutral-500">
-                  Ganador o empate acertado
-                </p>
+                <p className="mt-1 text-xs text-neutral-500">Ganador o empate acertado</p>
               </div>
             </div>
           </section>
@@ -358,16 +580,18 @@ export default async function RankingPage() {
               const isCurrentUser = row.user_id === user.id;
               const competitiveHint = getCompetitiveHint(rankedRows, index);
               const isPodium = isPodiumRow(row);
+              const movement = latestSnapshotKey
+                ? getMovementInfo(row, previousSnapshotMap)
+                : null;
+              const movementClass = movement
+                ? getMovementTextClass(movement.positionChange, movement.isNew)
+                : "";
 
               return (
                 <div
                   key={row.user_id}
                   className={`flex items-center justify-between gap-3 px-4 py-4 sm:px-6 ${
-                    isCurrentUser
-                      ? "bg-violet-50"
-                      : isPodium
-                      ? "bg-neutral-50"
-                      : "bg-white"
+                    isCurrentUser ? "bg-violet-50" : isPodium ? "bg-neutral-50" : "bg-white"
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-3 sm:gap-4">
@@ -405,6 +629,17 @@ export default async function RankingPage() {
                       {competitiveHint && (
                         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-violet-700/85 sm:text-[11px]">
                           {competitiveHint}
+                        </p>
+                      )}
+
+                      {movement && (
+                        <p
+                          className={`mt-1 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${movementClass}`}
+                        >
+                          {movement.movementLabel}
+                          {movement.pointsChange !== null && movement.pointsChange !== 0
+                            ? ` · ${movement.pointsChange > 0 ? "+" : ""}${movement.pointsChange} pts`
+                            : ""}
                         </p>
                       )}
                     </div>

@@ -70,3 +70,34 @@ button {
     @apply outline-none ring-2 ring-slate-300 border-slate-400;
   }
 }
+
+@keyframes fadeInUpSoft {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softPulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  50% {
+    transform: scale(1.015);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUpSoft 0.45s ease-out both;
+}
+
+.animate-soft-pulse {
+  animation: softPulseGlow 1.8s ease-in-out 1;
+}

@@ -70,7 +70,9 @@ export default function PredictionForm({
       parsedHome < 0 ||
       parsedAway < 0
     ) {
-      setError("Los marcadores deben ser números enteros válidos mayores o iguales a 0.");
+      setError(
+        "Los marcadores deben ser números enteros válidos mayores o iguales a 0."
+      );
       return;
     }
 
@@ -109,17 +111,14 @@ export default function PredictionForm({
   }
 
   return (
-    <section className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-lg">
-      <div className="mb-5 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-          Tu predicción
+    <div className="space-y-5">
+      <div className="text-center">
+        <p className="text-sm text-slate-600">
+          Introduce el marcador final estimado. Podrás cambiarlo hasta que empiece el partido.
         </p>
-        <h2 className="mt-2 text-2xl font-bold text-slate-900">
-          ¿Cómo quedará el partido?
-        </h2>
       </div>
 
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-3 sm:gap-4">
         <input
           type="number"
           min="0"
@@ -128,7 +127,8 @@ export default function PredictionForm({
           value={homeScore}
           onChange={(e) => setHomeScore(e.target.value)}
           disabled={isLocked || loading}
-          className="w-20 rounded-xl border border-slate-300 bg-white px-3 py-3 text-center text-2xl font-bold text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+          aria-label="Marcador equipo local"
+          className="h-14 w-16 rounded-2xl border border-slate-300 bg-white px-3 text-center text-2xl font-bold text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-16 sm:w-20"
           placeholder="0"
         />
 
@@ -142,21 +142,20 @@ export default function PredictionForm({
           value={awayScore}
           onChange={(e) => setAwayScore(e.target.value)}
           disabled={isLocked || loading}
-          className="w-20 rounded-xl border border-slate-300 bg-white px-3 py-3 text-center text-2xl font-bold text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:bg-slate-100 disabled:text-slate-400"
+          aria-label="Marcador equipo visitante"
+          className="h-14 w-16 rounded-2xl border border-slate-300 bg-white px-3 text-center text-2xl font-bold text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-16 sm:w-20"
           placeholder="0"
         />
       </div>
 
-      <div className="mt-6 flex justify-center">
+      <div className="flex justify-center">
         <button
           type="button"
           onClick={handleSave}
           disabled={loading || isLocked}
-          className={`${buttonStyles.primary} px-6 py-3 text-sm font-semibold disabled:opacity-60`}
+          className={`${buttonStyles.primary} min-w-[220px] px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60`}
         >
-          {isLocked
-            ? "Predicción cerrada"
-            : loading
+          {loading
             ? "Guardando..."
             : isEditing
             ? "Actualizar predicción"
@@ -164,23 +163,17 @@ export default function PredictionForm({
         </button>
       </div>
 
-      {isLocked && (
-        <p className="mt-4 text-center text-sm font-medium text-red-600">
-          Las predicciones se cerraron al comenzar el partido.
-        </p>
-      )}
-
       {message && (
-        <p className="mt-4 text-center text-sm font-medium text-green-600">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-700">
           {message}
-        </p>
+        </div>
       )}
 
       {error && (
-        <p className="mt-4 text-center text-sm font-medium text-red-600">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700">
           {error}
-        </p>
+        </div>
       )}
-    </section>
+    </div>
   );
 }

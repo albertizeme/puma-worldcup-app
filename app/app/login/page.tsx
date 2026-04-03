@@ -1,222 +1,138 @@
+// app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { buttonStyles } from "@/lib/ui";
 
-type Mode = "login" | "register";
-
-function isValidCorporateEmail(email: string) {
-  return email.trim().toLowerCase().endsWith("@puma.com");
-}
-
 export default function LoginPage() {
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
 
-  const [mode, setMode] = useState<Mode>("login");
-  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit() {
-    if (loading) return;
+  useEffect(() => {
+    async function checkExistingSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    const cleanEmail = email.trim().toLowerCase();
+      if (session) {
+        router.replace("/");
+        return;
+      }
 
+      setCheckingSession(false);
+    }
+
+    checkExistingSession();
+  }, [router, supabase]);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
-    setMessage(null);
     setError(null);
 
-    try {
-      if (!cleanEmail || !password) {
-        setError("Debes completar email y contraseña.");
-        return;
-      }
+    const normalizedEmail = email.trim().toLowerCase();
 
-      if (!isValidCorporateEmail(cleanEmail)) {
-        setError("Solo se permite acceso con email corporativo @puma.com.");
-        return;
-      }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
-      if (mode === "register" && !displayName.trim()) {
-        setError("Debes indicar un nombre visible.");
-        return;
-      }
-
-      if (password.length < 8) {
-        setError("La contraseña debe tener al menos 8 caracteres.");
-        return;
-      }
-
-      const supabase = getSupabaseBrowserClient();
-
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
-
-        if (error) {
-          setError(`No se pudo iniciar sesión: ${error.message}`);
-          return;
-        }
-
-        router.replace("/");
-        router.refresh();
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password,
-        options: {
-          data: {
-            display_name: displayName.trim(),
-          },
-        },
-      });
-
-      if (error) {
-        setError(`No se pudo crear la cuenta: ${error.message}`);
-        return;
-      }
-
-      if (data.session) {
-        setMessage("Cuenta creada correctamente. Accediendo...");
-        router.replace("/");
-        router.refresh();
-        return;
-      }
-
-      setMessage(
-        "Cuenta creada correctamente. Ya puedes iniciar sesión con tu email y contraseña."
-      );
-      setMode("login");
-      setPassword("");
-    } finally {
+    if (error) {
+      setError("Credenciales no válidas.");
       setLoading(false);
+      return;
     }
+
+    router.replace("/");
+    router.refresh();
+  }
+
+  if (checkingSession) {
+    return (
+      <main className="min-h-screen bg-slate-50">
+        <div className="mx-auto max-w-md px-4 py-10">
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm text-slate-600">Cargando...</p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex min-h-screen max-w-md items-center px-4 py-8">
-        <section className="w-full rounded-[1.75rem] border border-slate-200 bg-white p-8 shadow-lg">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Acceso
+      <div className="mx-auto max-w-md px-4 py-10">
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-bold text-slate-900">Iniciar sesión</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Accede con tu email corporativo y tu contraseña.
           </p>
 
-          <h1 className="mt-2 text-3xl font-extrabold text-slate-900">
-            {mode === "login" ? "Inicia sesión" : "Crea tu cuenta"}
-          </h1>
-
-          <p className="mt-3 text-sm text-slate-600">
-            Accede con tu email corporativo y una contraseña. Ya no dependemos
-            del magic link.
-          </p>
-
-          <div className="mt-6 flex rounded-xl bg-slate-100 p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("login");
-                setMessage(null);
-                setError(null);
-              }}
-              className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                mode === "login"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500"
-              }`}
-            >
-              Iniciar sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("register");
-                setMessage(null);
-                setError(null);
-              }}
-              className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                mode === "register"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500"
-              }`}
-            >
-              Crear cuenta
-            </button>
-          </div>
-
-          {mode === "register" && (
-            <div className="mt-6">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Nombre visible
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1 block text-sm font-medium text-slate-700"
+              >
+                Email corporativo
               </label>
               <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Ej. Albert"
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                id="email"
+                type="email"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
               />
             </div>
-          )}
 
-          <div className="mt-6">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Email corporativo
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu.email@puma.com"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-            />
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1 block text-sm font-medium text-slate-700"
+              >
+                Contraseña
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            {error ? (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={`${buttonStyles.primary} w-full justify-center`}
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          </form>
+
+          <div className="mt-6 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+            Si has olvidado tu contraseña, contacta con IT para que te asignemos
+            una temporal.
           </div>
-
-          <div className="mt-4">
-            <label className="mb-2 block text-sm font-medium text-slate-700">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading || !email || !password}
-            className={`${buttonStyles.primary} mt-6 w-full disabled:cursor-not-allowed disabled:opacity-50`}
-          >
-            {loading
-              ? mode === "login"
-                ? "Accediendo..."
-                : "Creando cuenta..."
-              : mode === "login"
-              ? "Entrar"
-              : "Crear cuenta"}
-          </button>
-
-          {message && (
-            <p className="mt-4 text-sm font-medium text-green-600">{message}</p>
-          )}
-
-          {error && (
-            <p className="mt-4 text-sm font-medium text-red-600">{error}</p>
-          )}
-        </section>
+        </div>
       </div>
     </main>
   );

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
 type RankingRow = {
   user_id: string;

@@ -6,6 +6,7 @@ import {
   deleteMatchAction,
   updateMatchAction,
 } from "./actions";
+import DeleteMatchButton from "./DeleteMatchButton";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -329,14 +330,11 @@ export default async function AdminPage({
                   </div>
 
                   <form action={deleteMatchAction}>
-                    <input type="hidden" name="id" value={match.id} />
-                    <button
-                      type="submit"
-                      className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700"
-                    >
-                      Eliminar
-                    </button>
-                  </form>
+  <input type="hidden" name="id" value={match.id} />
+  <DeleteMatchButton
+    label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
+  />
+</form>
                 </div>
 
                 <form action={updateMatchAction}>

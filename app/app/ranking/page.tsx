@@ -390,17 +390,20 @@ export default async function RankingPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-5">
   <div className="mb-4 flex items-center justify-between gap-3">
-    <div className="flex items-center">
-        <UserMenu />
-      </div>
-    
-    <Link href="/my-predictions" className={buttonStyles.nav}>
-      Mis predicciones
+  <div className="flex items-center">
+    <UserMenu />
+  </div>
+
+  <div className="flex flex-wrap items-center justify-end gap-3">
+    <Link href="/ranking" className={buttonStyles.nav}>
+      Ranking
     </Link>
+
     <Link href="/" className={buttonStyles.nav}>
       Próximos partidos
     </Link>
   </div>
+</div>
 
   <div>
     <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -65,7 +66,7 @@ async function requireAdmin() {
     redirect("/");
   }
 
-  return supabase;
+  return userId;
 }
 
 function revalidateAdminSurfaces() {
@@ -76,7 +77,8 @@ function revalidateAdminSurfaces() {
 }
 
 export async function createMatchAction(formData: FormData) {
-  const supabase = await requireAdmin();
+  await requireAdmin();
+  const supabaseAdmin = getSupabaseAdminClient();
 
   const stage = parseNullableText(formData.get("stage"));
   const matchDatetime = parseNullableDateTime(formData.get("match_datetime"));
@@ -104,7 +106,7 @@ export async function createMatchAction(formData: FormData) {
     away_score: null,
   };
 
-  const { error } = await supabase.from("matches").insert(payload);
+  const { error } = await supabaseAdmin.from("matches").insert(payload);
 
   if (error) {
     throw new Error(`No se pudo crear el partido: ${error.message}`);
@@ -114,7 +116,8 @@ export async function createMatchAction(formData: FormData) {
 }
 
 export async function updateMatchAction(formData: FormData) {
-  const supabase = await requireAdmin();
+  await requireAdmin();
+  const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
   const stage = parseNullableText(formData.get("stage"));
@@ -165,7 +168,10 @@ export async function updateMatchAction(formData: FormData) {
     payload.away_score = null;
   }
 
-  const { error } = await supabase.from("matches").update(payload).eq("id", id);
+  const { error } = await supabaseAdmin
+    .from("matches")
+    .update(payload)
+    .eq("id", id);
 
   if (error) {
     throw new Error(`No se pudo actualizar el partido: ${error.message}`);
@@ -175,7 +181,8 @@ export async function updateMatchAction(formData: FormData) {
 }
 
 export async function deleteMatchAction(formData: FormData) {
-  const supabase = await requireAdmin();
+  await requireAdmin();
+  const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
 
@@ -183,7 +190,7 @@ export async function deleteMatchAction(formData: FormData) {
     throw new Error("Falta el id del partido.");
   }
 
-  const { error } = await supabase.from("matches").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("matches").delete().eq("id", id);
 
   if (error) {
     throw new Error(`No se pudo eliminar el partido: ${error.message}`);

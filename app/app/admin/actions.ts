@@ -17,19 +17,27 @@ function parseNullableScore(value: FormDataEntryValue | null) {
 export async function updateMatchAction(formData: FormData) {
   const supabase = await getSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (claimsError || !claimsData?.claims) {
     redirect("/login");
   }
 
-  const { data: me } = await supabase
+  const userId = claimsData.claims.sub;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const { data: me, error: meError } = await supabase
     .from("users")
     .select("is_admin")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
+
+  if (meError) {
+    throw new Error(`Error comprobando permisos admin: ${meError.message}`);
+  }
 
   if (!me?.is_admin) {
     redirect("/");

@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  let supabaseResponse = NextResponse.next({
     request,
   });
 
@@ -17,16 +17,16 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
+            supabaseResponse.cookies.set(name, value, options);
           });
         },
       },
     }
   );
 
-  await supabase.auth.getUser();
+  await supabase.auth.getClaims();
 
-  return response;
+  return supabaseResponse;
 }
 
 export const config = {

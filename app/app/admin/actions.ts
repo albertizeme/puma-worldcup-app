@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
+type MatchStatus = "upcoming" | "live" | "finished";
+
 function parseNullableScore(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
   if (!text) return null;
@@ -14,10 +16,30 @@ function parseNullableScore(value: FormDataEntryValue | null) {
   return num;
 }
 
-export async function updateMatchAction(formData: FormData) {
+function parseNullableText(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
+function parseNullableDateTime(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString();
+}
+
+function parseCheckbox(value: FormDataEntryValue | null) {
+  return value === "true";
+}
+
+async function requireAdmin() {
   const supabase = await getSupabaseServerClient();
 
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
 
   if (claimsError || !claimsData?.claims) {
     redirect("/login");
@@ -43,12 +65,66 @@ export async function updateMatchAction(formData: FormData) {
     redirect("/");
   }
 
-  const id = String(formData.get("id") ?? "");
-  const status = String(formData.get("status") ?? "upcoming") as
-    | "upcoming"
-    | "live"
-    | "finished";
+  return supabase;
+}
 
+function revalidateAdminSurfaces() {
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/ranking");
+  revalidatePath("/my-predictions");
+}
+
+export async function createMatchAction(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const stage = parseNullableText(formData.get("stage"));
+  const matchDatetime = parseNullableDateTime(formData.get("match_datetime"));
+  const homeTeam = parseNullableText(formData.get("home_team"));
+  const awayTeam = parseNullableText(formData.get("away_team"));
+  const homeFlag = parseNullableText(formData.get("home_flag"));
+  const awayFlag = parseNullableText(formData.get("away_flag"));
+  const status = String(formData.get("status") ?? "upcoming") as MatchStatus;
+  const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
+
+  if (!homeTeam || !awayTeam) {
+    throw new Error("Debes informar equipo local y visitante.");
+  }
+
+  const payload = {
+    stage,
+    match_datetime: matchDatetime,
+    home_team: homeTeam,
+    away_team: awayTeam,
+    home_flag: homeFlag,
+    away_flag: awayFlag,
+    status,
+    is_puma_match: isPumaMatch,
+    home_score: null,
+    away_score: null,
+  };
+
+  const { error } = await supabase.from("matches").insert(payload);
+
+  if (error) {
+    throw new Error(`No se pudo crear el partido: ${error.message}`);
+  }
+
+  revalidateAdminSurfaces();
+}
+
+export async function updateMatchAction(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  const stage = parseNullableText(formData.get("stage"));
+  const matchDatetime = parseNullableDateTime(formData.get("match_datetime"));
+  const homeTeam = parseNullableText(formData.get("home_team"));
+  const awayTeam = parseNullableText(formData.get("away_team"));
+  const homeFlag = parseNullableText(formData.get("home_flag"));
+  const awayFlag = parseNullableText(formData.get("away_flag"));
+  const status = String(formData.get("status") ?? "upcoming") as MatchStatus;
+  const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
   const homeScore = parseNullableScore(formData.get("home_score"));
   const awayScore = parseNullableScore(formData.get("away_score"));
 
@@ -56,17 +132,35 @@ export async function updateMatchAction(formData: FormData) {
     throw new Error("Falta el id del partido.");
   }
 
+  if (!homeTeam || !awayTeam) {
+    throw new Error("Debes informar equipo local y visitante.");
+  }
+
   const payload: {
-    status: "upcoming" | "live" | "finished";
+    stage: string | null;
+    match_datetime: string | null;
+    home_team: string | null;
+    away_team: string | null;
+    home_flag: string | null;
+    away_flag: string | null;
+    status: MatchStatus;
+    is_puma_match: boolean;
     home_score: number | null;
     away_score: number | null;
   } = {
+    stage,
+    match_datetime: matchDatetime,
+    home_team: homeTeam,
+    away_team: awayTeam,
+    home_flag: homeFlag,
+    away_flag: awayFlag,
     status,
+    is_puma_match: isPumaMatch,
     home_score: homeScore,
     away_score: awayScore,
   };
 
-  if (status !== "finished" && (homeScore === null || awayScore === null)) {
+  if (status !== "finished") {
     payload.home_score = null;
     payload.away_score = null;
   }
@@ -77,8 +171,23 @@ export async function updateMatchAction(formData: FormData) {
     throw new Error(`No se pudo actualizar el partido: ${error.message}`);
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/ranking");
-  revalidatePath("/my-predictions");
+  revalidateAdminSurfaces();
+}
+
+export async function deleteMatchAction(formData: FormData) {
+  const supabase = await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+
+  if (!id) {
+    throw new Error("Falta el id del partido.");
+  }
+
+  const { error } = await supabase.from("matches").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(`No se pudo eliminar el partido: ${error.message}`);
+  }
+
+  revalidateAdminSurfaces();
 }

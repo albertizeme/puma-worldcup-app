@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
+import UserMenu from "@/components/UserMenu";
 
 type RankingRow = {
   user_id: string;
@@ -389,10 +390,13 @@ export default async function RankingPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-5">
   <div className="mb-4 flex flex-wrap justify-end gap-3">
+    <div className="flex items-center">
+        <UserMenu />
+      </div>
+    
     <Link href="/my-predictions" className={buttonStyles.nav}>
       Mis predicciones
     </Link>
-
     <Link href="/" className={buttonStyles.nav}>
       Próximos partidos
     </Link>

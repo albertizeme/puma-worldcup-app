@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
+import UserMenu from "@/components/UserMenu";
 
 type MyPredictionRow = {
   prediction_id: string;
@@ -339,6 +340,10 @@ export default async function MyPredictionsPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <section className="mb-6">
   <div className="mb-4 flex flex-wrap justify-end gap-3">
+    <div className="flex items-center">
+        <UserMenu />
+      </div>
+
     <Link href="/ranking" className={buttonStyles.nav}>
       Ranking
     </Link>

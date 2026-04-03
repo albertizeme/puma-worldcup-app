@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { buttonStyles } from "@/lib/ui";
 
 type RankingRow = {
   user_id: string;
@@ -386,29 +387,34 @@ export default async function RankingPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
-            Ranking
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-            Tu posición actual y la clasificación completa del torneo.
-          </p>
-          {latestSnapshotKey && (
-            <p className="mt-2 text-xs text-neutral-500">
-              Comparativa respecto a{" "}
-              <span className="font-semibold text-neutral-700">{snapshotReference}</span>
-            </p>
-          )}
-        </div>
+      <section className="mb-5">
+  <div className="mb-4 flex flex-wrap justify-end gap-3">
+    <Link href="/my-predictions" className={buttonStyles.nav}>
+      Mis predicciones
+    </Link>
 
-        <Link
-          href="/my-predictions"
-          className="inline-flex shrink-0 items-center rounded-full border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-800 shadow-sm transition hover:border-neutral-400 hover:bg-neutral-50 sm:px-4 sm:text-sm"
-        >
-          Mis predicciones
-        </Link>
-      </div>
+    <Link href="/" className={buttonStyles.nav}>
+      Próximos partidos
+    </Link>
+  </div>
+
+  <div>
+    <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
+      Ranking
+    </h1>
+
+    <p className="mt-1 max-w-2xl text-sm text-neutral-600">
+      Tu posición actual y la clasificación completa del torneo.
+    </p>
+
+    {latestSnapshotKey && (
+      <p className="mt-2 text-xs text-neutral-500">
+        Comparativa respecto a{" "}
+        <span className="font-semibold text-neutral-700">{snapshotReference}</span>
+      </p>
+    )}
+  </div>
+</section>
 
       {currentUserRow ? (
         <>

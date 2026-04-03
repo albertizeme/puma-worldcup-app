@@ -1,7 +1,6 @@
 import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
-import AuthButton from "@/components/AuthButton";
-import UserAvatar from "@/components/UserAvatar";
+import UserMenu from "@/components/UserMenu";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
@@ -335,12 +334,21 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <div className="mb-4 flex items-start justify-end">
-          <div className="flex items-center gap-3">
-            {user?.email ? <UserAvatar email={user.email} /> : null}
-            <AuthButton />
-          </div>
-        </div>
+        <div className="mb-4 flex items-center justify-between gap-3">
+  <div className="flex items-center">
+    <UserMenu />
+  </div>
+
+  <div className="flex flex-wrap items-center justify-end gap-3">
+    <Link href="/ranking" className={buttonStyles.nav}>
+      Ranking
+    </Link>
+
+    <Link href="/my-predictions" className={buttonStyles.nav}>
+      Mis predicciones
+    </Link>
+  </div>
+</div>
 
         <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">
@@ -358,46 +366,30 @@ export default async function HomePage() {
         </section>
 
         <section className="mb-6 rounded-[1.5rem] border border-orange-100 bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
-                Jornada activa
-              </p>
+          <div>
+  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+    Jornada activa
+  </p>
 
-              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-                {visibleGroups[normalizedActiveGroupIndex]?.label ??
-                  "Próximos partidos"}
-              </h2>
+  <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+    {visibleGroups[normalizedActiveGroupIndex]?.label ?? "Próximos partidos"}
+  </h2>
 
-              <p className="mt-2 text-sm text-slate-600">
-                Te faltan{" "}
-                <span className="font-bold text-slate-900">
-                  {pendingEditableMatches.length}
-                </span>{" "}
-                predicciones por completar y{" "}
-                <span className="font-bold text-slate-900">
-                  {closingTodayCount}
-                </span>{" "}
-                {closingTodayCount === 1
-                  ? "partido cierra hoy"
-                  : "partidos cierran hoy"}
-                .
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/ranking" className={buttonStyles.secondary}>
-                Ver ranking
-              </Link>
-
-              <Link
-                href="/my-predictions"
-                className="inline-flex items-center justify-center rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600"
-              >
-                Completar predicciones
-              </Link>
-            </div>
-          </div>
+  <p className="mt-2 text-sm text-slate-600">
+    Te faltan{" "}
+    <span className="font-bold text-slate-900">
+      {pendingEditableMatches.length}
+    </span>{" "}
+    predicciones por completar y{" "}
+    <span className="font-bold text-slate-900">
+      {closingTodayCount}
+    </span>{" "}
+    {closingTodayCount === 1
+      ? "partido cierra hoy"
+      : "partidos cierran hoy"}
+    .
+  </p>
+</div>
         </section>
 
         <section className="mb-6">

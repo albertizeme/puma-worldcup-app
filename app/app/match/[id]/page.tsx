@@ -5,6 +5,7 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 import CountryFlag from "@/components/CountryFlag";
 import PredictionSection from "@/components/PredictionSection";
 import { Match } from "@/types/match";
+import CloseMatchDetailButton from "@/components/CloseMatchDetailButton";
 
 type Props = {
   params: Promise<{
@@ -258,157 +259,23 @@ function getStatusLabel(status: MatchStatus) {
   }
 }
 
-function getPredictionBadge(outcome: PredictionOutcome) {
-  switch (outcome) {
-    case "exact":
-      return {
-        label: "Exacta",
-        className:
-          "bg-emerald-100 text-emerald-800 border border-emerald-200",
-      };
-    case "trend":
-      return {
-        label: "Tendencia",
-        className:
-          "bg-amber-100 text-amber-800 border border-amber-200",
-      };
-    case "miss":
-      return {
-        label: "Fallo",
-        className: "bg-rose-100 text-rose-800 border border-rose-200",
-      };
-    case "no_prediction":
-      return {
-        label: "Sin predicción",
-        className:
-          "bg-slate-100 text-slate-700 border border-slate-200",
-      };
-    case "pending":
-    default:
-      return {
-        label: "Pendiente",
-        className: "bg-sky-100 text-sky-800 border border-sky-200",
-      };
-  }
-}
-
 function ScoreBox({
-  label,
   value,
 }: {
-  label: string;
   value: string | number | null | undefined;
 }) {
   const displayValue =
     value == null || String(value).trim() === "" ? "-" : String(value);
 
   return (
-    <div className="flex min-w-[72px] flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </span>
-      <span className="mt-1 text-3xl font-extrabold text-slate-900">
+    <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-[84px] sm:w-[84px]">
+      <span className="text-3xl font-extrabold text-slate-900">
         {displayValue}
       </span>
     </div>
   );
 }
 
-function ComparisonCard({
-  title,
-  badgeLabel,
-  badgeClassName,
-  homeTeam,
-  awayTeam,
-  homeFlag,
-  awayFlag,
-  homeScore,
-  awayScore,
-  isPrediction = false,
-  emptyText,
-}: {
-  title: string;
-  badgeLabel: string;
-  badgeClassName: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeFlag?: string | null;
-  awayFlag?: string | null;
-  homeScore: string | number | null;
-  awayScore: string | number | null;
-  isPrediction?: boolean;
-  emptyText?: string;
-}) {
-  const homeDisplay =
-    homeScore == null || String(homeScore).trim() === ""
-      ? null
-      : String(homeScore);
-  const awayDisplay =
-    awayScore == null || String(awayScore).trim() === ""
-      ? null
-      : String(awayScore);
-
-  const isEmpty = homeDisplay == null || awayDisplay == null;
-
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClassName}`}
-        >
-          {badgeLabel}
-        </span>
-      </div>
-
-      {isEmpty ? (
-        <div className="rounded-2xl bg-slate-50 px-4 py-6 text-sm text-slate-600">
-          {emptyText ?? "Sin información disponible."}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <CountryFlag
-                code={homeFlag}
-                teamName={homeTeam}
-                alt={`Bandera de ${homeTeam}`}
-              />
-              <span className="truncate text-sm font-medium text-slate-800 sm:text-base">
-                {homeTeam}
-              </span>
-            </div>
-            <span className="text-2xl font-extrabold text-slate-900">
-              {homeDisplay}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <CountryFlag
-                code={awayFlag}
-                teamName={awayTeam}
-                alt={`Bandera de ${awayTeam}`}
-              />
-              <span className="truncate text-sm font-medium text-slate-800 sm:text-base">
-                {awayTeam}
-              </span>
-            </div>
-            <span className="text-2xl font-extrabold text-slate-900">
-              {awayDisplay}
-            </span>
-          </div>
-
-          <div className="pt-2 text-xs text-slate-500">
-            {isPrediction
-              ? "Esta es la predicción registrada para este partido."
-              : "Resultado oficial del partido."}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default async function MatchDetailPage({ params }: Props) {
   const { id } = await params;
@@ -452,7 +319,6 @@ export default async function MatchDetailPage({ params }: Props) {
 
   const { totalPoints, breakdown } = getPointsAndBreakdown(outcome);
   const outcomeContent = getOutcomeContent(outcome, totalPoints);
-  const predictionBadge = getPredictionBadge(outcome);
 
   const predictionForSection: PredictionSectionRow | null = prediction
     ? {
@@ -466,14 +332,9 @@ export default async function MatchDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
-        >
-          ← Volver
-        </Link>
-      </div>
+      <div className="flex justify-end">
+  <CloseMatchDetailButton />
+</div>
 
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
@@ -503,10 +364,10 @@ export default async function MatchDetailPage({ params }: Props) {
             </div>
 
             <div className="flex items-center justify-center gap-3">
-              <ScoreBox label="Local" value={match.home_score} />
-              <div className="text-xl font-bold text-slate-400">-</div>
-              <ScoreBox label="Visitante" value={match.away_score} />
-            </div>
+  <ScoreBox value={match.home_score} />
+  <div className="text-xl font-bold text-slate-400">-</div>
+  <ScoreBox value={match.away_score} />
+</div>
 
             <div className="flex items-center justify-start gap-4 md:justify-end">
               <div className="min-w-0 text-left md:text-right">
@@ -550,42 +411,7 @@ export default async function MatchDetailPage({ params }: Props) {
           <p className="text-sm opacity-90">{outcomeContent.description}</p>
         </div>
       </section>
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <ComparisonCard
-          title="Resultado final"
-          badgeLabel={
-            matchStatus === "finished" ? "Oficial" : getStatusLabel(matchStatus)
-          }
-          badgeClassName="bg-slate-100 text-slate-700 border border-slate-200"
-          homeTeam={match.home_team}
-          awayTeam={match.away_team}
-          homeFlag={match.home_flag}
-          awayFlag={match.away_flag}
-          homeScore={match.home_score}
-          awayScore={match.away_score}
-          emptyText="El resultado oficial todavía no está disponible."
-        />
-
-        <ComparisonCard
-          title="Tu predicción"
-          badgeLabel={predictionBadge.label}
-          badgeClassName={predictionBadge.className}
-          homeTeam={match.home_team}
-          awayTeam={match.away_team}
-          homeFlag={match.home_flag}
-          awayFlag={match.away_flag}
-          homeScore={prediction?.home_score_pred ?? null}
-          awayScore={prediction?.away_score_pred ?? null}
-          isPrediction
-          emptyText={
-            user
-              ? "Todavía no has enviado una predicción para este partido."
-              : "Inicia sesión para ver o guardar tu predicción."
-          }
-        />
-      </section>
-
+      
       {matchStatus === "finished" ? (
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Cómo se calculó</h2>

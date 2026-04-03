@@ -337,30 +337,31 @@ export default async function MyPredictionsPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <section className="mb-6 rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
-                Seguimiento personal
-              </p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-                Mis predicciones
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
-                Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.
-              </p>
-            </div>
+        <section className="mb-6">
+  <div className="mb-4 flex flex-wrap justify-end gap-3">
+    <Link href="/ranking" className={buttonStyles.nav}>
+      Ranking
+    </Link>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/ranking" className={buttonStyles.secondary}>
-                Ver ranking
-              </Link>
-              <Link href="/" className={buttonStyles.primary}>
-                Volver a partidos
-              </Link>
-            </div>
-          </div>
-        </section>
+    <Link href="/" className={buttonStyles.nav}>
+      Próximos partidos
+    </Link>
+  </div>
+
+  <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
+    <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
+      Seguimiento personal
+    </p>
+
+    <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+      Mis predicciones
+    </h1>
+
+    <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
+      Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.
+    </p>
+  </div>
+</section>
 
         {rows.length > 0 ? (
           <>

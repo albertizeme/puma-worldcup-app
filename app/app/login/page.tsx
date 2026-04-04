@@ -98,7 +98,7 @@ export default function LoginPage() {
               }}
             >
               <img
-  src="/images/puma-logo-white.jpg"
+  src="/images/puma-logo-white.png"
   alt="PUMA"
   className="absolute top-4 left-4 h-6 w-auto opacity-90"
 />

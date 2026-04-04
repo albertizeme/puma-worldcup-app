@@ -50,6 +50,8 @@ type TeamMeta = {
   sponsor_brand: string | null;
   sponsor_campaign_image: string | null;
   sponsor_kit_image: string | null;
+  sponsor_card_text: string | null;
+  sponsor_card_title: string | null;
 };
 
 function formatMatchDate(value: string | null | undefined) {
@@ -334,7 +336,7 @@ export default async function MatchDetailPage({ params }: Props) {
   const { data: teamsData, error: teamsError } = await supabaseServer
     .from("teams")
     .select(
-      "id, name, is_puma_team, sponsor_brand, sponsor_campaign_image, sponsor_kit_image"
+      "id, name, is_puma_team, sponsor_brand, sponsor_campaign_image, sponsor_kit_image, sponsor_card_text, sponsor_card_title"
     );
 
   if (teamsError) {
@@ -395,7 +397,7 @@ export default async function MatchDetailPage({ params }: Props) {
             </span>
 
             {hasPumaTeam ? (
-              <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 font-semibold text-orange-700">
+              <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
                 PUMA Match
               </span>
             ) : null}
@@ -461,13 +463,12 @@ export default async function MatchDetailPage({ params }: Props) {
               </div>
 
               <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                PUMA x {primaryPumaTeam.name}
+                {primaryPumaTeam.sponsor_card_title || `PUMA x ${primaryPumaTeam.name}`}
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                Partido destacado con selección PUMA. Este bloque puede usarse
-                para visibilidad de campaña, equipación o creatividad específica
-                del equipo.
+                {primaryPumaTeam.sponsor_card_text ||
+                  `Descubre el contenido destacado de PUMA para ${primaryPumaTeam.name}.`}
               </p>
 
               {primaryPumaTeam.sponsor_brand ? (

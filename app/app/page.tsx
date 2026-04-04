@@ -244,6 +244,14 @@ export default async function HomePage() {
     user,
   } = await requireAuthenticatedUser();
 
+  const { data: profile } = await supabaseServer
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+  const isAdmin = profile?.role === "admin";
+
   const { data: matchesData, error: matchesError } = await supabaseServer
     .from("matches")
     .select("*")
@@ -373,6 +381,11 @@ export default async function HomePage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center">
             <UserMenu />
+            {isAdmin ? (
+      <Link href="/admin" className={buttonStyles.nav}>
+        Admin
+      </Link>
+    ) : null}
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">

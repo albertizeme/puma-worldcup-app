@@ -417,8 +417,8 @@ export default async function RankingPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">
-            <Link href="/ranking" className={buttonStyles.nav}>
-              Ranking
+            <Link href="/my-predictions" className={buttonStyles.nav}>
+              Mis predicciones
             </Link>
 
             <Link href="/" className={buttonStyles.nav}>

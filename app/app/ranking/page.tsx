@@ -1,6 +1,5 @@
 // app/ranking/page.tsx
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
@@ -34,6 +33,7 @@ type MovementInfo = {
   positionChange: number | null;
   pointsChange: number | null;
   movementLabel: string;
+  pointsLabel: string | null;
   isNew: boolean;
 };
 
@@ -131,17 +131,24 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
   return null;
 }
 
+function getComparisonReference(snapshotReference: string | null) {
+  return snapshotReference ?? "el último corte";
+}
+
 function getMovementInfo(
   row: RankedRow,
-  previousSnapshotMap: Map<string, { user_id: string; position: number; total_points: number }>
+  previousSnapshotMap: Map<string, { user_id: string; position: number; total_points: number }>,
+  snapshotReference: string | null
 ): MovementInfo {
   const previous = previousSnapshotMap.get(row.user_id);
+  const reference = getComparisonReference(snapshotReference);
 
   if (!previous) {
     return {
       positionChange: null,
       pointsChange: null,
       movementLabel: "Nuevo en el ranking",
+      pointsLabel: `Sin comparación previa respecto a ${reference}`,
       isNew: true,
     };
   }
@@ -163,10 +170,26 @@ function getMovementInfo(
     movementLabel = `↓ Baja ${fallen} ${fallen === 1 ? "puesto" : "puestos"}`;
   }
 
+  let pointsLabel: string | null = `Mismos puntos que en ${reference}`;
+
+  if (pointsDelta > 0) {
+    pointsLabel =
+      pointsDelta === 1
+        ? `1 punto más que en ${reference}`
+        : `${pointsDelta} puntos más que en ${reference}`;
+  } else if (pointsDelta < 0) {
+    const diff = Math.abs(pointsDelta);
+    pointsLabel =
+      diff === 1
+        ? `1 punto menos que en ${reference}`
+        : `${diff} puntos menos que en ${reference}`;
+  }
+
   return {
     positionChange: positionDelta,
     pointsChange: pointsDelta,
     movementLabel,
+    pointsLabel,
     isNew: false,
   };
 }
@@ -208,10 +231,10 @@ function getPointsChangeTextClass(pointsChange: number | null) {
 }
 
 function getMovementSummaryText(movement: MovementInfo, snapshotReference: string | null) {
-  const reference = snapshotReference ?? "el último corte";
+  const reference = getComparisonReference(snapshotReference);
 
   if (movement.isNew) {
-    return "Has entrado en el ranking desde el último corte.";
+    return `Has entrado en el ranking desde ${reference}.`;
   }
 
   if (movement.positionChange === null || movement.positionChange === 0) {
@@ -231,17 +254,22 @@ function getMovementSummaryText(movement: MovementInfo, snapshotReference: strin
 function getPointsChangeSummaryText(movement: MovementInfo, snapshotReference: string | null) {
   if (movement.pointsChange === null) return null;
 
-  const reference = snapshotReference ?? "el último corte";
+  const reference = getComparisonReference(snapshotReference);
 
   if (movement.pointsChange === 0) {
     return `Sin variación de puntos respecto a ${reference}.`;
   }
 
   if (movement.pointsChange > 0) {
-    return `+${movement.pointsChange} pts respecto a ${reference}.`;
+    return movement.pointsChange === 1
+      ? `Tienes 1 punto más que en ${reference}.`
+      : `Tienes ${movement.pointsChange} puntos más que en ${reference}.`;
   }
 
-  return `${movement.pointsChange} pts respecto a ${reference}.`;
+  const diff = Math.abs(movement.pointsChange);
+  return diff === 1
+    ? `Tienes 1 punto menos que en ${reference}.`
+    : `Tienes ${diff} puntos menos que en ${reference}.`;
 }
 
 export default async function RankingPage() {
@@ -371,9 +399,10 @@ export default async function RankingPage() {
         )
       : 0;
 
-  const currentUserMovement = currentUserRow
-    ? getMovementInfo(currentUserRow, previousSnapshotMap)
-    : null;
+  const currentUserMovement =
+    currentUserRow && latestSnapshotKey
+      ? getMovementInfo(currentUserRow, previousSnapshotMap, snapshotReference)
+      : null;
 
   const currentUserMovementPillClass = currentUserMovement
     ? getMovementPillClass(currentUserMovement.positionChange, currentUserMovement.isNew)
@@ -382,39 +411,39 @@ export default async function RankingPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-5">
-  <div className="mb-4 flex items-center justify-between gap-3">
-  <div className="flex items-center">
-    <UserMenu />
-  </div>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center">
+            <UserMenu />
+          </div>
 
-  <div className="flex flex-wrap items-center justify-end gap-3">
-    <Link href="/ranking" className={buttonStyles.nav}>
-      Ranking
-    </Link>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <Link href="/ranking" className={buttonStyles.nav}>
+              Ranking
+            </Link>
 
-    <Link href="/" className={buttonStyles.nav}>
-      Próximos partidos
-    </Link>
-  </div>
-</div>
+            <Link href="/" className={buttonStyles.nav}>
+              Próximos partidos
+            </Link>
+          </div>
+        </div>
 
-  <div>
-    <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
-      Ranking
-    </h1>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
+            Ranking
+          </h1>
 
-    <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-      Tu posición actual y la clasificación completa del torneo.
-    </p>
+          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
+            Tu posición actual y la clasificación completa del torneo.
+          </p>
 
-    {latestSnapshotKey && (
-      <p className="mt-2 text-xs text-neutral-500">
-        Comparativa respecto a{" "}
-        <span className="font-semibold text-neutral-700">{snapshotReference}</span>
-      </p>
-    )}
-  </div>
-</section>
+          {latestSnapshotKey && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Comparativa respecto a{" "}
+              <span className="font-semibold text-neutral-700">{snapshotReference}</span>
+            </p>
+          )}
+        </div>
+      </section>
 
       {currentUserRow ? (
         <>
@@ -587,7 +616,7 @@ export default async function RankingPage() {
               const competitiveHint = getCompetitiveHint(rankedRows, index);
               const isPodium = isPodiumRow(row);
               const movement = latestSnapshotKey
-                ? getMovementInfo(row, previousSnapshotMap)
+                ? getMovementInfo(row, previousSnapshotMap, snapshotReference)
                 : null;
               const movementClass = movement
                 ? getMovementTextClass(movement.positionChange, movement.isNew)
@@ -639,14 +668,17 @@ export default async function RankingPage() {
                       )}
 
                       {movement && (
-                        <p
-                          className={`mt-1 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${movementClass}`}
-                        >
-                          {movement.movementLabel}
-                          {movement.pointsChange !== null && movement.pointsChange !== 0
-                            ? ` · ${movement.pointsChange > 0 ? "+" : ""}${movement.pointsChange} pts`
-                            : ""}
-                        </p>
+                        <div className="mt-1 flex flex-col gap-0.5">
+                          <p
+                            className={`text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${movementClass}`}
+                          >
+                            {movement.movementLabel}
+                          </p>
+
+                          <p className="text-[10px] font-medium text-neutral-500 sm:text-[11px]">
+                            {movement.pointsLabel}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>

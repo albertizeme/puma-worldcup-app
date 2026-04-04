@@ -26,33 +26,40 @@ export default async function UpdatePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto flex min-h-screen max-w-lg items-center px-4 py-8">
-        <div className="w-full rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+    <main className="relative min-h-screen overflow-hidden bg-[#140c1f]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#140c1f] via-[#3b1d73] to-[#0f172a]" />
+      <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
+      <div className="absolute top-1/3 -right-16 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
+      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+
+      <div className="relative mx-auto flex min-h-screen max-w-lg items-center px-4 py-8">
+        <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
             Seguridad
           </p>
 
-          <h1 className="mt-2 text-3xl font-extrabold text-slate-900">
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
             Actualiza tu contraseña
           </h1>
 
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm leading-6 text-white/70">
             Tu cuenta requiere cambiar la contraseña antes de continuar.
           </p>
 
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-400/10 p-3 text-sm text-amber-50">
             Usuario: <span className="font-semibold">{profile.email}</span>
           </div>
 
           <div className="mt-6">
-            <UpdatePasswordForm mustChangePassword={profile.must_change_password} />
+            <UpdatePasswordForm
+              mustChangePassword={profile.must_change_password}
+            />
           </div>
 
           <div className="mt-6">
             <Link
               href="/"
-              className="text-sm font-medium text-slate-600 underline-offset-4 hover:underline"
+              className="text-sm font-medium text-white/65 underline-offset-4 transition hover:text-white hover:underline"
             >
               ← Volver
             </Link>

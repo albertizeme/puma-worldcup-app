@@ -1,10 +1,8 @@
-// app/change-password/page.tsx
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { buttonStyles } from "@/lib/ui";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -102,10 +100,15 @@ export default function ChangePasswordPage() {
 
   if (checkingSession) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <div className="mx-auto max-w-md px-4 py-10">
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-600">Validando sesión...</p>
+      <main className="relative min-h-screen overflow-hidden bg-[#140c1f]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#140c1f] via-[#3b1d73] to-[#0f172a]" />
+        <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
+        <div className="absolute top-1/3 -right-16 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+
+        <div className="relative mx-auto flex min-h-screen max-w-md items-center px-4 py-10">
+          <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
+            <p className="text-sm text-white/75">Validando sesión...</p>
           </div>
         </div>
       </main>
@@ -113,13 +116,23 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-md px-4 py-10">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">
+    <main className="relative min-h-screen overflow-hidden bg-[#140c1f]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#140c1f] via-[#3b1d73] to-[#0f172a]" />
+      <div className="absolute -top-24 -left-20 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
+      <div className="absolute top-1/3 -right-16 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
+      <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+
+      <div className="relative mx-auto flex min-h-screen max-w-md items-center px-4 py-8 sm:py-10">
+        <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
+            Seguridad
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
             Cambiar contraseña
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+
+          <p className="mt-3 text-sm leading-6 text-white/70">
             Debes cambiar tu contraseña temporal antes de continuar.
           </p>
 
@@ -127,17 +140,18 @@ export default function ChangePasswordPage() {
             <div>
               <label
                 htmlFor="password"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-white/85"
               >
                 Nueva contraseña
               </label>
               <input
                 id="password"
                 type="password"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+                className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
+                placeholder="Introduce la nueva contraseña"
                 required
               />
             </div>
@@ -145,29 +159,30 @@ export default function ChangePasswordPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className="mb-1.5 block text-sm font-medium text-white/85"
               >
                 Confirmar nueva contraseña
               </label>
               <input
                 id="confirmPassword"
                 type="password"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-500"
+                className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
+                placeholder="Repite la nueva contraseña"
                 required
               />
             </div>
 
             {error ? (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-xl border border-red-400/20 bg-red-500/15 px-3 py-2 text-sm text-red-100">
                 {error}
               </p>
             ) : null}
 
             {message ? (
-              <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+              <p className="rounded-xl border border-emerald-400/20 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-100">
                 {message}
               </p>
             ) : null}
@@ -175,7 +190,7 @@ export default function ChangePasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`${buttonStyles.primary} w-full justify-center`}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? "Guardando..." : "Guardar nueva contraseña"}
             </button>

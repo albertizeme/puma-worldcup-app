@@ -47,7 +47,9 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
       });
 
       if (authError) {
-        throw new Error(authError.message || "No se pudo actualizar la contraseña");
+        throw new Error(
+          authError.message || "No se pudo actualizar la contraseña"
+        );
       }
 
       const response = await fetch("/api/account/complete-password-change", {
@@ -68,7 +70,9 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
       }, 1000);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error inesperado al actualizar la contraseña"
+        err instanceof Error
+          ? err.message
+          : "Error inesperado al actualizar la contraseña"
       );
     } finally {
       setLoading(false);
@@ -78,13 +82,13 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {mustChangePassword && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/70">
           Debes establecer una contraseña nueva para seguir usando la app.
         </div>
       )}
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <label className="mb-1.5 block text-sm font-medium text-white/85">
           Nueva contraseña
         </label>
         <input
@@ -92,13 +96,14 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
           placeholder="Introduce la nueva contraseña"
+          required
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <label className="mb-1.5 block text-sm font-medium text-white/85">
           Confirmar contraseña
         </label>
         <input
@@ -106,27 +111,28 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
           placeholder="Repite la nueva contraseña"
+          required
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {loading ? "Actualizando..." : "Guardar nueva contraseña"}
       </button>
 
       {success && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/15 p-3 text-sm text-emerald-100">
           {success}
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-red-400/20 bg-red-500/15 p-3 text-sm text-red-100">
           {error}
         </div>
       )}

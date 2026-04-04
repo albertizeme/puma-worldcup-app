@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
 import UserMenu from "@/components/UserMenu";
@@ -292,17 +293,9 @@ function PredictionCard({
 }
 
 export default async function MyPredictionsPage() {
-  const supabase = await getSupabaseServerClient();
+  const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from("my_predictions_view")
     .select("*")
     .eq("user_id", user.id)

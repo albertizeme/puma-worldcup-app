@@ -280,6 +280,7 @@ function ScoreBox({
 export default async function MatchDetailPage({ params }: Props) {
   const { id } = await params;
   const supabase = await getSupabaseServerClient();
+  
 
   const {
     data: { user },

@@ -4,6 +4,7 @@ import UserMenu from "@/components/UserMenu";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
 type MatchWithMeta = Match & {
   matchday?: string | number | null;
@@ -206,6 +207,7 @@ function isSameMadridDay(dateA: Date, dateB: Date) {
 
 export default async function HomePage() {
   const supabase = await getSupabaseServerClient();
+  
 
   const [
     {

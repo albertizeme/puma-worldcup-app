@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
-import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
 type RankingRow = {
   user_id: string;
@@ -245,15 +245,7 @@ function getPointsChangeSummaryText(movement: MovementInfo, snapshotReference: s
 }
 
 export default async function RankingPage() {
-  const supabaseServer = await getSupabaseServerClient();
-
-  const {
-    data: { user },
-  } = await supabaseServer.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
+  const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
 
   const { data, error } = await supabaseServer
     .from("prediction_scores")

@@ -97,14 +97,12 @@ export default function LoginPage() {
                 backgroundPosition: "center",
               }}
             >
-              <img
-  src="/images/puma-logo-white.png"
-  alt="PUMA"
-  className="absolute top-4 left-4 h-6 w-auto opacity-90"
-/>
+              <img src="/images/puma-logo-white.png" alt="PUMA"
+                className="absolute top-5 left-5 h-11 w-auto opacity-95 sm:h-12"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-[#140c1f]/95 via-[#140c1f]/40 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                <div className="mt-6 inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm sm:mt-8">
                   PUMA Employees
                 </div>
                 <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
@@ -166,7 +164,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`${buttonStyles.primary} w-full justify-center rounded-xl border-0 bg-violet-600 text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70`}
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? "Entrando..." : "Entrar"}
                 </button>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
 import UserMenu from "@/components/UserMenu";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
@@ -206,56 +205,48 @@ function isSameMadridDay(dateA: Date, dateB: Date) {
 }
 
 export default async function HomePage() {
-  const supabase = await getSupabaseServerClient();
-  
+  const {
+    supabase: supabaseServer,
+    user,
+  } = await requireAuthenticatedUser();
 
-  const [
-    {
-      data: { user },
-    },
-    matchesResult,
-  ] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase
-      .from("matches")
-      .select("*")
-      .order("match_datetime", { ascending: true }),
-  ]);
+  const { data: matchesData, error: matchesError } = await supabaseServer
+    .from("matches")
+    .select("*")
+    .order("match_datetime", { ascending: true });
 
-  if (matchesResult.error) {
+  if (matchesError) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-6">
         <div className="mx-auto max-w-5xl">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-            Error cargando partidos: {matchesResult.error.message}
+            Error cargando partidos: {matchesError.message}
           </div>
         </div>
       </main>
     );
   }
 
-  const matches: MatchWithMeta[] = (matchesResult.data ?? []) as MatchWithMeta[];
+  const matches: MatchWithMeta[] = (matchesData ?? []) as MatchWithMeta[];
 
   let predictionsByMatch = new Map<string, PredictionRow>();
 
-  if (user) {
-    const { data: predictions } = await supabase
-      .from("predictions")
-      .select("match_id, home_score_pred, away_score_pred, created_at")
-      .eq("user_id", user.id);
+  const { data: predictions } = await supabaseServer
+    .from("predictions")
+    .select("match_id, home_score_pred, away_score_pred, created_at")
+    .eq("user_id", user.id);
 
-    predictionsByMatch = new Map(
-      ((predictions ?? []) as PredictionRow[]).map((prediction) => [
-        prediction.match_id,
-        prediction,
-      ]),
-    );
-  }
+  predictionsByMatch = new Map(
+    ((predictions ?? []) as PredictionRow[]).map((prediction) => [
+      prediction.match_id,
+      prediction,
+    ]),
+  );
 
   const now = new Date();
 
-  const editableMatches = matches.filter(
-    (match) => getMatchStatus(match.match_datetime).isEditable,
+  const editableMatches = matches.filter((match) =>
+    getMatchStatus(match.match_datetime).isEditable,
   );
 
   const pendingEditableMatches = editableMatches.filter(
@@ -331,26 +322,27 @@ export default async function HomePage() {
     (group) => group.state === "active",
   );
 
-  const normalizedActiveGroupIndex = activeGroupIndex >= 0 ? activeGroupIndex : 0;
+  const normalizedActiveGroupIndex =
+    activeGroupIndex >= 0 ? activeGroupIndex : 0;
 
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
-  <div className="flex items-center">
-    <UserMenu />
-  </div>
+          <div className="flex items-center">
+            <UserMenu />
+          </div>
 
-  <div className="flex flex-wrap items-center justify-end gap-3">
-    <Link href="/ranking" className={buttonStyles.nav}>
-      Ranking
-    </Link>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <Link href="/ranking" className={buttonStyles.nav}>
+              Ranking
+            </Link>
 
-    <Link href="/my-predictions" className={buttonStyles.nav}>
-      Mis predicciones
-    </Link>
-  </div>
-</div>
+            <Link href="/my-predictions" className={buttonStyles.nav}>
+              Mis predicciones
+            </Link>
+          </div>
+        </div>
 
         <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">
@@ -369,29 +361,30 @@ export default async function HomePage() {
 
         <section className="mb-6 rounded-[1.5rem] border border-orange-100 bg-white p-5 shadow-sm md:p-6">
           <div>
-  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
-    Jornada activa
-  </p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+              Jornada activa
+            </p>
 
-  <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-    {visibleGroups[normalizedActiveGroupIndex]?.label ?? "Próximos partidos"}
-  </h2>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+              {visibleGroups[normalizedActiveGroupIndex]?.label ??
+                "Próximos partidos"}
+            </h2>
 
-  <p className="mt-2 text-sm text-slate-600">
-    Te faltan{" "}
-    <span className="font-bold text-slate-900">
-      {pendingEditableMatches.length}
-    </span>{" "}
-    predicciones por completar y{" "}
-    <span className="font-bold text-slate-900">
-      {closingTodayCount}
-    </span>{" "}
-    {closingTodayCount === 1
-      ? "partido cierra hoy"
-      : "partidos cierran hoy"}
-    .
-  </p>
-</div>
+            <p className="mt-2 text-sm text-slate-600">
+              Te faltan{" "}
+              <span className="font-bold text-slate-900">
+                {pendingEditableMatches.length}
+              </span>{" "}
+              predicciones por completar y{" "}
+              <span className="font-bold text-slate-900">
+                {closingTodayCount}
+              </span>{" "}
+              {closingTodayCount === 1
+                ? "partido cierra hoy"
+                : "partidos cierran hoy"}
+              .
+            </p>
+          </div>
         </section>
 
         <section className="mb-6">
@@ -413,8 +406,6 @@ export default async function HomePage() {
 
         <section className="space-y-5">
           {visibleGroups.map((group, index) => {
-            const isActiveGroup = index === normalizedActiveGroupIndex;
-
             const prioritizedMatches = [...group.matches].sort((a, b) => {
               const aPuma = a.is_puma_match ? 1 : 0;
               const bPuma = b.is_puma_match ? 1 : 0;
@@ -460,7 +451,8 @@ export default async function HomePage() {
                       </div>
 
                       <p className="mt-1 text-sm text-slate-500">
-                        {prioritizedMatches.length} partidos · {groupPredictedCount}{" "}
+                        {prioritizedMatches.length} partidos ·{" "}
+                        {groupPredictedCount}{" "}
                         {groupPredictedCount === 1
                           ? "predicción guardada"
                           : "predicciones guardadas"}
@@ -497,8 +489,9 @@ export default async function HomePage() {
 
                           {savedPrediction ? (
                             <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-                              Tu pronóstico: {savedPrediction.home_score_pred ?? "-"}
-                              -{savedPrediction.away_score_pred ?? "-"}
+                              Tu pronóstico:{" "}
+                              {savedPrediction.home_score_pred ?? "-"}-
+                              {savedPrediction.away_score_pred ?? "-"}
                             </span>
                           ) : status.isEditable ? (
                             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
@@ -509,7 +502,6 @@ export default async function HomePage() {
                               Sin predicción
                             </span>
                           )}
-
 
                           {match.match_datetime ? (
                             <span className="text-xs font-medium text-slate-500">

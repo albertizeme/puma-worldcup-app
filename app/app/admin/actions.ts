@@ -53,8 +53,8 @@ async function requireAdmin() {
   }
 
   const { data: me, error: meError } = await supabase
-    .from("users")
-    .select("is_admin")
+    .from("profiles")
+    .select("id, role, is_active")
     .eq("id", userId)
     .maybeSingle();
 
@@ -62,7 +62,7 @@ async function requireAdmin() {
     throw new Error(`Error comprobando permisos admin: ${meError.message}`);
   }
 
-  if (!me?.is_admin) {
+  if (!me || me.role !== "admin" || !me.is_active) {
     redirect("/");
   }
 
@@ -90,7 +90,7 @@ export async function createMatchAction(formData: FormData) {
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
 
   if (!homeTeam || !awayTeam) {
-    throw new Error("Debes informar equipo local y visitante.");
+    redirect("/admin?error=match-create");
   }
 
   const payload = {
@@ -109,10 +109,12 @@ export async function createMatchAction(formData: FormData) {
   const { error } = await supabaseAdmin.from("matches").insert(payload);
 
   if (error) {
-    throw new Error(`No se pudo crear el partido: ${error.message}`);
+    console.error("[createMatchAction]", error);
+    redirect("/admin?error=match-create");
   }
 
   revalidateAdminSurfaces();
+  redirect("/admin?success=match-created");
 }
 
 export async function updateMatchAction(formData: FormData) {
@@ -132,11 +134,11 @@ export async function updateMatchAction(formData: FormData) {
   const awayScore = parseNullableScore(formData.get("away_score"));
 
   if (!id) {
-    throw new Error("Falta el id del partido.");
+    redirect("/admin?error=match-update");
   }
 
   if (!homeTeam || !awayTeam) {
-    throw new Error("Debes informar equipo local y visitante.");
+    redirect("/admin?error=match-update");
   }
 
   const payload: {
@@ -174,10 +176,12 @@ export async function updateMatchAction(formData: FormData) {
     .eq("id", id);
 
   if (error) {
-    throw new Error(`No se pudo actualizar el partido: ${error.message}`);
+    console.error("[updateMatchAction]", error);
+    redirect("/admin?error=match-update");
   }
 
   revalidateAdminSurfaces();
+  redirect("/admin?success=match-updated");
 }
 
 export async function deleteMatchAction(formData: FormData) {
@@ -187,14 +191,16 @@ export async function deleteMatchAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
 
   if (!id) {
-    throw new Error("Falta el id del partido.");
+    redirect("/admin?error=match-delete");
   }
 
   const { error } = await supabaseAdmin.from("matches").delete().eq("id", id);
 
   if (error) {
-    throw new Error(`No se pudo eliminar el partido: ${error.message}`);
+    console.error("[deleteMatchAction]", error);
+    redirect("/admin?error=match-delete");
   }
 
   revalidateAdminSurfaces();
+  redirect("/admin?success=match-deleted");
 }

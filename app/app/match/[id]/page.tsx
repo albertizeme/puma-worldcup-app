@@ -1,7 +1,7 @@
 // app/match/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import CountryFlag from "@/components/CountryFlag";
 import PredictionSection from "@/components/PredictionSection";
 import { Match } from "@/types/match";
@@ -276,17 +276,15 @@ function ScoreBox({
   );
 }
 
-
 export default async function MatchDetailPage({ params }: Props) {
   const { id } = await params;
-  const supabase = await getSupabaseServerClient();
-  
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    supabase: supabaseServer,
+    user,
+  } = await requireAuthenticatedUser();
 
-  const { data: match, error: matchError } = await supabase
+  const { data: match, error: matchError } = await supabaseServer
     .from("matches")
     .select("*")
     .eq("id", id)
@@ -296,20 +294,16 @@ export default async function MatchDetailPage({ params }: Props) {
     notFound();
   }
 
-  let prediction: PredictionRow | null = null;
+  const { data: predictionData } = await supabaseServer
+    .from("predictions")
+    .select(
+      "id, user_id, match_id, home_score_pred, away_score_pred, created_at"
+    )
+    .eq("match_id", id)
+    .eq("user_id", user.id)
+    .maybeSingle<PredictionRow>();
 
-  if (user) {
-    const { data: predictionData } = await supabase
-      .from("predictions")
-      .select(
-        "id, user_id, match_id, home_score_pred, away_score_pred, created_at"
-      )
-      .eq("match_id", id)
-      .eq("user_id", user.id)
-      .maybeSingle<PredictionRow>();
-
-    prediction = predictionData ?? null;
-  }
+  const prediction: PredictionRow | null = predictionData ?? null;
 
   const matchStatus = normalizeMatchStatus(match);
   const outcome = getOutcome({
@@ -334,13 +328,13 @@ export default async function MatchDetailPage({ params }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex justify-end">
-  <CloseMatchDetailButton />
-</div>
+        <CloseMatchDetailButton />
+      </div>
 
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-            <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700 shadow-sm">
+            <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
               {getStatusLabel(matchStatus)}
             </span>
             {match.stage ? <span>· {match.stage}</span> : null}
@@ -365,10 +359,10 @@ export default async function MatchDetailPage({ params }: Props) {
             </div>
 
             <div className="flex items-center justify-center gap-3">
-  <ScoreBox value={match.home_score} />
-  <div className="text-xl font-bold text-slate-400">-</div>
-  <ScoreBox value={match.away_score} />
-</div>
+              <ScoreBox value={match.home_score} />
+              <div className="text-xl font-bold text-slate-400">-</div>
+              <ScoreBox value={match.away_score} />
+            </div>
 
             <div className="flex items-center justify-start gap-4 md:justify-end">
               <div className="min-w-0 text-left md:text-right">
@@ -412,10 +406,12 @@ export default async function MatchDetailPage({ params }: Props) {
           <p className="text-sm opacity-90">{outcomeContent.description}</p>
         </div>
       </section>
-      
+
       {matchStatus === "finished" ? (
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-lg font-bold text-slate-900">Cómo se calculó</h2>
+          <h2 className="text-lg font-bold text-slate-900">
+            Cómo se calculó
+          </h2>
 
           <div className="mt-4 space-y-3">
             {breakdown.map((item) => (
@@ -475,7 +471,7 @@ export default async function MatchDetailPage({ params }: Props) {
         awayTeam={match.away_team}
         homeScore={parseScore(match.home_score)}
         awayScore={parseScore(match.away_score)}
-        userId={user?.id ?? null}
+        userId={user.id}
         prediction={predictionForSection}
       />
     </main>

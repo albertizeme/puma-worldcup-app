@@ -7,6 +7,7 @@ import {
   updateMatchAction,
 } from "./actions";
 import DeleteMatchButton from "./DeleteMatchButton";
+import ResetPasswordButton from "./ResetPasswordButton";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -24,11 +25,14 @@ type MatchRow = {
   away_flag: string | null;
 };
 
-type UserRow = {
+type ProfileRow = {
   id: string;
   email: string;
   display_name: string | null;
-  is_admin: boolean;
+  role: "user" | "admin";
+  is_active: boolean;
+  must_change_password: boolean;
+  last_password_reset_at: string | null;
 };
 
 type SearchParams = Promise<{
@@ -100,8 +104,8 @@ export default async function AdminPage({
   }
 
   const { data: me, error: meError } = await supabase
-    .from("users")
-    .select("is_admin")
+    .from("profiles")
+    .select("id, role, is_active")
     .eq("id", userId)
     .maybeSingle();
 
@@ -109,7 +113,7 @@ export default async function AdminPage({
     throw new Error(`Error comprobando permisos admin: ${meError.message}`);
   }
 
-  if (!me?.is_admin) {
+  if (!me || me.role !== "admin" || !me.is_active) {
     redirect("/");
   }
 
@@ -127,8 +131,10 @@ export default async function AdminPage({
   const { data: matches, error: matchesError } = await matchesQuery;
 
   const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select("id, email, display_name, is_admin")
+    .from("profiles")
+    .select(
+      "id, email, display_name, role, is_active, must_change_password, last_password_reset_at"
+    )
     .order("created_at", { ascending: true });
 
   if (matchesError) {
@@ -330,11 +336,11 @@ export default async function AdminPage({
                   </div>
 
                   <form action={deleteMatchAction}>
-  <input type="hidden" name="id" value={match.id} />
-  <DeleteMatchButton
-    label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
-  />
-</form>
+                    <input type="hidden" name="id" value={match.id} />
+                    <DeleteMatchButton
+                      label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
+                    />
+                  </form>
                 </div>
 
                 <form action={updateMatchAction}>
@@ -478,7 +484,7 @@ export default async function AdminPage({
         <section className="mt-8 rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900">Usuarios</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Revisión rápida de accesos y admins.
+            Revisión rápida de accesos, rol y reseteo de contraseña.
           </p>
 
           <div className="mt-6 overflow-x-auto">
@@ -487,21 +493,50 @@ export default async function AdminPage({
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-3 py-2">Email</th>
                   <th className="px-3 py-2">Nombre</th>
-                  <th className="px-3 py-2">Admin</th>
+                  <th className="px-3 py-2">Rol</th>
+                  <th className="px-3 py-2">Activo</th>
+                  <th className="px-3 py-2">Cambio pass</th>
+                  <th className="px-3 py-2">Último reset</th>
+                  <th className="px-3 py-2">Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {(users as UserRow[] | null)?.map((row) => (
-                  <tr key={row.id} className="rounded-xl bg-slate-50 text-sm">
-                    <td className="px-3 py-3 text-slate-800">{row.email}</td>
-                    <td className="px-3 py-3 text-slate-800">
-                      {row.display_name || "Usuario"}
-                    </td>
-                    <td className="px-3 py-3 text-slate-800">
-                      {row.is_admin ? "Sí" : "No"}
-                    </td>
-                  </tr>
-                ))}
+                {(users as ProfileRow[] | null)?.map((row) => {
+                  const userLabel = row.display_name || row.email || "Usuario";
+
+                  return (
+                    <tr key={row.id} className="rounded-xl bg-slate-50 text-sm">
+                      <td className="px-3 py-3 text-slate-800">{row.email}</td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {row.display_name || "Usuario"}
+                      </td>
+                      <td className="px-3 py-3 text-slate-800">{row.role}</td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {row.is_active ? "Sí" : "No"}
+                      </td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {row.must_change_password ? "Sí" : "No"}
+                      </td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {row.last_password_reset_at
+                          ? new Date(row.last_password_reset_at).toLocaleString("es-ES")
+                          : "Nunca"}
+                      </td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {row.id === me.id ? (
+                          <span className="text-xs text-slate-400">
+                            Tu usuario
+                          </span>
+                        ) : (
+                          <ResetPasswordButton
+                            userId={row.id}
+                            userLabel={userLabel}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

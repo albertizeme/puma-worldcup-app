@@ -5,6 +5,12 @@ import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
+type TeamMeta = {
+  id: string;
+  name: string;
+  is_puma_team: boolean | null;
+};
+
 type MatchWithMeta = Match & {
   matchday?: string | number | null;
   round?: string | null;
@@ -204,6 +210,34 @@ function isSameMadridDay(dateA: Date, dateB: Date) {
   return a === b;
 }
 
+function normalizeTeamName(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function buildPumaTeamNameSet(teams: TeamMeta[]) {
+  return new Set(
+    teams
+      .filter((team) => team.is_puma_team)
+      .map((team) => normalizeTeamName(team.name)),
+  );
+}
+
+function enrichMatchesWithPumaFlag(
+  matches: MatchWithMeta[],
+  pumaTeamNames: Set<string>,
+): MatchWithMeta[] {
+  return matches.map((match) => {
+    const isPumaMatch =
+      pumaTeamNames.has(normalizeTeamName(match.home_team)) ||
+      pumaTeamNames.has(normalizeTeamName(match.away_team));
+
+    return {
+      ...match,
+      is_puma_match: isPumaMatch,
+    };
+  });
+}
+
 export default async function HomePage() {
   const {
     supabase: supabaseServer,
@@ -215,19 +249,27 @@ export default async function HomePage() {
     .select("*")
     .order("match_datetime", { ascending: true });
 
-  if (matchesError) {
+  const { data: teamsData, error: teamsError } = await supabaseServer
+    .from("teams")
+    .select("id, name, is_puma_team");
+
+  if (matchesError || teamsError) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-6">
         <div className="mx-auto max-w-5xl">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
-            Error cargando partidos: {matchesError.message}
+            Error cargando datos: {matchesError?.message ?? teamsError?.message}
           </div>
         </div>
       </main>
     );
   }
 
-  const matches: MatchWithMeta[] = (matchesData ?? []) as MatchWithMeta[];
+  const rawMatches: MatchWithMeta[] = (matchesData ?? []) as MatchWithMeta[];
+  const teams: TeamMeta[] = (teamsData ?? []) as TeamMeta[];
+
+  const pumaTeamNames = buildPumaTeamNameSet(teams);
+  const matches = enrichMatchesWithPumaFlag(rawMatches, pumaTeamNames);
 
   let predictionsByMatch = new Map<string, PredictionRow>();
 

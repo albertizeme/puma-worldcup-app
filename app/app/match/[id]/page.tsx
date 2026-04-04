@@ -1,5 +1,4 @@
 // app/match/[id]/page.tsx
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import CountryFlag from "@/components/CountryFlag";
@@ -42,6 +41,15 @@ type MatchStatus = "scheduled" | "live" | "finished";
 type BreakdownItem = {
   label: string;
   points: number;
+};
+
+type TeamMeta = {
+  id: string;
+  name: string;
+  is_puma_team: boolean | null;
+  sponsor_brand: string | null;
+  sponsor_campaign_image: string | null;
+  sponsor_kit_image: string | null;
 };
 
 function formatMatchDate(value: string | null | undefined) {
@@ -259,6 +267,35 @@ function getStatusLabel(status: MatchStatus) {
   }
 }
 
+function normalizeTeamName(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase();
+}
+
+function getTeamByMatchName(
+  teamName: string | null | undefined,
+  teams: TeamMeta[],
+) {
+  const normalized = normalizeTeamName(teamName);
+  return teams.find((team) => normalizeTeamName(team.name) === normalized) ?? null;
+}
+
+function getPumaTeamsForMatch(match: Match, teams: TeamMeta[]) {
+  const homeTeamData = getTeamByMatchName(match.home_team, teams);
+  const awayTeamData = getTeamByMatchName(match.away_team, teams);
+
+  const pumaTeams = [homeTeamData, awayTeamData].filter(
+    (team): team is TeamMeta => Boolean(team?.is_puma_team),
+  );
+
+  return {
+    homeTeamData,
+    awayTeamData,
+    hasPumaTeam: pumaTeams.length > 0,
+    primaryPumaTeam: pumaTeams[0] ?? null,
+    pumaTeams,
+  };
+}
+
 function ScoreBox({
   value,
 }: {
@@ -294,6 +331,20 @@ export default async function MatchDetailPage({ params }: Props) {
     notFound();
   }
 
+  const { data: teamsData, error: teamsError } = await supabaseServer
+    .from("teams")
+    .select(
+      "id, name, is_puma_team, sponsor_brand, sponsor_campaign_image, sponsor_kit_image"
+    );
+
+  if (teamsError) {
+    notFound();
+  }
+
+  const teams: TeamMeta[] = (teamsData ?? []) as TeamMeta[];
+
+  const { hasPumaTeam, primaryPumaTeam } = getPumaTeamsForMatch(match, teams);
+
   const { data: predictionData } = await supabaseServer
     .from("predictions")
     .select(
@@ -325,6 +376,11 @@ export default async function MatchDetailPage({ params }: Props) {
       }
     : null;
 
+  const pumaImage =
+    primaryPumaTeam?.sponsor_campaign_image ||
+    primaryPumaTeam?.sponsor_kit_image ||
+    null;
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex justify-end">
@@ -337,6 +393,13 @@ export default async function MatchDetailPage({ params }: Props) {
             <span className="rounded-full bg-white px-3 py-1 font-medium text-slate-700">
               {getStatusLabel(matchStatus)}
             </span>
+
+            {hasPumaTeam ? (
+              <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 font-semibold text-orange-700">
+                PUMA Match
+              </span>
+            ) : null}
+
             {match.stage ? <span>· {match.stage}</span> : null}
             <span>· {formatMatchDate(match.match_datetime)}</span>
           </div>
@@ -386,6 +449,57 @@ export default async function MatchDetailPage({ params }: Props) {
           ) : null}
         </div>
       </section>
+
+      {hasPumaTeam && primaryPumaTeam ? (
+        <section className="overflow-hidden rounded-3xl border border-orange-200 bg-white shadow-sm">
+          <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
+            <div className="p-5 sm:p-6">
+              <div className="mb-3">
+                <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
+                  PUMA Highlight
+                </span>
+              </div>
+
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
+                PUMA x {primaryPumaTeam.name}
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-600">
+                Partido destacado con selección PUMA. Este bloque puede usarse
+                para visibilidad de campaña, equipación o creatividad específica
+                del equipo.
+              </p>
+
+              {primaryPumaTeam.sponsor_brand ? (
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Sponsor: {primaryPumaTeam.sponsor_brand}
+                </p>
+              ) : null}
+            </div>
+
+            {pumaImage ? (
+              <div className="min-h-[220px] bg-slate-100">
+                <img
+                  src={pumaImage}
+                  alt={`Imagen PUMA de ${primaryPumaTeam.name}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex min-h-[220px] items-center justify-center bg-gradient-to-br from-orange-100 via-white to-red-100 p-6">
+                <div className="text-center">
+                  <div className="text-sm font-bold uppercase tracking-[0.25em] text-orange-600">
+                    PUMA
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-slate-700">
+                    {primaryPumaTeam.name}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section
         className={`rounded-3xl border px-5 py-5 shadow-sm sm:px-6 ${outcomeContent.containerClass}`}

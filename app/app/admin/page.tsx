@@ -8,6 +8,7 @@ import {
 } from "./actions";
 import DeleteMatchButton from "./DeleteMatchButton";
 import ResetPasswordButton from "./ResetPasswordButton";
+import SubmitButton from "./SubmitButton";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -272,12 +273,10 @@ export default async function AdminPage({
             </div>
 
             <div className="mt-4">
-              <button
-                type="submit"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-              >
-                Crear partido
-              </button>
+              <SubmitButton
+  idleText="Crear partido"
+  pendingText="Creando..."
+/>
             </div>
           </form>
         </section>
@@ -468,12 +467,10 @@ export default async function AdminPage({
                   </div>
 
                   <div className="mt-4">
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-                    >
-                      Guardar cambios
-                    </button>
+                    <SubmitButton
+  idleText="Guardar cambios"
+  pendingText="Guardando..."
+/>
                   </div>
                 </form>
               </div>

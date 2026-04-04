@@ -408,41 +408,49 @@ export default async function MatchDetailPage({ params }: Props) {
         </div>
 
         <div className="px-5 py-6 sm:px-6">
-          <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <div className="flex items-center gap-4">
-              <CountryFlag
-                code={match.home_flag}
-                teamName={match.home_team}
-                alt={`Bandera de ${match.home_team}`}
-              />
-              <div className="min-w-0">
-                <div className="text-lg font-bold text-slate-900 sm:text-2xl">
-                  {match.home_team}
-                </div>
-                <div className="text-sm text-slate-500">Local</div>
-              </div>
-            </div>
+          <div className="flex flex-col items-center text-center gap-6">
 
-            <div className="flex items-center justify-center gap-3">
-              <ScoreBox value={match.home_score} />
-              <div className="text-xl font-bold text-slate-400">-</div>
-              <ScoreBox value={match.away_score} />
-            </div>
+  {/* FLAGS + EQUIPOS */}
+  <div className="flex items-center justify-between w-full max-w-xs">
 
-            <div className="flex items-center justify-start gap-4 md:justify-end">
-              <div className="min-w-0 text-left md:text-right">
-                <div className="text-lg font-bold text-slate-900 sm:text-2xl">
-                  {match.away_team}
-                </div>
-                <div className="text-sm text-slate-500">Visitante</div>
-              </div>
-              <CountryFlag
-                code={match.away_flag}
-                teamName={match.away_team}
-                alt={`Bandera de ${match.away_team}`}
-              />
-            </div>
-          </div>
+    {/* HOME */}
+    <div className="flex flex-col items-center gap-2 flex-1">
+      <CountryFlag
+        code={match.home_flag}
+        teamName={match.home_team}
+        alt={`Bandera de ${match.home_team}`}
+      />
+      <p className="text-sm font-semibold text-slate-900 leading-tight text-center break-words max-w-[90px]">
+        {match.home_team}
+      </p>
+    </div>
+
+    {/* VS / SCORE */}
+    <div className="flex flex-col items-center justify-center gap-2 px-2">
+
+      <div className="flex items-center gap-2">
+        <ScoreBox value={match.home_score} />
+        <span className="text-xl font-bold text-slate-400">-</span>
+        <ScoreBox value={match.away_score} />
+      </div>
+
+    </div>
+
+    {/* AWAY */}
+    <div className="flex flex-col items-center gap-2 flex-1">
+      <CountryFlag
+        code={match.away_flag}
+        teamName={match.away_team}
+        alt={`Bandera de ${match.away_team}`}
+      />
+      <p className="text-sm font-semibold text-slate-900 leading-tight text-center break-words max-w-[90px]">
+        {match.away_team}
+      </p>
+    </div>
+
+  </div>
+
+</div>
 
           {match.stadium || match.city ? (
             <div className="mt-5 text-sm text-slate-500">

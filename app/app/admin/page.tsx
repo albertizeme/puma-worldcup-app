@@ -8,6 +8,7 @@ import {
 } from "./actions";
 import DeleteMatchButton from "./DeleteMatchButton";
 import ResetPasswordButton from "./ResetPasswordButton";
+import ToggleUserActiveButton from "./ToggleUserActiveButton";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 type UserRole = "all" | "user" | "admin";
@@ -166,6 +167,16 @@ function getAlertFromQuery(success?: string, error?: string) {
           type: "error" as const,
           message: "No se pudo eliminar el partido.",
         };
+      case "user-toggle":
+        return {
+          type: "error" as const,
+          message: "No se pudo actualizar el estado del usuario.",
+        };
+      case "user-toggle-self":
+        return {
+          type: "error" as const,
+          message: "No puedes desactivar tu propio usuario.",
+        };
       default:
         return {
           type: "error" as const,
@@ -195,6 +206,16 @@ function getAlertFromQuery(success?: string, error?: string) {
         return {
           type: "success" as const,
           message: "Partido eliminado correctamente.",
+        };
+      case "user-activated":
+        return {
+          type: "success" as const,
+          message: "Usuario activado correctamente.",
+        };
+      case "user-deactivated":
+        return {
+          type: "success" as const,
+          message: "Usuario desactivado correctamente.",
         };
       default:
         return {
@@ -576,15 +597,22 @@ export default async function AdminPage({
                         </td>
 
                         <td className="px-3 py-3">
-                          {row.id === me.id ? (
-                            <span className="text-xs text-slate-400">Tu usuario</span>
-                          ) : (
-                            <ResetPasswordButton
-                              userId={row.id}
-                              userLabel={userLabel}
-                            />
-                          )}
-                        </td>
+  {row.id === me.id ? (
+    <span className="text-xs text-slate-400">Tu usuario</span>
+  ) : (
+    <div className="flex flex-wrap items-start gap-2">
+      <ResetPasswordButton
+        userId={row.id}
+        userLabel={userLabel}
+      />
+      <ToggleUserActiveButton
+        userId={row.id}
+        isActive={row.is_active}
+        userLabel={userLabel}
+      />
+    </div>
+  )}
+</td>
                       </tr>
                     );
                   })

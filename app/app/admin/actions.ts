@@ -204,3 +204,59 @@ export async function deleteMatchAction(formData: FormData) {
   revalidateAdminSurfaces();
   redirect("/admin?success=match-deleted");
 }
+
+export async function toggleUserActiveAction(formData: FormData) {
+  await requireAdmin();
+  const supabaseAdmin = getSupabaseAdminClient();
+
+  const id = String(formData.get("id") ?? "");
+  const nextValueRaw = String(formData.get("next_is_active") ?? "");
+
+  if (!id) {
+    redirect("/admin?error=user-toggle");
+  }
+
+  if (nextValueRaw !== "true" && nextValueRaw !== "false") {
+    redirect("/admin?error=user-toggle");
+  }
+
+  const nextIsActive = nextValueRaw === "true";
+
+  const supabase = await getSupabaseServerClient();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    redirect("/login");
+  }
+
+  const currentAdminId = claimsData.claims.sub;
+
+  if (id === currentAdminId) {
+    redirect("/admin?error=user-toggle-self");
+  }
+
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      is_active: nextIsActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("[toggleUserActiveAction]", error);
+    redirect("/admin?error=user-toggle");
+  }
+
+  await supabaseAdmin.from("admin_audit_logs").insert({
+    admin_user_id: currentAdminId,
+    target_user_id: id,
+    action: nextIsActive ? "user_activated" : "user_deactivated",
+    details: {
+      is_active: nextIsActive,
+    },
+  });
+
+  revalidateAdminSurfaces();
+  redirect(`/admin?success=${nextIsActive ? "user-activated" : "user-deactivated"}`);
+}

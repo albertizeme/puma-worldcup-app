@@ -97,13 +97,18 @@ export default function LoginPage() {
                 backgroundPosition: "center",
               }}
             >
+              <img
+  src="/images/puma-logo-white.jpg"
+  alt="PUMA"
+  className="absolute top-4 left-4 h-6 w-auto opacity-90"
+/>
               <div className="absolute inset-0 bg-gradient-to-t from-[#140c1f]/95 via-[#140c1f]/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5">
                 <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm">
                   PUMA Employees
                 </div>
                 <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Iniciar sesión
+                  Accede a la plataforma
                 </h1>
                 <p className="mt-2 max-w-sm text-sm text-white/75">
                   Accede a la experiencia interna para empleados, participa y

@@ -390,6 +390,8 @@ export default async function MatchDetailPage({ params }: Props) {
   const { hasPumaTeam, isDualPuma, primaryPumaTeam, pumaTeams } =
     getPumaTeamsForMatch(match, teams);
 
+  const isPumaMatch = Boolean(match.is_puma_match) || hasPumaTeam;
+
   const { data: predictionData } = await supabaseServer
     .from("predictions")
     .select(

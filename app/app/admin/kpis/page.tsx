@@ -5,11 +5,14 @@ type ProfileKpiRow = {
   id: string;
   role: "user" | "admin";
   is_active: boolean;
+  created_at: string | null;
+  last_seen_at: string | null;
 };
 
 type PredictionRow = {
   id: string;
   user_id: string;
+  match_id: string;
   created_at: string;
 };
 
@@ -22,11 +25,22 @@ type PredictionScoreRow = {
   resolved_predictions: number | null;
 };
 
-type TopPredictorRow = {
+type MatchRow = {
   id: string;
-  display_name: string | null;
-  email: string;
-  predictions_count: number;
+  stage: string | null;
+  match_datetime: string | null;
+  home_team: string | null;
+  away_team: string | null;
+  is_puma_match: boolean | null;
+  status: "upcoming" | "live" | "finished";
+};
+
+type MatchPredictionSummary = {
+  id: string;
+  label: string;
+  status: "upcoming" | "live" | "finished";
+  isPuma: boolean;
+  predictionsCount: number;
 };
 
 function StatCard({
@@ -69,6 +83,68 @@ function formatDecimal(value: number) {
   }).format(value);
 }
 
+function formatShortDate(date: Date) {
+  return date.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function getMatchLabel(match: MatchRow) {
+  const home = match.home_team || "Local";
+  const away = match.away_team || "Visitante";
+  return `${home} vs ${away}`;
+}
+
+function MiniBarChart({
+  title,
+  subtitle,
+  rows,
+  valueLabel,
+}: {
+  title: string;
+  subtitle?: string;
+  rows: Array<{ label: string; value: number; secondaryValue?: number }>;
+  valueLabel?: string;
+}) {
+  const maxValue = Math.max(...rows.map((row) => row.value), 1);
+
+  return (
+    <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+      {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+
+      <div className="mt-6 space-y-4">
+        {rows.map((row) => {
+          const widthPct = (row.value / maxValue) * 100;
+
+          return (
+            <div key={row.label}>
+              <div className="mb-1 flex items-center justify-between gap-4 text-sm">
+                <span className="font-medium text-slate-800">{row.label}</span>
+                <span className="text-slate-500">
+                  {formatNumber(row.value)}
+                  {valueLabel ? ` ${valueLabel}` : ""}
+                  {typeof row.secondaryValue === "number"
+                    ? ` · ${formatNumber(row.secondaryValue)} usuarios`
+                    : ""}
+                </span>
+              </div>
+
+              <div className="h-3 w-full rounded-full bg-slate-100">
+                <div
+                  className="h-3 rounded-full bg-slate-900"
+                  style={{ width: `${widthPct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default async function AdminKpisPage() {
   const supabase = await getSupabaseServerClient();
 
@@ -76,13 +152,19 @@ export default async function AdminKpisPage() {
     { data: profiles, error: profilesError },
     { data: predictions, error: predictionsError },
     { data: predictionScores, error: predictionScoresError },
+    { data: matches, error: matchesError },
   ] = await Promise.all([
-    supabase.from("profiles").select("id, role, is_active"),
-    supabase.from("predictions").select("id, user_id, created_at"),
+    supabase.from("profiles").select("id, role, is_active, created_at, last_seen_at"),
+    supabase.from("predictions").select("id, user_id, match_id, created_at"),
     supabase
       .from("prediction_scores")
       .select(
         "user_id, display_name, total_points, exact_hits, tendency_hits, resolved_predictions"
+      ),
+    supabase
+      .from("matches")
+      .select(
+        "id, stage, match_datetime, home_team, away_team, is_puma_match, status"
       ),
   ]);
 
@@ -100,10 +182,15 @@ export default async function AdminKpisPage() {
     );
   }
 
+  if (matchesError) {
+    throw new Error(`Error cargando matches: ${matchesError.message}`);
+  }
+
   const safeProfiles = (profiles as ProfileKpiRow[] | null) ?? [];
   const safePredictions = (predictions as PredictionRow[] | null) ?? [];
   const safePredictionScores =
     (predictionScores as PredictionScoreRow[] | null) ?? [];
+  const safeMatches = (matches as MatchRow[] | null) ?? [];
 
   const now = Date.now();
   const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -112,6 +199,31 @@ export default async function AdminKpisPage() {
   const totalUsers = safeProfiles.length;
   const activeUsers = safeProfiles.filter((user) => user.is_active).length;
   const adminUsers = safeProfiles.filter((user) => user.role === "admin").length;
+
+  const newUsersLast7d = safeProfiles.filter(
+    (user) =>
+      user.created_at && new Date(user.created_at).getTime() >= sevenDaysAgo
+  ).length;
+
+  const newUsersLast30d = safeProfiles.filter(
+    (user) =>
+      user.created_at && new Date(user.created_at).getTime() >= thirtyDaysAgo
+  ).length;
+
+  const seenUsersLast7d = safeProfiles.filter(
+    (user) =>
+      user.last_seen_at && new Date(user.last_seen_at).getTime() >= sevenDaysAgo
+  ).length;
+
+  const seenUsersLast30d = safeProfiles.filter(
+    (user) =>
+      user.last_seen_at && new Date(user.last_seen_at).getTime() >= thirtyDaysAgo
+  ).length;
+
+  const dormantUsers = safeProfiles.filter(
+    (user) =>
+      !user.last_seen_at || new Date(user.last_seen_at).getTime() < thirtyDaysAgo
+  ).length;
 
   const usersWithPredictionsSet = new Set(safePredictions.map((p) => p.user_id));
   const usersWithPredictions = usersWithPredictionsSet.size;
@@ -137,6 +249,9 @@ export default async function AdminKpisPage() {
   const activePredictorsLast30d = new Set(
     predictionsLast30d.map((prediction) => prediction.user_id)
   ).size;
+
+  const predictorAccessRate7d =
+    seenUsersLast7d > 0 ? (activePredictorsLast7d / seenUsersLast7d) * 100 : 0;
 
   const avgPredictionsPerActiveUser =
     activeUsers > 0 ? safePredictions.length / activeUsers : 0;
@@ -173,7 +288,6 @@ export default async function AdminKpisPage() {
       : 0;
 
   const predictionsByUser = new Map<string, number>();
-
   for (const prediction of safePredictions) {
     predictionsByUser.set(
       prediction.user_id,
@@ -181,37 +295,9 @@ export default async function AdminKpisPage() {
     );
   }
 
-  const topPredictors: TopPredictorRow[] = safeProfiles
-    .map((profile) => ({
-      id: profile.id,
-      display_name: null,
-      email: "",
-      predictions_count: predictionsByUser.get(profile.id) ?? 0,
-    }))
-    .map((base) => {
-      const profile = safeProfiles.find((p) => p.id === base.id);
-      const scoreRow = safePredictionScores.find((s) => s.user_id === base.id);
-
-      return {
-        id: base.id,
-        display_name: scoreRow?.display_name ?? profile?.id ?? null,
-        email: "",
-        predictions_count: base.predictions_count,
-      };
-    });
-
-  const profileIdentityMap = new Map<string, { displayName: string; email: string }>();
-
-  for (const profile of safeProfiles) {
-    const scoreRow = safePredictionScores.find((row) => row.user_id === profile.id);
-
-    profileIdentityMap.set(profile.id, {
-      displayName:
-        scoreRow?.display_name ||
-        `Usuario ${profile.id.slice(0, 8)}`,
-      email: "",
-    });
-  }
+  const usersWithMoreThan5Predictions = [...predictionsByUser.values()].filter(
+    (count) => count > 5
+  ).length;
 
   const topPredictorsResolved = safeProfiles
     .map((profile) => {
@@ -221,7 +307,6 @@ export default async function AdminKpisPage() {
         id: profile.id,
         display_name:
           scoreRow?.display_name || `Usuario ${profile.id.slice(0, 8)}`,
-        email: "",
         predictions_count: predictionsByUser.get(profile.id) ?? 0,
       };
     })
@@ -236,6 +321,96 @@ export default async function AdminKpisPage() {
     })
     .slice(0, 5);
 
+  const predictionsByMatch = new Map<string, number>();
+  for (const prediction of safePredictions) {
+    predictionsByMatch.set(
+      prediction.match_id,
+      (predictionsByMatch.get(prediction.match_id) ?? 0) + 1
+    );
+  }
+
+  const matchSummaries: MatchPredictionSummary[] = safeMatches.map((match) => ({
+    id: match.id,
+    label: getMatchLabel(match),
+    status: match.status,
+    isPuma: Boolean(match.is_puma_match),
+    predictionsCount: predictionsByMatch.get(match.id) ?? 0,
+  }));
+
+  const totalMatches = safeMatches.length;
+  const upcomingMatches = safeMatches.filter((m) => m.status === "upcoming").length;
+  const liveMatches = safeMatches.filter((m) => m.status === "live").length;
+  const finishedMatches = safeMatches.filter((m) => m.status === "finished").length;
+  const pumaMatches = safeMatches.filter((m) => Boolean(m.is_puma_match)).length;
+
+  const matchesWithoutPredictions = matchSummaries.filter(
+    (match) => match.predictionsCount === 0
+  ).length;
+
+  const avgPredictionsPerMatch =
+    totalMatches > 0 ? safePredictions.length / totalMatches : 0;
+
+  const pumaMatchSummaries = matchSummaries.filter((match) => match.isPuma);
+  const nonPumaMatchSummaries = matchSummaries.filter((match) => !match.isPuma);
+
+  const avgPredictionsPerPumaMatch =
+    pumaMatchSummaries.length > 0
+      ? pumaMatchSummaries.reduce((acc, row) => acc + row.predictionsCount, 0) /
+        pumaMatchSummaries.length
+      : 0;
+
+  const avgPredictionsPerNonPumaMatch =
+    nonPumaMatchSummaries.length > 0
+      ? nonPumaMatchSummaries.reduce((acc, row) => acc + row.predictionsCount, 0) /
+        nonPumaMatchSummaries.length
+      : 0;
+
+  const topMatchesByPredictions = [...matchSummaries]
+    .sort((a, b) => b.predictionsCount - a.predictionsCount)
+    .slice(0, 5);
+
+  const last7DaysSeries = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (6 - index));
+
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    const dayPredictions = safePredictions.filter((prediction) => {
+      const predictionDate = new Date(prediction.created_at).getTime();
+      return (
+        predictionDate >= date.getTime() && predictionDate < nextDate.getTime()
+      );
+    });
+
+    return {
+      label: formatShortDate(date),
+      value: dayPredictions.length,
+      secondaryValue: new Set(dayPredictions.map((prediction) => prediction.user_id))
+        .size,
+    };
+  });
+
+  const accessVsPredictionRows = [
+    {
+      label: "Acceso 7 días",
+      value: seenUsersLast7d,
+    },
+    {
+      label: "Predictores 7 días",
+      value: activePredictorsLast7d,
+    },
+    {
+      label: "Acceso 30 días",
+      value: seenUsersLast30d,
+    },
+    {
+      label: "Predictores 30 días",
+      value: activePredictorsLast30d,
+    },
+  ];
+
   return (
     <div className="space-y-8">
       <section>
@@ -248,7 +423,7 @@ export default async function AdminKpisPage() {
               Indicadores de uso
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Visión rápida sobre adopción, actividad y participación en predicciones.
+              Visión rápida sobre acceso real, adopción, actividad, partidos y participación.
             </p>
           </div>
 
@@ -258,6 +433,33 @@ export default async function AdminKpisPage() {
           >
             ← Volver al resumen
           </Link>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-bold text-slate-900">Acceso real</h3>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Usuarios vistos 7 días"
+            value={formatNumber(seenUsersLast7d)}
+            tone="success"
+          />
+          <StatCard
+            label="Usuarios vistos 30 días"
+            value={formatNumber(seenUsersLast30d)}
+          />
+          <StatCard
+            label="Usuarios dormidos"
+            value={formatNumber(dormantUsers)}
+            hint="Sin acceso en 30 días o nunca vistos"
+            tone={dormantUsers > 0 ? "warning" : "default"}
+          />
+          <StatCard
+            label="Conversión acceso → predicción"
+            value={`${formatDecimal(predictorAccessRate7d)}%`}
+            hint="Predictores 7d / usuarios vistos 7d"
+            tone={predictorAccessRate7d >= 50 ? "success" : "warning"}
+          />
         </div>
       </section>
 
@@ -279,7 +481,15 @@ export default async function AdminKpisPage() {
           />
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Nuevos usuarios 7 días"
+            value={formatNumber(newUsersLast7d)}
+          />
+          <StatCard
+            label="Nuevos usuarios 30 días"
+            value={formatNumber(newUsersLast30d)}
+          />
           <StatCard
             label="Usuarios con predicciones"
             value={formatNumber(usersWithPredictions)}
@@ -289,10 +499,6 @@ export default async function AdminKpisPage() {
             value={formatNumber(usersWithoutPredictions)}
             tone={usersWithoutPredictions > 0 ? "warning" : "default"}
           />
-          <StatCard
-            label="Predicciones totales"
-            value={formatNumber(safePredictions.length)}
-          />
         </div>
       </section>
 
@@ -300,35 +506,71 @@ export default async function AdminKpisPage() {
         <h3 className="text-lg font-bold text-slate-900">Actividad</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Predicciones últimos 7 días"
+            label="Predicciones totales"
+            value={formatNumber(safePredictions.length)}
+          />
+          <StatCard
+            label="Predicciones 7 días"
             value={formatNumber(predictionsLast7d.length)}
           />
           <StatCard
-            label="Usuarios activos 7 días"
-            value={formatNumber(activePredictorsLast7d)}
-            hint="Usuarios con al menos 1 predicción en 7 días"
-          />
-          <StatCard
-            label="Predicciones últimos 30 días"
+            label="Predicciones 30 días"
             value={formatNumber(predictionsLast30d.length)}
           />
           <StatCard
-            label="Usuarios activos 30 días"
-            value={formatNumber(activePredictorsLast30d)}
-            hint="Usuarios con al menos 1 predicción en 30 días"
+            label="Usuarios con +5 predicciones"
+            value={formatNumber(usersWithMoreThan5Predictions)}
           />
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Predictores 7 días"
+            value={formatNumber(activePredictorsLast7d)}
+            hint="Usuarios con al menos 1 predicción"
+          />
+          <StatCard
+            label="Predictores 30 días"
+            value={formatNumber(activePredictorsLast30d)}
+            hint="Usuarios con al menos 1 predicción"
+          />
           <StatCard
             label="Promedio por usuario activo"
             value={formatDecimal(avgPredictionsPerActiveUser)}
             hint="Predicciones totales / usuarios activos"
           />
           <StatCard
-            label="Promedio por usuario participante"
+            label="Promedio por participante"
             value={formatDecimal(avgPredictionsPerParticipatingUser)}
-            hint="Predicciones totales / usuarios con al menos 1 predicción"
+            hint="Predicciones totales / usuarios con predicciones"
+          />
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-bold text-slate-900">Partidos</h3>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Partidos totales" value={formatNumber(totalMatches)} />
+          <StatCard label="Upcoming" value={formatNumber(upcomingMatches)} />
+          <StatCard label="Live" value={formatNumber(liveMatches)} tone="success" />
+          <StatCard label="Finished" value={formatNumber(finishedMatches)} />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Partidos PUMA" value={formatNumber(pumaMatches)} />
+          <StatCard
+            label="Partidos sin predicciones"
+            value={formatNumber(matchesWithoutPredictions)}
+            tone={matchesWithoutPredictions > 0 ? "warning" : "default"}
+          />
+          <StatCard
+            label="Promedio por partido"
+            value={formatDecimal(avgPredictionsPerMatch)}
+          />
+          <StatCard
+            label="Media en partidos PUMA"
+            value={formatDecimal(avgPredictionsPerPumaMatch)}
+            hint={`No PUMA: ${formatDecimal(avgPredictionsPerNonPumaMatch)}`}
           />
         </div>
       </section>
@@ -361,6 +603,21 @@ export default async function AdminKpisPage() {
             hint="Promedio sobre usuarios presentes en prediction_scores"
           />
         </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <MiniBarChart
+          title="Actividad diaria últimos 7 días"
+          subtitle="Predicciones por día y usuarios únicos"
+          rows={last7DaysSeries}
+          valueLabel="pred."
+        />
+
+        <MiniBarChart
+          title="Acceso vs predicción"
+          subtitle="Comparativa simple de usuarios vistos y usuarios que predicen"
+          rows={accessVsPredictionRows}
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -461,6 +718,65 @@ export default async function AdminKpisPage() {
             </table>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">
+            Top 5 partidos por predicciones
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Qué partidos están generando más interés.
+          </p>
+
+          <div className="mt-6 overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-y-2">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">Pos.</th>
+                  <th className="px-3 py-2">Partido</th>
+                  <th className="px-3 py-2">Estado</th>
+                  <th className="px-3 py-2">Predicciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topMatchesByPredictions.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="rounded-2xl bg-slate-50 px-3 py-6 text-center text-sm text-slate-500"
+                    >
+                      Aún no hay partidos cargados.
+                    </td>
+                  </tr>
+                ) : (
+                  topMatchesByPredictions.map((row, index) => (
+                    <tr key={row.id} className="rounded-2xl bg-slate-50 text-sm">
+                      <td className="px-3 py-3 font-semibold text-slate-900">
+                        #{index + 1}
+                      </td>
+                      <td className="px-3 py-3 text-slate-800">{row.label}</td>
+                      <td className="px-3 py-3 text-slate-800">{row.status}</td>
+                      <td className="px-3 py-3 text-slate-800">
+                        {formatNumber(row.predictionsCount)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <MiniBarChart
+          title="Top partidos por interés"
+          subtitle="Comparativa visual de predicciones por partido"
+          rows={topMatchesByPredictions.map((row) => ({
+            label: row.label,
+            value: row.predictionsCount,
+          }))}
+          valueLabel="pred."
+        />
       </section>
     </div>
   );

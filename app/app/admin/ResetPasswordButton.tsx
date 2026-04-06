@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 type Props = {
   userId: string;
@@ -8,7 +9,9 @@ type Props = {
 };
 
 export default function ResetPasswordButton({ userId, userLabel }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [refreshing, startTransition] = useTransition();
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,14 +39,31 @@ export default function ResetPasswordButton({ userId, userLabel }: Props) {
         body: JSON.stringify({ userId }),
       });
 
-      const result = await response.json();
+      const raw = await response.text();
+
+      let result: {
+        error?: string;
+        temporaryPassword?: string;
+      } | null = null;
+
+      try {
+        result = raw ? JSON.parse(raw) : null;
+      } catch {
+        result = null;
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || "No se pudo resetear la contraseña");
+        throw new Error(
+          result?.error || `Respuesta no válida del servidor (${response.status}).`
+        );
+      }
+
+      if (!result?.temporaryPassword) {
+        throw new Error("El servidor no devolvió una contraseña temporal.");
       }
 
       setTemporaryPassword(result.temporaryPassword);
-      setMessage("Contraseña temporal generada correctamente.");
+      setMessage("Contraseña temporal generada correctamente. Copia la contraseña y refresca la tabla.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error inesperado al resetear"
@@ -61,7 +81,21 @@ export default function ResetPasswordButton({ userId, userLabel }: Props) {
       setCopied(true);
     } catch {
       setCopied(false);
+      setError("No se pudo copiar la contraseña al portapapeles.");
     }
+  }
+
+  function handleRefreshTable() {
+    startTransition(() => {
+      router.refresh();
+    });
+  }
+
+  async function handleCopyAndRefresh() {
+    await handleCopy();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (
@@ -69,7 +103,7 @@ export default function ResetPasswordButton({ userId, userLabel }: Props) {
       <button
         type="button"
         onClick={handleReset}
-        disabled={loading}
+        disabled={loading || refreshing}
         className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Generando..." : "Reset password"}
@@ -91,13 +125,32 @@ export default function ResetPasswordButton({ userId, userLabel }: Props) {
             {temporaryPassword}
           </div>
 
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleCopy}
-              className="rounded-lg border border-amber-300 px-2 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+              disabled={refreshing}
+              className="rounded-lg border border-amber-300 px-2 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Copiar
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyAndRefresh}
+              disabled={refreshing}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {refreshing ? "Refrescando..." : "Copiar y refrescar"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRefreshTable}
+              disabled={refreshing}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Refrescar tabla
             </button>
 
             {copied && (

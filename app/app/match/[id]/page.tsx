@@ -496,7 +496,7 @@ export default async function MatchDetailPage({ params }: Props) {
             <div className="p-5 sm:p-6">
               <div className="mb-3">
                 <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-                  {isDualPuma ? "PUMA Highlights" : "PUMA Highlights"}
+                  {isDualPuma ? "PUMA Highlight" : "PUMA Highlight"}
                 </span>
               </div>
 
@@ -511,6 +511,11 @@ export default async function MatchDetailPage({ params }: Props) {
                 {getPumaCardText(pumaTeams, primaryPumaTeam, isDualPuma)}
               </p>
 
+              {!isDualPuma && primaryPumaTeam?.sponsor_brand ? (
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Sponsor: {primaryPumaTeam.sponsor_brand}
+                </p>
+              ) : null}
             </div>
 
             {isDualPuma ? (
@@ -604,8 +609,8 @@ export default async function MatchDetailPage({ params }: Props) {
         userId={user.id}
         prediction={predictionForSection}
       />
-
-      {matchStatus === "finished" ? (
+    
+    {matchStatus === "finished" ? (
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">
             Cómo se calculó

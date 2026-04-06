@@ -17,7 +17,9 @@ export const metadata: Metadata = {
   title: "PUMA World Cup 2026 Predictor",
   description: "Predice resultados, suma puntos y compite en el ranking del Mundial.",
   icons: {
-    icon: "/icon.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 

@@ -47,21 +47,16 @@ function getPredictionOutcomeLabel(prediction: PredictionRow | null) {
   }
 
   const pointsLabel = points === 1 ? "punto" : "puntos";
-  const hasPumaBonus = prediction.exact_hit ? points > 3 : points > 1;
 
   if (prediction.exact_hit) {
     return {
-      label: hasPumaBonus
-        ? `+${points} ${pointsLabel} · Exacta + bonus PUMA`
-        : `+${points} ${pointsLabel} · Exacta`,
+      label: `+${points} ${pointsLabel} · Exacta`,
       badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
   }
 
   return {
-    label: hasPumaBonus
-      ? `+${points} ${pointsLabel} · Tendencia + bonus PUMA`
-      : `+${points} ${pointsLabel} · Tendencia`,
+    label: `+${points} ${pointsLabel} · Tendencia`,
     badgeClass: "bg-sky-100 text-sky-700 border-sky-200",
   };
 }

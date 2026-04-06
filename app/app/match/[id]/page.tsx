@@ -496,7 +496,7 @@ export default async function MatchDetailPage({ params }: Props) {
             <div className="p-5 sm:p-6">
               <div className="mb-3">
                 <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-                  {isDualPuma ? "PUMA Highlight" : "PUMA Highlight"}
+                  {isDualPuma ? "PUMA Highlights" : "PUMA Highlights"}
                 </span>
               </div>
 
@@ -642,7 +642,7 @@ export default async function MatchDetailPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-      
+
     </main>
   );
 }

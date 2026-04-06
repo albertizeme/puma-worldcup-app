@@ -69,29 +69,35 @@ function TeamScoreRow({
   awayValue: number | null;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-      <div className="min-w-0 text-right">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:gap-4 sm:px-5">
+      <div className="min-w-0 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
           Local
         </p>
-        <p className="truncate text-sm font-medium text-slate-700">{homeTeam}</p>
+        <p className="mt-2 text-sm font-semibold leading-tight text-slate-800 sm:text-base">
+          {homeTeam}
+        </p>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-bold text-slate-900">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-xl font-extrabold text-slate-900 sm:h-14 sm:w-14">
           {homeValue ?? "-"}
         </div>
-        <span className="text-lg font-semibold text-slate-400">-</span>
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-bold text-slate-900">
+
+        <span className="text-lg font-bold text-slate-400 sm:text-xl">-</span>
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-xl font-extrabold text-slate-900 sm:h-14 sm:w-14">
           {awayValue ?? "-"}
         </div>
       </div>
 
-      <div className="min-w-0 text-left">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <div className="min-w-0 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
           Visitante
         </p>
-        <p className="truncate text-sm font-medium text-slate-700">{awayTeam}</p>
+        <p className="mt-2 text-sm font-semibold leading-tight text-slate-800 sm:text-base">
+          {awayTeam}
+        </p>
       </div>
     </div>
   );
@@ -240,12 +246,12 @@ function FinishedState({
 
         {prediction ? (
           <div>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-semibold text-slate-700">Tu predicción</p>
 
               {outcome ? (
                 <span
-                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${outcome.badgeClass}`}
+                  className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold ${outcome.badgeClass}`}
                 >
                   {outcome.label}
                 </span>
@@ -264,7 +270,7 @@ function FinishedState({
             <p className="text-sm font-semibold text-slate-900">
               No registraste predicción para este partido
             </p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
               Como no llegaste a enviar marcador antes del inicio, aquí no sumas puntos.
             </p>
           </div>

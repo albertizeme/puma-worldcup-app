@@ -1,6 +1,5 @@
 // app/ranking/page.tsx
 import Link from "next/link";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
@@ -435,7 +434,10 @@ export default async function RankingPage() {
           <p className="mt-1 max-w-2xl text-sm text-neutral-600">
             Tu posición actual y la clasificación completa del torneo.
           </p>
-
+          <p className="mt-2 max-w-2xl text-xs text-neutral-500">
+            Los PUMA Match suman 1 punto extra por acierto.
+          </p>
+          
           {latestSnapshotKey && (
             <p className="mt-2 text-xs text-neutral-500">
               Comparativa respecto a{" "}

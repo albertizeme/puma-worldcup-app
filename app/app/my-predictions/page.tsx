@@ -332,14 +332,6 @@ function PredictionCard({
         </div>
       </div>
 
-      {status === "resolved" && scoring.pumaBonus > 0 ? (
-        <div className="mt-4 flex justify-end">
-          <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
-            {scoring.basePoints} + {scoring.pumaBonus} bonus PUMA
-          </span>
-        </div>
-      ) : null}
-
       <div className="mt-4 flex items-center justify-end">
         <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
           Ver detalle

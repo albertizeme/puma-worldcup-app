@@ -22,6 +22,8 @@ type SearchParams = Promise<{
   userRole?: string;
   userState?: string;
   passwordState?: string;
+  success?: string;
+  error?: string;
 }>;
 
 function getUserRoleOptions() {
@@ -66,6 +68,50 @@ function getMustChangePasswordBadgeClass(mustChangePassword: boolean) {
     : "border border-slate-200 bg-slate-100 text-slate-600";
 }
 
+function getAlertFromQuery(success?: string, error?: string) {
+  if (error) {
+    switch (error) {
+      case "user-toggle":
+        return {
+          type: "error" as const,
+          message: "No se pudo actualizar el estado del usuario.",
+        };
+      case "user-toggle-self":
+        return {
+          type: "error" as const,
+          message: "No puedes desactivar tu propio usuario.",
+        };
+      default:
+        return {
+          type: "error" as const,
+          message: "Ha ocurrido un error en la gestión de usuarios.",
+        };
+    }
+  }
+
+  if (success) {
+    switch (success) {
+      case "user-activated":
+        return {
+          type: "success" as const,
+          message: "Usuario activado correctamente.",
+        };
+      case "user-deactivated":
+        return {
+          type: "success" as const,
+          message: "Usuario desactivado correctamente.",
+        };
+      default:
+        return {
+          type: "success" as const,
+          message: "Operación completada correctamente.",
+        };
+    }
+  }
+
+  return null;
+}
+
 export default async function AdminUsersPage({
   searchParams,
 }: {
@@ -77,6 +123,11 @@ export default async function AdminUsersPage({
   const selectedUserState = (resolvedSearchParams.userState ?? "all") as UserState;
   const selectedPasswordState = (resolvedSearchParams.passwordState ??
     "all") as PasswordState;
+
+  const alert = getAlertFromQuery(
+    resolvedSearchParams.success,
+    resolvedSearchParams.error
+  );
 
   const supabase = await getSupabaseServerClient();
 
@@ -197,6 +248,18 @@ export default async function AdminUsersPage({
           </div>
         </form>
       </div>
+
+      {alert && (
+        <div
+          className={`mt-6 rounded-2xl border p-4 text-sm ${
+            alert.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border-red-200 bg-red-50 text-red-800"
+          }`}
+        >
+          {alert.message}
+        </div>
+      )}
 
       <div className="mt-6 overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-y-2">

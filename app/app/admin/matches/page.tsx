@@ -24,6 +24,8 @@ type MatchRow = {
 
 type SearchParams = Promise<{
   status?: string;
+  success?: string;
+  error?: string;
 }>;
 
 function formatDateTime(value: string | null) {
@@ -80,6 +82,60 @@ function getMatchStatusBadgeClass(status: MatchStatus) {
   }
 }
 
+function getAlertFromQuery(success?: string, error?: string) {
+  if (error) {
+    switch (error) {
+      case "match-create":
+        return {
+          type: "error" as const,
+          message: "No se pudo crear el partido. Revisa los datos e inténtalo de nuevo.",
+        };
+      case "match-update":
+        return {
+          type: "error" as const,
+          message: "No se pudieron guardar los cambios del partido.",
+        };
+      case "match-delete":
+        return {
+          type: "error" as const,
+          message: "No se pudo eliminar el partido.",
+        };
+      default:
+        return {
+          type: "error" as const,
+          message: "Ha ocurrido un error en la gestión de partidos.",
+        };
+    }
+  }
+
+  if (success) {
+    switch (success) {
+      case "match-created":
+        return {
+          type: "success" as const,
+          message: "Partido creado correctamente.",
+        };
+      case "match-updated":
+        return {
+          type: "success" as const,
+          message: "Partido actualizado correctamente.",
+        };
+      case "match-deleted":
+        return {
+          type: "success" as const,
+          message: "Partido eliminado correctamente.",
+        };
+      default:
+        return {
+          type: "success" as const,
+          message: "Operación completada correctamente.",
+        };
+    }
+  }
+
+  return null;
+}
+
 export default async function AdminMatchesPage({
   searchParams,
 }: {
@@ -87,6 +143,10 @@ export default async function AdminMatchesPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const selectedStatus = resolvedSearchParams.status ?? "all";
+  const alert = getAlertFromQuery(
+    resolvedSearchParams.success,
+    resolvedSearchParams.error
+  );
 
   const supabase = await getSupabaseServerClient();
 
@@ -116,6 +176,18 @@ export default async function AdminMatchesPage({
         <p className="mt-1 text-sm text-slate-500">
           Añade un nuevo partido manualmente.
         </p>
+
+        {alert && (
+          <div
+            className={`mt-6 rounded-2xl border p-4 text-sm ${
+              alert.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {alert.message}
+          </div>
+        )}
 
         <form action={createMatchAction} className="mt-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -257,196 +329,209 @@ export default async function AdminMatchesPage({
             >
               Aplicar
             </button>
+
+            <a
+              href="/admin/matches"
+              className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600"
+            >
+              Limpiar
+            </a>
           </form>
         </div>
 
         <div className="mt-6 space-y-4">
-          {safeMatches.map((match) => (
-            <div
-              key={match.id}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-            >
-              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {match.home_flag ? `${match.home_flag} ` : ""}
-                      {match.home_team || "Local"} vs{" "}
-                      {match.away_flag ? `${match.away_flag} ` : ""}
-                      {match.away_team || "Visitante"}
+          {safeMatches.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+              No hay partidos que cumplan el filtro seleccionado.
+            </div>
+          ) : (
+            safeMatches.map((match) => (
+              <div
+                key={match.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {match.home_flag ? `${match.home_flag} ` : ""}
+                        {match.home_team || "Local"} vs{" "}
+                        {match.away_flag ? `${match.away_flag} ` : ""}
+                        {match.away_team || "Visitante"}
+                      </p>
+
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getMatchStatusBadgeClass(
+                          match.status
+                        )}`}
+                      >
+                        {match.status}
+                      </span>
+
+                      {match.is_puma_match && (
+                        <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                          PUMA
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      {match.stage || "Sin fase"} ·{" "}
+                      {formatDateTimeDisplay(match.match_datetime)}
                     </p>
 
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getMatchStatusBadgeClass(
-                        match.status
-                      )}`}
-                    >
-                      {match.status}
-                    </span>
-
-                    {match.is_puma_match && (
-                      <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                        PUMA
-                      </span>
+                    {(match.home_score !== null || match.away_score !== null) && (
+                      <p className="mt-2 text-sm font-semibold text-slate-700">
+                        Marcador actual: {match.home_score ?? "-"} -{" "}
+                        {match.away_score ?? "-"}
+                      </p>
                     )}
                   </div>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    {match.stage || "Sin fase"} ·{" "}
-                    {formatDateTimeDisplay(match.match_datetime)}
-                  </p>
-
-                  {(match.home_score !== null || match.away_score !== null) && (
-                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                      Marcador actual: {match.home_score ?? "-"} -{" "}
-                      {match.away_score ?? "-"}
-                    </p>
-                  )}
+                  <form action={deleteMatchAction}>
+                    <input type="hidden" name="id" value={match.id} />
+                    <DeleteMatchButton
+                      label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
+                    />
+                  </form>
                 </div>
 
-                <form action={deleteMatchAction}>
+                <form action={updateMatchAction}>
                   <input type="hidden" name="id" value={match.id} />
-                  <DeleteMatchButton
-                    label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
-                  />
+
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Fase
+                      </label>
+                      <input
+                        name="stage"
+                        defaultValue={match.stage ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Fecha/hora
+                      </label>
+                      <input
+                        name="match_datetime"
+                        type="datetime-local"
+                        defaultValue={formatDateTime(match.match_datetime)}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Equipo local
+                      </label>
+                      <input
+                        name="home_team"
+                        defaultValue={match.home_team ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Equipo visitante
+                      </label>
+                      <input
+                        name="away_team"
+                        defaultValue={match.away_team ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Flag local
+                      </label>
+                      <input
+                        name="home_flag"
+                        defaultValue={match.home_flag ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Flag visitante
+                      </label>
+                      <input
+                        name="away_flag"
+                        defaultValue={match.away_flag ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Estado
+                      </label>
+                      <select
+                        name="status"
+                        defaultValue={match.status}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="upcoming">upcoming</option>
+                        <option value="live">live</option>
+                        <option value="finished">finished</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-end">
+                      <label className="flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          name="is_puma_match"
+                          value="true"
+                          defaultChecked={Boolean(match.is_puma_match)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        Partido PUMA
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Goles local
+                      </label>
+                      <input
+                        name="home_score"
+                        type="number"
+                        defaultValue={match.home_score ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Goles visitante
+                      </label>
+                      <input
+                        name="away_score"
+                        type="number"
+                        defaultValue={match.away_score ?? ""}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      Guardar cambios
+                    </button>
+                  </div>
                 </form>
               </div>
-
-              <form action={updateMatchAction}>
-                <input type="hidden" name="id" value={match.id} />
-
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Fase
-                    </label>
-                    <input
-                      name="stage"
-                      defaultValue={match.stage ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Fecha/hora
-                    </label>
-                    <input
-                      name="match_datetime"
-                      type="datetime-local"
-                      defaultValue={formatDateTime(match.match_datetime)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Equipo local
-                    </label>
-                    <input
-                      name="home_team"
-                      defaultValue={match.home_team ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Equipo visitante
-                    </label>
-                    <input
-                      name="away_team"
-                      defaultValue={match.away_team ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Flag local
-                    </label>
-                    <input
-                      name="home_flag"
-                      defaultValue={match.home_flag ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Flag visitante
-                    </label>
-                    <input
-                      name="away_flag"
-                      defaultValue={match.away_flag ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Estado
-                    </label>
-                    <select
-                      name="status"
-                      defaultValue={match.status}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    >
-                      <option value="upcoming">upcoming</option>
-                      <option value="live">live</option>
-                      <option value="finished">finished</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-end">
-                    <label className="flex items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        name="is_puma_match"
-                        value="true"
-                        defaultChecked={Boolean(match.is_puma_match)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                      Partido PUMA
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Goles local
-                    </label>
-                    <input
-                      name="home_score"
-                      type="number"
-                      defaultValue={match.home_score ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Goles visitante
-                    </label>
-                    <input
-                      name="away_score"
-                      type="number"
-                      defaultValue={match.away_score ?? ""}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Guardar cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
     </div>

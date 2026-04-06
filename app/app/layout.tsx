@@ -29,6 +29,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-slate-50 text-slate-900 flex flex-col">
+        <AuthActivityTracker />
         {children}
       </body>
     </html>

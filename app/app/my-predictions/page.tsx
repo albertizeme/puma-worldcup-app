@@ -240,7 +240,7 @@ function PredictionCard({
 
             {row.is_puma_match ? (
               <span className="inline-flex items-center rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
-                PUMA Match +1
+                PUMA Match
               </span>
             ) : null}
           </div>

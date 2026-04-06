@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PUMA World Cup 2026 Predictor",
   description: "Predice resultados, suma puntos y compite en el ranking del Mundial.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

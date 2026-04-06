@@ -268,15 +268,7 @@ function FinishedState({
         {prediction ? (
           <div>
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-slate-700">Tu predicción</p>
-
-              {outcome ? (
-                <span
-                  className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold ${outcome.badgeClass}`}
-                >
-                  {outcome.label}
-                </span>
-              ) : null}
+              <p className="text-sm font-semibold text-slate-700">Tu predicción</p>             
             </div>
 
             <TeamScoreRow

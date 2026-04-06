@@ -7,6 +7,7 @@ type ProfileKpiRow = {
   is_active: boolean;
   created_at: string | null;
   last_seen_at: string | null;
+  last_prediction_at: string | null;
 };
 
 type PredictionRow = {
@@ -154,7 +155,11 @@ export default async function AdminKpisPage() {
     { data: predictionScores, error: predictionScoresError },
     { data: matches, error: matchesError },
   ] = await Promise.all([
-    supabase.from("profiles").select("id, role, is_active, created_at, last_seen_at"),
+    supabase
+      .from("profiles")
+      .select(
+        "id, role, is_active, created_at, last_seen_at, last_prediction_at"
+      ),
     supabase.from("predictions").select("id, user_id, match_id, created_at"),
     supabase
       .from("prediction_scores")
@@ -217,13 +222,55 @@ export default async function AdminKpisPage() {
 
   const seenUsersLast30d = safeProfiles.filter(
     (user) =>
-      user.last_seen_at && new Date(user.last_seen_at).getTime() >= thirtyDaysAgo
+      user.last_seen_at &&
+      new Date(user.last_seen_at).getTime() >= thirtyDaysAgo
   ).length;
 
   const dormantUsers = safeProfiles.filter(
     (user) =>
       !user.last_seen_at || new Date(user.last_seen_at).getTime() < thirtyDaysAgo
   ).length;
+
+  const predictedUsersLast7d = safeProfiles.filter(
+    (user) =>
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= sevenDaysAgo
+  ).length;
+
+  const predictedUsersLast30d = safeProfiles.filter(
+    (user) =>
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= thirtyDaysAgo
+  ).length;
+
+  const seenButNotPredictedLast7d = safeProfiles.filter((user) => {
+    const seenRecently =
+      user.last_seen_at && new Date(user.last_seen_at).getTime() >= sevenDaysAgo;
+
+    const predictedRecently =
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= sevenDaysAgo;
+
+    return Boolean(seenRecently) && !predictedRecently;
+  }).length;
+
+  const seenButNotPredictedLast30d = safeProfiles.filter((user) => {
+    const seenRecently =
+      user.last_seen_at &&
+      new Date(user.last_seen_at).getTime() >= thirtyDaysAgo;
+
+    const predictedRecently =
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= thirtyDaysAgo;
+
+    return Boolean(seenRecently) && !predictedRecently;
+  }).length;
+
+  const predictionConversion7d =
+    seenUsersLast7d > 0 ? (predictedUsersLast7d / seenUsersLast7d) * 100 : 0;
+
+  const predictionConversion30d =
+    seenUsersLast30d > 0 ? (predictedUsersLast30d / seenUsersLast30d) * 100 : 0;
 
   const usersWithPredictionsSet = new Set(safePredictions.map((p) => p.user_id));
   const usersWithPredictions = usersWithPredictionsSet.size;
@@ -249,9 +296,6 @@ export default async function AdminKpisPage() {
   const activePredictorsLast30d = new Set(
     predictionsLast30d.map((prediction) => prediction.user_id)
   ).size;
-
-  const predictorAccessRate7d =
-    seenUsersLast7d > 0 ? (activePredictorsLast7d / seenUsersLast7d) * 100 : 0;
 
   const avgPredictionsPerActiveUser =
     activeUsers > 0 ? safePredictions.length / activeUsers : 0;
@@ -398,16 +442,16 @@ export default async function AdminKpisPage() {
       value: seenUsersLast7d,
     },
     {
-      label: "Predictores 7 días",
-      value: activePredictorsLast7d,
+      label: "Predicción 7 días",
+      value: predictedUsersLast7d,
     },
     {
       label: "Acceso 30 días",
       value: seenUsersLast30d,
     },
     {
-      label: "Predictores 30 días",
-      value: activePredictorsLast30d,
+      label: "Predicción 30 días",
+      value: predictedUsersLast30d,
     },
   ];
 
@@ -437,7 +481,8 @@ export default async function AdminKpisPage() {
       </section>
 
       <section>
-        <h3 className="text-lg font-bold text-slate-900">Acceso real</h3>
+        <h3 className="text-lg font-bold text-slate-900">Acceso y conversión</h3>
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Usuarios vistos 7 días"
@@ -445,8 +490,37 @@ export default async function AdminKpisPage() {
             tone="success"
           />
           <StatCard
+            label="Usuarios con predicción 7 días"
+            value={formatNumber(predictedUsersLast7d)}
+          />
+          <StatCard
+            label="Conversión 7 días"
+            value={`${formatDecimal(predictionConversion7d)}%`}
+            hint="Usuarios con predicción / usuarios vistos"
+            tone={predictionConversion7d >= 50 ? "success" : "warning"}
+          />
+          <StatCard
+            label="Vistos sin predecir 7 días"
+            value={formatNumber(seenButNotPredictedLast7d)}
+            hint="Han entrado, pero no participaron"
+            tone={seenButNotPredictedLast7d > 0 ? "warning" : "default"}
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
             label="Usuarios vistos 30 días"
             value={formatNumber(seenUsersLast30d)}
+          />
+          <StatCard
+            label="Usuarios con predicción 30 días"
+            value={formatNumber(predictedUsersLast30d)}
+          />
+          <StatCard
+            label="Conversión 30 días"
+            value={`${formatDecimal(predictionConversion30d)}%`}
+            hint="Usuarios con predicción / usuarios vistos"
+            tone={predictionConversion30d >= 50 ? "success" : "warning"}
           />
           <StatCard
             label="Usuarios dormidos"
@@ -454,11 +528,18 @@ export default async function AdminKpisPage() {
             hint="Sin acceso en 30 días o nunca vistos"
             tone={dormantUsers > 0 ? "warning" : "default"}
           />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
           <StatCard
-            label="Conversión acceso → predicción"
-            value={`${formatDecimal(predictorAccessRate7d)}%`}
-            hint="Predictores 7d / usuarios vistos 7d"
-            tone={predictorAccessRate7d >= 50 ? "success" : "warning"}
+            label="Vistos sin predecir 30 días"
+            value={formatNumber(seenButNotPredictedLast30d)}
+            hint="Usuarios que entran pero no participan"
+            tone={seenButNotPredictedLast30d > 0 ? "warning" : "default"}
+          />
+          <StatCard
+            label="Nuevos usuarios 30 días"
+            value={formatNumber(newUsersLast30d)}
           />
         </div>
       </section>
@@ -474,7 +555,7 @@ export default async function AdminKpisPage() {
           />
           <StatCard label="Admins" value={formatNumber(adminUsers)} />
           <StatCard
-            label="Participación"
+            label="Participación histórica"
             value={`${formatDecimal(participationPct)}%`}
             hint="Usuarios con al menos 1 predicción / usuarios activos"
             tone={participationPct >= 50 ? "success" : "warning"}
@@ -487,10 +568,6 @@ export default async function AdminKpisPage() {
             value={formatNumber(newUsersLast7d)}
           />
           <StatCard
-            label="Nuevos usuarios 30 días"
-            value={formatNumber(newUsersLast30d)}
-          />
-          <StatCard
             label="Usuarios con predicciones"
             value={formatNumber(usersWithPredictions)}
           />
@@ -498,6 +575,10 @@ export default async function AdminKpisPage() {
             label="Usuarios sin predicciones"
             value={formatNumber(usersWithoutPredictions)}
             tone={usersWithoutPredictions > 0 ? "warning" : "default"}
+          />
+          <StatCard
+            label="Usuarios con +5 predicciones"
+            value={formatNumber(usersWithMoreThan5Predictions)}
           />
         </div>
       </section>
@@ -518,21 +599,17 @@ export default async function AdminKpisPage() {
             value={formatNumber(predictionsLast30d.length)}
           />
           <StatCard
-            label="Usuarios con +5 predicciones"
-            value={formatNumber(usersWithMoreThan5Predictions)}
+            label="Predictores 7 días"
+            value={formatNumber(activePredictorsLast7d)}
+            hint="Basado en predicciones creadas"
           />
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            label="Predictores 7 días"
-            value={formatNumber(activePredictorsLast7d)}
-            hint="Usuarios con al menos 1 predicción"
-          />
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
             label="Predictores 30 días"
             value={formatNumber(activePredictorsLast30d)}
-            hint="Usuarios con al menos 1 predicción"
+            hint="Basado en predicciones creadas"
           />
           <StatCard
             label="Promedio por usuario activo"
@@ -615,7 +692,7 @@ export default async function AdminKpisPage() {
 
         <MiniBarChart
           title="Acceso vs predicción"
-          subtitle="Comparativa simple de usuarios vistos y usuarios que predicen"
+          subtitle="Comparativa de usuarios vistos y usuarios que participaron"
           rows={accessVsPredictionRows}
         />
       </section>

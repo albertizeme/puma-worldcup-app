@@ -37,22 +37,31 @@ function isMatchFinished(homeScore: number | null, awayScore: number | null) {
 function getPredictionOutcomeLabel(prediction: PredictionRow | null) {
   if (!prediction) return null;
 
-  if ((prediction.points ?? 0) <= 0) {
+  const points = prediction.points ?? 0;
+
+  if (points <= 0) {
     return {
       label: "Sin puntos",
       badgeClass: "bg-slate-100 text-slate-700 border-slate-200",
     };
   }
 
+  const pointsLabel = points === 1 ? "punto" : "puntos";
+  const hasPumaBonus = prediction.exact_hit ? points > 3 : points > 1;
+
   if (prediction.exact_hit) {
     return {
-      label: `+${prediction.points} puntos · Exacta`,
+      label: hasPumaBonus
+        ? `+${points} ${pointsLabel} · Exacta + bonus PUMA`
+        : `+${points} ${pointsLabel} · Exacta`,
       badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
   }
 
   return {
-    label: `+${prediction.points} puntos · Tendencia`,
+    label: hasPumaBonus
+      ? `+${points} ${pointsLabel} · Tendencia + bonus PUMA`
+      : `+${points} ${pointsLabel} · Tendencia`,
     badgeClass: "bg-sky-100 text-sky-700 border-sky-200",
   };
 }
@@ -198,7 +207,7 @@ function ClosedPendingState({
             homeValue={prediction.home_score_pred}
             awayValue={prediction.away_score_pred}
           />
-
+        
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             Tu predicción ha quedado guardada y se evaluará cuando el partido finalice.
           </div>
@@ -226,6 +235,23 @@ function FinishedState({
   awayScore: number | null;
 }) {
   const outcome = getPredictionOutcomeLabel(prediction);
+
+  const points = prediction?.points ?? 0;
+  const hasPumaBonus = prediction
+    ? prediction.exact_hit
+      ? points > 3
+      : points > 1
+    : false;
+
+  const basePoints = prediction
+    ? prediction.exact_hit
+      ? hasPumaBonus
+        ? 3
+        : points
+      : hasPumaBonus
+      ? 1
+      : points
+    : 0;
 
   return (
     <SectionCard
@@ -264,6 +290,13 @@ function FinishedState({
               homeValue={prediction.home_score_pred}
               awayValue={prediction.away_score_pred}
             />
+            {prediction && hasPumaBonus ? (
+              <div className="mt-3 flex justify-end">
+                <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
+                  {basePoints} + 1 bonus PUMA
+                </span>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">

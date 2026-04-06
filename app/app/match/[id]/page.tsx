@@ -305,6 +305,42 @@ function getPumaImage(team: TeamMeta | null | undefined) {
   return team.sponsor_campaign_image || team.sponsor_kit_image || null;
 }
 
+function getPumaCardText(
+  pumaTeams: TeamMeta[],
+  primaryPumaTeam: TeamMeta | null,
+  isDualPuma: boolean,
+) {
+  if (isDualPuma && pumaTeams.length === 2) {
+    const firstText = pumaTeams[0].sponsor_card_text?.trim();
+    const secondText = pumaTeams[1].sponsor_card_text?.trim();
+
+    if (firstText && secondText) {
+      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${firstText} ${secondText}`;
+    }
+
+    if (firstText) {
+      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${firstText}`;
+    }
+
+    if (secondText) {
+      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${secondText}`;
+    }
+
+    return `Duelo entre ${pumaTeams[0].name} y ${pumaTeams[1].name}, dos selecciones vinculadas al universo PUMA. Wherever you play, play For the Love of the Shirt
+❤👕`;
+  }
+
+  if (primaryPumaTeam?.sponsor_card_text?.trim()) {
+    return primaryPumaTeam.sponsor_card_text.trim();
+  }
+
+  if (primaryPumaTeam) {
+    return `Descubre el contenido destacado de PUMA para ${primaryPumaTeam.name}.`;
+  }
+
+  return null;
+}
+
 function ScoreBox({
   value,
 }: {
@@ -401,7 +437,7 @@ export default async function MatchDetailPage({ params }: Props) {
 
             {hasPumaTeam ? (
               <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-                {isDualPuma ? "PUMA Clash" : "PUMA Match"}
+                {isDualPuma ? "PUMA Match" : "PUMA Match"}
               </span>
             ) : null}
 
@@ -461,7 +497,7 @@ export default async function MatchDetailPage({ params }: Props) {
             <div className="p-5 sm:p-6">
               <div className="mb-3">
                 <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-                  {isDualPuma ? "PUMA Clash" : "PUMA Highlight"}
+                  {isDualPuma ? "PUMA Highlight" : "PUMA Highlight"}
                 </span>
               </div>
 
@@ -473,17 +509,7 @@ export default async function MatchDetailPage({ params }: Props) {
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                {isDualPuma
-                  ? `${
-                      pumaTeams[0].sponsor_card_text ||
-                      `Descubre el contenido destacado de PUMA para ${pumaTeams[0].name}.`
-                    } ${
-                      pumaTeams[1].sponsor_card_text
-                        ? `· ${pumaTeams[1].sponsor_card_text}`
-                        : `· Explora también la presencia de PUMA con ${pumaTeams[1].name}.`
-                    }`
-                  : primaryPumaTeam?.sponsor_card_text ||
-                    `Descubre el contenido destacado de PUMA para ${primaryPumaTeam?.name}.`}
+                {getPumaCardText(pumaTeams, primaryPumaTeam, isDualPuma)}
               </p>
 
               {!isDualPuma && primaryPumaTeam?.sponsor_brand ? (

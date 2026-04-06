@@ -71,9 +71,27 @@ async function requireAdmin() {
 
 function revalidateAdminSurfaces() {
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/matches");
   revalidatePath("/");
   revalidatePath("/ranking");
   revalidatePath("/my-predictions");
+}
+
+function redirectMatchError(code: string): never {
+  redirect(`/admin/matches?error=${code}`);
+}
+
+function redirectMatchSuccess(code: string): never {
+  redirect(`/admin/matches?success=${code}`);
+}
+
+function redirectUserError(code: string): never {
+  redirect(`/admin/users?error=${code}`);
+}
+
+function redirectUserSuccess(code: string): never {
+  redirect(`/admin/users?success=${code}`);
 }
 
 export async function createMatchAction(formData: FormData) {
@@ -90,7 +108,11 @@ export async function createMatchAction(formData: FormData) {
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
 
   if (!homeTeam || !awayTeam) {
-    redirect("/admin?error=match-create");
+    redirectMatchError("match-create");
+  }
+
+  if (homeTeam === awayTeam) {
+    redirectMatchError("match-create");
   }
 
   const payload = {
@@ -110,11 +132,11 @@ export async function createMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[createMatchAction]", error);
-    redirect("/admin?error=match-create");
+    redirectMatchError("match-create");
   }
 
   revalidateAdminSurfaces();
-  redirect("/admin?success=match-created");
+  redirectMatchSuccess("match-created");
 }
 
 export async function updateMatchAction(formData: FormData) {
@@ -134,11 +156,19 @@ export async function updateMatchAction(formData: FormData) {
   const awayScore = parseNullableScore(formData.get("away_score"));
 
   if (!id) {
-    redirect("/admin?error=match-update");
+    redirectMatchError("match-update");
   }
 
   if (!homeTeam || !awayTeam) {
-    redirect("/admin?error=match-update");
+    redirectMatchError("match-update");
+  }
+
+  if (homeTeam === awayTeam) {
+    redirectMatchError("match-update");
+  }
+
+  if ((homeScore !== null && homeScore < 0) || (awayScore !== null && awayScore < 0)) {
+    redirectMatchError("match-update");
   }
 
   const payload: {
@@ -177,11 +207,11 @@ export async function updateMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[updateMatchAction]", error);
-    redirect("/admin?error=match-update");
+    redirectMatchError("match-update");
   }
 
   revalidateAdminSurfaces();
-  redirect("/admin?success=match-updated");
+  redirectMatchSuccess("match-updated");
 }
 
 export async function deleteMatchAction(formData: FormData) {
@@ -191,18 +221,18 @@ export async function deleteMatchAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
 
   if (!id) {
-    redirect("/admin?error=match-delete");
+    redirectMatchError("match-delete");
   }
 
   const { error } = await supabaseAdmin.from("matches").delete().eq("id", id);
 
   if (error) {
     console.error("[deleteMatchAction]", error);
-    redirect("/admin?error=match-delete");
+    redirectMatchError("match-delete");
   }
 
   revalidateAdminSurfaces();
-  redirect("/admin?success=match-deleted");
+  redirectMatchSuccess("match-deleted");
 }
 
 export async function toggleUserActiveAction(formData: FormData) {
@@ -213,11 +243,11 @@ export async function toggleUserActiveAction(formData: FormData) {
   const nextValueRaw = String(formData.get("next_is_active") ?? "");
 
   if (!id) {
-    redirect("/admin?error=user-toggle");
+    redirectUserError("user-toggle");
   }
 
   if (nextValueRaw !== "true" && nextValueRaw !== "false") {
-    redirect("/admin?error=user-toggle");
+    redirectUserError("user-toggle");
   }
 
   const nextIsActive = nextValueRaw === "true";
@@ -232,7 +262,7 @@ export async function toggleUserActiveAction(formData: FormData) {
   const currentAdminId = claimsData.claims.sub;
 
   if (id === currentAdminId) {
-    redirect("/admin?error=user-toggle-self");
+    redirectUserError("user-toggle-self");
   }
 
   const { error } = await supabaseAdmin
@@ -245,10 +275,10 @@ export async function toggleUserActiveAction(formData: FormData) {
 
   if (error) {
     console.error("[toggleUserActiveAction]", error);
-    redirect("/admin?error=user-toggle");
+    redirectUserError("user-toggle");
   }
 
-  await supabaseAdmin.from("admin_audit_logs").insert({
+  const { error: auditError } = await supabaseAdmin.from("admin_audit_logs").insert({
     admin_user_id: currentAdminId,
     target_user_id: id,
     action: nextIsActive ? "user_activated" : "user_deactivated",
@@ -257,6 +287,10 @@ export async function toggleUserActiveAction(formData: FormData) {
     },
   });
 
+  if (auditError) {
+    console.error("[toggleUserActiveAction][audit]", auditError);
+  }
+
   revalidateAdminSurfaces();
-  redirect(`/admin?success=${nextIsActive ? "user-activated" : "user-deactivated"}`);
+  redirectUserSuccess(nextIsActive ? "user-activated" : "user-deactivated");
 }

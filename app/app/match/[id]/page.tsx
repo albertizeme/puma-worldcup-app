@@ -41,6 +41,7 @@ type MatchStatus = "scheduled" | "live" | "finished";
 type BreakdownItem = {
   label: string;
   points: number;
+  highlight?: boolean;
 };
 
 type TeamMeta = {
@@ -159,23 +160,33 @@ function getOutcome(params: {
   return sameTrend ? "trend" : "miss";
 }
 
-function getPointsAndBreakdown(outcome: PredictionOutcome): {
+function getPointsAndBreakdown(
+  outcome: PredictionOutcome,
+  isPumaMatch: boolean,
+): {
   totalPoints: number;
   breakdown: BreakdownItem[];
 } {
   switch (outcome) {
     case "exact":
       return {
-        totalPoints: 3,
+        totalPoints: isPumaMatch ? 4 : 3,
         breakdown: [
           { label: "Marcador exacto", points: 3 },
-          { label: "Tendencia acertada", points: 0 },
+          ...(isPumaMatch
+            ? [{ label: "Bonus PUMA Match", points: 1, highlight: true }]
+            : []),
         ],
       };
     case "trend":
       return {
-        totalPoints: 1,
-        breakdown: [{ label: "Tendencia acertada", points: 1 }],
+        totalPoints: isPumaMatch ? 2 : 1,
+        breakdown: [
+          { label: "Tendencia acertada", points: 1 },
+          ...(isPumaMatch
+            ? [{ label: "Bonus PUMA Match", points: 1, highlight: true }]
+            : []),
+        ],
       };
     case "miss":
       return {
@@ -410,7 +421,7 @@ export default async function MatchDetailPage({ params }: Props) {
     prediction,
   });
 
-  const { totalPoints, breakdown } = getPointsAndBreakdown(outcome);
+  const { totalPoints, breakdown } = getPointsAndBreakdown(outcome, isPumaMatch);
   const outcomeContent = getOutcomeContent(outcome, totalPoints);
 
   const predictionForSection: PredictionSectionRow | null = prediction
@@ -424,16 +435,16 @@ export default async function MatchDetailPage({ params }: Props) {
     : null;
 
   console.log("MATCH DEBUG", {
-  matchId: match.id,
-  homeTeam: match.home_team,
-  awayTeam: match.away_team,
-  matchIsPuma: match.is_puma_match,
-  hasPumaTeam,
-  isPumaMatch,
-  outcome,
-  totalPoints,
-  breakdown,
-});
+    matchId: match.id,
+    homeTeam: match.home_team,
+    awayTeam: match.away_team,
+    matchIsPuma: match.is_puma_match,
+    hasPumaTeam,
+    isPumaMatch,
+    outcome,
+    totalPoints,
+    breakdown,
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -448,9 +459,9 @@ export default async function MatchDetailPage({ params }: Props) {
               {getStatusLabel(matchStatus)}
             </span>
 
-            {hasPumaTeam ? (
+            {isPumaMatch ? (
               <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-                {isDualPuma ? "PUMA Match" : "PUMA Match"}
+                PUMA Match +1
               </span>
             ) : null}
 
@@ -510,7 +521,7 @@ export default async function MatchDetailPage({ params }: Props) {
             <div className="p-5 sm:p-6">
               <div className="mb-3">
                 <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-                  {isDualPuma ? "PUMA Highlight" : "PUMA Highlight"}
+                  PUMA Highlight
                 </span>
               </div>
 
@@ -623,8 +634,8 @@ export default async function MatchDetailPage({ params }: Props) {
         userId={user.id}
         prediction={predictionForSection}
       />
-    
-    {matchStatus === "finished" ? (
+
+      {matchStatus === "finished" ? (
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">
             Cómo se calculó
@@ -634,12 +645,24 @@ export default async function MatchDetailPage({ params }: Props) {
             {breakdown.map((item) => (
               <div
                 key={item.label}
-                className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3"
+                className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
+                  item.highlight
+                    ? "border border-orange-200 bg-orange-50"
+                    : "bg-slate-50"
+                }`}
               >
-                <span className="text-sm font-medium text-slate-700">
+                <span
+                  className={`text-sm font-medium ${
+                    item.highlight ? "text-orange-700" : "text-slate-700"
+                  }`}
+                >
                   {item.label}
                 </span>
-                <span className="text-sm font-bold text-slate-900">
+                <span
+                  className={`text-sm font-bold ${
+                    item.highlight ? "text-orange-700" : "text-slate-900"
+                  }`}
+                >
                   {item.points > 0 ? `+${item.points}` : item.points}
                 </span>
               </div>
@@ -656,7 +679,6 @@ export default async function MatchDetailPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-
     </main>
   );
 }

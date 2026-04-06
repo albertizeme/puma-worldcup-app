@@ -570,108 +570,7 @@ export default async function RankingPage() {
                     {getPointsChangeSummaryText(currentUserMovement, snapshotReference)}
                   </p>
                 </div>
-              )}
-                          {currentUserRow && (rowAbove || rowBelow) ? (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 px-4 py-4 backdrop-blur-sm shadow-sm">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
-                        Tu batalla ahora
-                      </p>
-                      <p className="mt-1 text-sm text-white/80">
-                        Lo que te separa del de arriba y del de abajo.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {rowAbove ? (
-                      <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-white/60">
-                            Justo encima
-                          </p>
-                          <p className="truncate text-sm font-bold text-white">
-                            #{rowAbove.position} · {getDisplayName(rowAbove)}
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <p className="text-lg font-black text-white">
-                            {rowAbove.total_points ?? 0}
-                          </p>
-                          <p className="text-[11px] text-white/65">
-                            A {getGapText(rowAbove.total_points, currentUserRow.total_points)}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-3">
-                        <p className="text-sm font-bold text-emerald-100">
-                          Vas primero. Todos te persiguen.
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-100/80">
-                          Tú
-                        </p>
-                        <p className="truncate text-sm font-bold text-white">
-                          #{currentUserRow.position} · {getDisplayName(currentUserRow)}
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="text-lg font-black text-white">
-                          {currentUserRow.total_points ?? 0}
-                        </p>
-                        <p className="text-[11px] text-white/65">Tus puntos</p>
-                      </div>
-                    </div>
-
-                    {rowBelow ? (
-                      <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-white/60">
-                            Justo debajo
-                          </p>
-                          <p className="truncate text-sm font-bold text-white">
-                            #{rowBelow.position} · {getDisplayName(rowBelow)}
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <p className="text-lg font-black text-white">
-                            {rowBelow.total_points ?? 0}
-                          </p>
-                          <p className="text-[11px] text-white/65">
-                            Le llevas {getGapText(currentUserRow.total_points, rowBelow.total_points)}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p className="text-sm font-bold text-white">
-                          Cierras el ranking por ahora.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {gapToAbove !== null && gapToAbove > 0 ? (
-                    <p className="mt-3 text-xs font-medium text-amber-100">
-                      Estás a {formatPointsLabel(gapToAbove)} del siguiente puesto.
-                    </p>
-                  ) : rowAbove ? (
-                    <p className="mt-3 text-xs font-medium text-amber-100">
-                      Estás empatado con el de arriba. El desempate manda.
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-
+              )}                   
             </div>
 
             <div className="grid grid-cols-2 gap-3 bg-white/95 px-4 py-4 text-neutral-900 sm:px-6 xl:grid-cols-4">
@@ -744,7 +643,108 @@ export default async function RankingPage() {
           </p>
         </section>
       )}
+      
+      {currentUserRow && (rowAbove || rowBelow) ? (
+  <section className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="mb-4">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-violet-600">
+        Tu batalla ahora
+      </p>
+      <h2 className="mt-2 text-xl font-black tracking-tight text-neutral-900 sm:text-2xl">
+        Lo que te separa del siguiente puesto
+      </h2>
+      <p className="mt-1 text-sm text-neutral-600">
+        Tu referencia inmediata por arriba y por abajo en la clasificación.
+      </p>
+    </div>
 
+    <div className="space-y-3">
+      {rowAbove ? (
+        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Justo encima
+            </p>
+            <p className="truncate text-sm font-bold text-neutral-900">
+              #{rowAbove.position} · {getDisplayName(rowAbove)}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-lg font-black text-neutral-900">
+              {rowAbove.total_points ?? 0}
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              A {getGapText(rowAbove.total_points, currentUserRow.total_points)}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-sm font-bold text-emerald-700">
+            Vas primero. Todos te persiguen.
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+            Tú
+          </p>
+          <p className="truncate text-sm font-bold text-neutral-900">
+            #{currentUserRow.position} · {getDisplayName(currentUserRow)}
+          </p>
+        </div>
+
+        <div className="text-right">
+          <p className="text-lg font-black text-neutral-900">
+            {currentUserRow.total_points ?? 0}
+          </p>
+          <p className="text-[11px] text-neutral-500">Tus puntos</p>
+        </div>
+      </div>
+
+      {rowBelow ? (
+        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              Justo debajo
+            </p>
+            <p className="truncate text-sm font-bold text-neutral-900">
+              #{rowBelow.position} · {getDisplayName(rowBelow)}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-lg font-black text-neutral-900">
+              {rowBelow.total_points ?? 0}
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              Le llevas {getGapText(currentUserRow.total_points, rowBelow.total_points)}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <p className="text-sm font-bold text-neutral-900">
+            Cierras el ranking por ahora.
+          </p>
+        </div>
+      )}
+    </div>
+
+    {gapToAbove !== null && gapToAbove > 0 ? (
+      <p className="mt-4 text-sm font-medium text-violet-700">
+        Estás a {formatPointsLabel(gapToAbove)} del siguiente puesto.
+      </p>
+    ) : rowAbove ? (
+      <p className="mt-4 text-sm font-medium text-violet-700">
+        Estás empatado con el de arriba. El desempate manda.
+      </p>
+    ) : null}
+  </section>
+) : null} 
       <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
         <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">

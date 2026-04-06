@@ -290,13 +290,7 @@ function FinishedState({
               homeValue={prediction.home_score_pred}
               awayValue={prediction.away_score_pred}
             />
-            {prediction && hasPumaBonus ? (
-              <div className="mt-3 flex justify-end">
-                <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
-                  {basePoints} + 1 bonus PUMA
-                </span>
-              </div>
-            ) : null}
+            
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">

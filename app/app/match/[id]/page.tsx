@@ -434,18 +434,6 @@ export default async function MatchDetailPage({ params }: Props) {
       }
     : null;
 
-  console.log("MATCH DEBUG", {
-    matchId: match.id,
-    homeTeam: match.home_team,
-    awayTeam: match.away_team,
-    matchIsPuma: match.is_puma_match,
-    hasPumaTeam,
-    isPumaMatch,
-    outcome,
-    totalPoints,
-    breakdown,
-  });
-
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex justify-end">
@@ -461,7 +449,7 @@ export default async function MatchDetailPage({ params }: Props) {
 
             {isPumaMatch ? (
               <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-                PUMA Match +1
+                PUMA Match
               </span>
             ) : null}
 

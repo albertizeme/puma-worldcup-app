@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
@@ -97,34 +95,83 @@ function getStatusClasses(status: PredictionSectionKey) {
   }
 }
 
-function isTendencyHit(row: MyPredictionRow) {
-  if (row.home_score === null || row.away_score === null) return false;
-  if (row.home_score_pred === null || row.away_score_pred === null) return false;
+function getRowScoring(row: MyPredictionRow) {
+  if (
+    row.home_score === null ||
+    row.away_score === null ||
+    row.home_score_pred === null ||
+    row.away_score_pred === null
+  ) {
+    return {
+      exactHit: false,
+      tendencyHit: false,
+      basePoints: 0,
+      pumaBonus: 0,
+      totalPoints: 0,
+    };
+  }
 
-  const predDiff = row.home_score_pred - row.away_score_pred;
-  const realDiff = row.home_score - row.away_score;
+  const homeScorePred = row.home_score_pred;
+  const awayScorePred = row.away_score_pred;
+  const homeScore = row.home_score;
+  const awayScore = row.away_score;
 
-  return (
-    (predDiff > 0 && realDiff > 0) ||
-    (predDiff < 0 && realDiff < 0) ||
-    (predDiff === 0 && realDiff === 0)
-  );
+  const exactHit =
+    homeScorePred === homeScore &&
+    awayScorePred === awayScore;
+
+  const predDiff = homeScorePred - awayScorePred;
+  const realDiff = homeScore - awayScore;
+
+  const tendencyHit =
+    !exactHit &&
+    (
+      (predDiff > 0 && realDiff > 0) ||
+      (predDiff < 0 && realDiff < 0) ||
+      (predDiff === 0 && realDiff === 0)
+    );
+
+  const basePoints = exactHit ? 3 : tendencyHit ? 1 : 0;
+  const pumaBonus = basePoints > 0 && row.is_puma_match ? 1 : 0;
+
+  return {
+    exactHit,
+    tendencyHit,
+    basePoints,
+    pumaBonus,
+    totalPoints: basePoints + pumaBonus,
+  };
 }
 
 function getResolutionText(row: MyPredictionRow) {
   const hasResult = row.home_score !== null && row.away_score !== null;
   if (!hasResult) return "Pendiente de resultado";
 
-  if (row.exact_hit) return "Marcador exacto";
-  if (isTendencyHit(row)) return "Tendencia acertada";
+  const scoring = getRowScoring(row);
+
+  if (scoring.exactHit) {
+    return scoring.pumaBonus > 0
+      ? "Marcador exacto + bonus PUMA"
+      : "Marcador exacto";
+  }
+
+  if (scoring.tendencyHit) {
+    return scoring.pumaBonus > 0
+      ? "Tendencia acertada + bonus PUMA"
+      : "Tendencia acertada";
+  }
+
   return "Sin acierto";
 }
 
 function getResolutionClasses(row: MyPredictionRow) {
   const hasResult = row.home_score !== null && row.away_score !== null;
   if (!hasResult) return "border border-amber-200 bg-amber-50 text-amber-700";
-  if (row.exact_hit) return "border border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (isTendencyHit(row)) return "border border-violet-200 bg-violet-50 text-violet-700";
+
+  const scoring = getRowScoring(row);
+
+  if (scoring.exactHit) return "border border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (scoring.tendencyHit) return "border border-violet-200 bg-violet-50 text-violet-700";
   return "border border-slate-200 bg-slate-50 text-slate-700";
 }
 
@@ -175,6 +222,8 @@ function PredictionCard({
   row: MyPredictionRow;
   status: PredictionSectionKey;
 }) {
+  const scoring = getRowScoring(row);
+
   return (
     <Link
       href={`/match/${row.match_id}`}
@@ -191,7 +240,7 @@ function PredictionCard({
 
             {row.is_puma_match ? (
               <span className="inline-flex items-center rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
-                PUMA Match
+                PUMA Match +1
               </span>
             ) : null}
           </div>
@@ -240,7 +289,7 @@ function PredictionCard({
 
           {status === "resolved" ? (
             <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
-              {row.points ?? 0} pts
+              {scoring.totalPoints} pts
             </span>
           ) : null}
         </div>
@@ -283,6 +332,14 @@ function PredictionCard({
         </div>
       </div>
 
+      {status === "resolved" && scoring.pumaBonus > 0 ? (
+        <div className="mt-4 flex justify-end">
+          <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
+            {scoring.basePoints} + {scoring.pumaBonus} bonus PUMA
+          </span>
+        </div>
+      ) : null}
+
       <div className="mt-4 flex items-center justify-end">
         <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
           Ver detalle
@@ -324,7 +381,7 @@ export default async function MyPredictionsPage() {
   const pending = groupedByStatus.pending.length;
   const closed = groupedByStatus.closed.length;
   const resolved = groupedByStatus.resolved.length;
-  const totalPoints = rows.reduce((acc, row) => acc + (row.points ?? 0), 0);
+  const totalPoints = rows.reduce((acc, row) => acc + getRowScoring(row).totalPoints, 0);
 
   const sections: PredictionSectionKey[] = ["pending", "closed", "resolved"];
 
@@ -332,36 +389,36 @@ export default async function MyPredictionsPage() {
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <section className="mb-6">
-  <div className="mb-4 flex items-center justify-between gap-3">
-  <div className="flex items-center">
-    <UserMenu />
-  </div>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center">
+              <UserMenu />
+            </div>
 
-  <div className="flex flex-wrap items-center justify-end gap-3">
-    <Link href="/ranking" className={buttonStyles.nav}>
-      Ranking
-    </Link>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <Link href="/ranking" className={buttonStyles.nav}>
+                Ranking
+              </Link>
 
-    <Link href="/" className={buttonStyles.nav}>
-      Próximos partidos
-    </Link>
-  </div>
-</div>
+              <Link href="/" className={buttonStyles.nav}>
+                Próximos partidos
+              </Link>
+            </div>
+          </div>
 
-  <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
-    <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
-      Seguimiento personal
-    </p>
+          <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
+              Seguimiento personal
+            </p>
 
-    <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-      Mis predicciones
-    </h1>
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+              Mis predicciones
+            </h1>
 
-    <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
-      Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.
-    </p>
-  </div>
-</section>
+            <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
+              Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.
+            </p>
+          </div>
+        </section>
 
         {rows.length > 0 ? (
           <>

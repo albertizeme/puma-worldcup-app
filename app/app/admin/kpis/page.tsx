@@ -44,6 +44,56 @@ type MatchPredictionSummary = {
   predictionsCount: number;
 };
 
+type Tone = "default" | "success" | "warning" | "danger" | "info";
+type BarColor = "slate" | "emerald" | "amber" | "sky" | "violet" | "rose";
+
+function toneClasses(tone: Tone) {
+  switch (tone) {
+    case "success":
+      return "border-emerald-200 bg-emerald-50";
+    case "warning":
+      return "border-amber-200 bg-amber-50";
+    case "danger":
+      return "border-red-200 bg-red-50";
+    case "info":
+      return "border-sky-200 bg-sky-50";
+    default:
+      return "border-slate-200 bg-white";
+  }
+}
+
+function barColorClasses(color: BarColor) {
+  switch (color) {
+    case "emerald":
+      return "bg-emerald-500";
+    case "amber":
+      return "bg-amber-500";
+    case "sky":
+      return "bg-sky-500";
+    case "violet":
+      return "bg-violet-500";
+    case "rose":
+      return "bg-rose-500";
+    default:
+      return "bg-slate-900";
+  }
+}
+
+function badgeClasses(tone: Tone) {
+  switch (tone) {
+    case "success":
+      return "border border-emerald-200 bg-emerald-50 text-emerald-700";
+    case "warning":
+      return "border border-amber-200 bg-amber-50 text-amber-800";
+    case "danger":
+      return "border border-red-200 bg-red-50 text-red-700";
+    case "info":
+      return "border border-sky-200 bg-sky-50 text-sky-700";
+    default:
+      return "border border-slate-200 bg-slate-100 text-slate-700";
+  }
+}
+
 function StatCard({
   label,
   value,
@@ -53,22 +103,39 @@ function StatCard({
   label: string;
   value: number | string;
   hint?: string;
-  tone?: "default" | "success" | "warning";
+  tone?: Tone;
 }) {
-  const toneClasses =
-    tone === "success"
-      ? "border-emerald-200 bg-emerald-50"
-      : tone === "warning"
-        ? "border-amber-200 bg-amber-50"
-        : "border-slate-200 bg-white";
-
   return (
-    <div className={`rounded-2xl border p-5 shadow-sm ${toneClasses}`}>
+    <div className={`rounded-2xl border p-5 shadow-sm ${toneClasses(tone)}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
       <p className="mt-2 text-3xl font-extrabold text-slate-900">{value}</p>
       {hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+function SegmentCard({
+  title,
+  value,
+  description,
+  tone,
+}: {
+  title: string;
+  value: number;
+  description: string;
+  tone: Tone;
+}) {
+  return (
+    <div className={`rounded-2xl border p-5 shadow-sm ${toneClasses(tone)}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClasses(tone)}`}>
+          {formatNumber(value)}
+        </span>
+      </div>
+      <p className="mt-3 text-sm text-slate-600">{description}</p>
     </div>
   );
 }
@@ -105,7 +172,7 @@ function MiniBarChart({
 }: {
   title: string;
   subtitle?: string;
-  rows: Array<{ label: string; value: number; secondaryValue?: number }>;
+  rows: Array<{ label: string; value: number; secondaryValue?: number; color?: BarColor }>;
   valueLabel?: string;
 }) {
   const maxValue = Math.max(...rows.map((row) => row.value), 1);
@@ -134,7 +201,7 @@ function MiniBarChart({
 
               <div className="h-3 w-full rounded-full bg-slate-100">
                 <div
-                  className="h-3 rounded-full bg-slate-900"
+                  className={`h-3 rounded-full ${barColorClasses(row.color ?? "slate")}`}
                   style={{ width: `${widthPct}%` }}
                 />
               </div>
@@ -433,6 +500,7 @@ export default async function AdminKpisPage() {
       value: dayPredictions.length,
       secondaryValue: new Set(dayPredictions.map((prediction) => prediction.user_id))
         .size,
+      color: "sky" as BarColor,
     };
   });
 
@@ -440,18 +508,67 @@ export default async function AdminKpisPage() {
     {
       label: "Acceso 7 días",
       value: seenUsersLast7d,
+      color: "emerald" as BarColor,
     },
     {
       label: "Predicción 7 días",
       value: predictedUsersLast7d,
+      color: "violet" as BarColor,
     },
     {
       label: "Acceso 30 días",
       value: seenUsersLast30d,
+      color: "sky" as BarColor,
     },
     {
       label: "Predicción 30 días",
       value: predictedUsersLast30d,
+      color: "amber" as BarColor,
+    },
+  ];
+
+  const engagedUsers = safeProfiles.filter((user) => {
+    const seenRecently =
+      user.last_seen_at && new Date(user.last_seen_at).getTime() >= sevenDaysAgo;
+    const predictedRecently =
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= sevenDaysAgo;
+
+    return Boolean(seenRecently) && Boolean(predictedRecently);
+  }).length;
+
+  const watchersUsers = safeProfiles.filter((user) => {
+    const seenRecently =
+      user.last_seen_at && new Date(user.last_seen_at).getTime() >= sevenDaysAgo;
+    const predictedRecently =
+      user.last_prediction_at &&
+      new Date(user.last_prediction_at).getTime() >= sevenDaysAgo;
+
+    return Boolean(seenRecently) && !predictedRecently;
+  }).length;
+
+  const coldUsers = safeProfiles.filter((user) => !user.last_prediction_at).length;
+
+  const segmentRows = [
+    {
+      label: "Engaged",
+      value: engagedUsers,
+      color: "emerald" as BarColor,
+    },
+    {
+      label: "Watchers",
+      value: watchersUsers,
+      color: "amber" as BarColor,
+    },
+    {
+      label: "Dormant",
+      value: dormantUsers,
+      color: "rose" as BarColor,
+    },
+    {
+      label: "Cold",
+      value: coldUsers,
+      color: "slate" as BarColor,
     },
   ];
 
@@ -481,6 +598,40 @@ export default async function AdminKpisPage() {
       </section>
 
       <section>
+        <h3 className="text-lg font-bold text-slate-900">Segmentos de usuarios</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Clasificación rápida para entender quién participa, quién observa y quién se está perdiendo.
+        </p>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SegmentCard
+            title="Engaged"
+            value={engagedUsers}
+            description="Han accedido y también han predicho en los últimos 7 días."
+            tone="success"
+          />
+          <SegmentCard
+            title="Watchers"
+            value={watchersUsers}
+            description="Han accedido recientemente, pero no han participado con predicciones."
+            tone="warning"
+          />
+          <SegmentCard
+            title="Dormant"
+            value={dormantUsers}
+            description="No acceden desde hace 30 días o nunca han sido vistos."
+            tone="danger"
+          />
+          <SegmentCard
+            title="Cold"
+            value={coldUsers}
+            description="Usuarios que todavía no han hecho ninguna predicción histórica."
+            tone="default"
+          />
+        </div>
+      </section>
+
+      <section>
         <h3 className="text-lg font-bold text-slate-900">Acceso y conversión</h3>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -492,6 +643,7 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Usuarios con predicción 7 días"
             value={formatNumber(predictedUsersLast7d)}
+            tone="info"
           />
           <StatCard
             label="Conversión 7 días"
@@ -511,10 +663,12 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Usuarios vistos 30 días"
             value={formatNumber(seenUsersLast30d)}
+            tone="info"
           />
           <StatCard
             label="Usuarios con predicción 30 días"
             value={formatNumber(predictedUsersLast30d)}
+            tone="info"
           />
           <StatCard
             label="Conversión 30 días"
@@ -526,7 +680,7 @@ export default async function AdminKpisPage() {
             label="Usuarios dormidos"
             value={formatNumber(dormantUsers)}
             hint="Sin acceso en 30 días o nunca vistos"
-            tone={dormantUsers > 0 ? "warning" : "default"}
+            tone={dormantUsers > 0 ? "danger" : "default"}
           />
         </div>
 
@@ -540,6 +694,7 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Nuevos usuarios 30 días"
             value={formatNumber(newUsersLast30d)}
+            tone="info"
           />
         </div>
       </section>
@@ -566,10 +721,12 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Nuevos usuarios 7 días"
             value={formatNumber(newUsersLast7d)}
+            tone="info"
           />
           <StatCard
             label="Usuarios con predicciones"
             value={formatNumber(usersWithPredictions)}
+            tone="info"
           />
           <StatCard
             label="Usuarios sin predicciones"
@@ -579,6 +736,7 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Usuarios con +5 predicciones"
             value={formatNumber(usersWithMoreThan5Predictions)}
+            tone="success"
           />
         </div>
       </section>
@@ -589,19 +747,23 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Predicciones totales"
             value={formatNumber(safePredictions.length)}
+            tone="info"
           />
           <StatCard
             label="Predicciones 7 días"
             value={formatNumber(predictionsLast7d.length)}
+            tone="info"
           />
           <StatCard
             label="Predicciones 30 días"
             value={formatNumber(predictionsLast30d.length)}
+            tone="info"
           />
           <StatCard
             label="Predictores 7 días"
             value={formatNumber(activePredictorsLast7d)}
             hint="Basado en predicciones creadas"
+            tone="success"
           />
         </div>
 
@@ -610,6 +772,7 @@ export default async function AdminKpisPage() {
             label="Predictores 30 días"
             value={formatNumber(activePredictorsLast30d)}
             hint="Basado en predicciones creadas"
+            tone="info"
           />
           <StatCard
             label="Promedio por usuario activo"
@@ -628,13 +791,13 @@ export default async function AdminKpisPage() {
         <h3 className="text-lg font-bold text-slate-900">Partidos</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Partidos totales" value={formatNumber(totalMatches)} />
-          <StatCard label="Upcoming" value={formatNumber(upcomingMatches)} />
+          <StatCard label="Upcoming" value={formatNumber(upcomingMatches)} tone="info" />
           <StatCard label="Live" value={formatNumber(liveMatches)} tone="success" />
           <StatCard label="Finished" value={formatNumber(finishedMatches)} />
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Partidos PUMA" value={formatNumber(pumaMatches)} />
+          <StatCard label="Partidos PUMA" value={formatNumber(pumaMatches)} tone="info" />
           <StatCard
             label="Partidos sin predicciones"
             value={formatNumber(matchesWithoutPredictions)}
@@ -648,6 +811,7 @@ export default async function AdminKpisPage() {
             label="Media en partidos PUMA"
             value={formatDecimal(avgPredictionsPerPumaMatch)}
             hint={`No PUMA: ${formatDecimal(avgPredictionsPerNonPumaMatch)}`}
+            tone="info"
           />
         </div>
       </section>
@@ -658,14 +822,17 @@ export default async function AdminKpisPage() {
           <StatCard
             label="Puntos repartidos"
             value={formatNumber(totalPointsAwarded)}
+            tone="info"
           />
           <StatCard
             label="Exact hits totales"
             value={formatNumber(totalExactHits)}
+            tone="success"
           />
           <StatCard
             label="Tendency hits totales"
             value={formatNumber(totalTendencyHits)}
+            tone="warning"
           />
           <StatCard
             label="Media puntos por usuario"
@@ -698,6 +865,12 @@ export default async function AdminKpisPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
+        <MiniBarChart
+          title="Distribución por segmento"
+          subtitle="Mapa rápido del estado de la base de usuarios"
+          rows={segmentRows}
+        />
+
         <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">
             Top 5 usuarios por predicciones
@@ -744,7 +917,9 @@ export default async function AdminKpisPage() {
             </table>
           </div>
         </div>
+      </section>
 
+      <section className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">
             Top 5 usuarios por puntos
@@ -795,9 +970,20 @@ export default async function AdminKpisPage() {
             </table>
           </div>
         </div>
+
+        <MiniBarChart
+          title="Top partidos por interés"
+          subtitle="Comparativa visual de predicciones por partido"
+          rows={topMatchesByPredictions.map((row, index) => ({
+            label: row.label,
+            value: row.predictionsCount,
+            color: index === 0 ? "emerald" : index === 1 ? "sky" : "violet",
+          }))}
+          valueLabel="pred."
+        />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section>
         <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">
             Top 5 partidos por predicciones
@@ -844,16 +1030,6 @@ export default async function AdminKpisPage() {
             </table>
           </div>
         </div>
-
-        <MiniBarChart
-          title="Top partidos por interés"
-          subtitle="Comparativa visual de predicciones por partido"
-          rows={topMatchesByPredictions.map((row) => ({
-            label: row.label,
-            value: row.predictionsCount,
-          }))}
-          valueLabel="pred."
-        />
       </section>
     </div>
   );

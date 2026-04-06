@@ -599,6 +599,17 @@ export default async function MatchDetailPage({ params }: Props) {
         </div>
       </section>
 
+      <PredictionSection
+        matchId={match.id}
+        matchDatetime={match.match_datetime}
+        homeTeam={match.home_team}
+        awayTeam={match.away_team}
+        homeScore={parseScore(match.home_score)}
+        awayScore={parseScore(match.away_score)}
+        userId={user.id}
+        prediction={predictionForSection}
+      />
+
       {matchStatus === "finished" ? (
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">
@@ -631,17 +642,7 @@ export default async function MatchDetailPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-
-      <PredictionSection
-        matchId={match.id}
-        matchDatetime={match.match_datetime}
-        homeTeam={match.home_team}
-        awayTeam={match.away_team}
-        homeScore={parseScore(match.home_score)}
-        awayScore={parseScore(match.away_score)}
-        userId={user.id}
-        prediction={predictionForSection}
-      />
+      
     </main>
   );
 }

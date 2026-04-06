@@ -326,8 +326,7 @@ function getPumaCardText(
       return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${secondText}`;
     }
 
-    return `Duelo entre ${pumaTeams[0].name} y ${pumaTeams[1].name}, dos selecciones vinculadas al universo PUMA. Wherever you play, play For the Love of the Shirt
-❤👕`;
+    return `Wherever you play, play For the Love of the Shirt ❤👕`;
   }
 
   if (primaryPumaTeam?.sponsor_card_text?.trim()) {
@@ -632,30 +631,6 @@ export default async function MatchDetailPage({ params }: Props) {
           </div>
         </section>
       ) : null}
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-lg font-bold text-slate-900">Estado</h2>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Predicción registrada
-            </div>
-            <div className="mt-1 text-sm font-medium text-slate-900">
-              {prediction ? formatShortDate(prediction.created_at) : "—"}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Estado del partido
-            </div>
-            <div className="mt-1 text-sm font-medium text-slate-900">
-              {getStatusLabel(matchStatus)}
-            </div>
-          </div>
-        </div>
-      </section>
 
       <PredictionSection
         matchId={match.id}

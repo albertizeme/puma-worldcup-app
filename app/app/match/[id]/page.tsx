@@ -293,9 +293,16 @@ function getPumaTeamsForMatch(match: Match, teams: TeamMeta[]) {
     homeTeamData,
     awayTeamData,
     hasPumaTeam: pumaTeams.length > 0,
+    isDualPuma: pumaTeams.length === 2,
     primaryPumaTeam: pumaTeams[0] ?? null,
     pumaTeams,
   };
+}
+
+function getPumaImage(team: TeamMeta | null | undefined) {
+  if (!team) return null;
+
+  return team.sponsor_campaign_image || team.sponsor_kit_image || null;
 }
 
 function ScoreBox({
@@ -345,7 +352,8 @@ export default async function MatchDetailPage({ params }: Props) {
 
   const teams: TeamMeta[] = (teamsData ?? []) as TeamMeta[];
 
-  const { hasPumaTeam, primaryPumaTeam } = getPumaTeamsForMatch(match, teams);
+  const { hasPumaTeam, isDualPuma, primaryPumaTeam, pumaTeams } =
+    getPumaTeamsForMatch(match, teams);
 
   const { data: predictionData } = await supabaseServer
     .from("predictions")
@@ -378,11 +386,6 @@ export default async function MatchDetailPage({ params }: Props) {
       }
     : null;
 
-  const pumaImage =
-    primaryPumaTeam?.sponsor_campaign_image ||
-    primaryPumaTeam?.sponsor_kit_image ||
-    null;
-
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex justify-end">
@@ -398,7 +401,7 @@ export default async function MatchDetailPage({ params }: Props) {
 
             {hasPumaTeam ? (
               <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-                PUMA Match
+                {isDualPuma ? "PUMA Clash" : "PUMA Match"}
               </span>
             ) : null}
 
@@ -408,49 +411,41 @@ export default async function MatchDetailPage({ params }: Props) {
         </div>
 
         <div className="px-5 py-6 sm:px-6">
-          <div className="flex flex-col items-center text-center gap-6">
+          <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
+            <div className="flex items-center gap-4">
+              <CountryFlag
+                code={match.home_flag}
+                teamName={match.home_team}
+                alt={`Bandera de ${match.home_team}`}
+              />
+              <div className="min-w-0">
+                <div className="text-lg font-bold text-slate-900 sm:text-2xl">
+                  {match.home_team}
+                </div>
+                <div className="text-sm text-slate-500">Local</div>
+              </div>
+            </div>
 
-  {/* FLAGS + EQUIPOS */}
-  <div className="flex items-center justify-between w-full max-w-xs">
+            <div className="flex items-center justify-center gap-3">
+              <ScoreBox value={match.home_score} />
+              <div className="text-xl font-bold text-slate-400">-</div>
+              <ScoreBox value={match.away_score} />
+            </div>
 
-    {/* HOME */}
-    <div className="flex flex-col items-center gap-2 flex-1">
-      <CountryFlag
-        code={match.home_flag}
-        teamName={match.home_team}
-        alt={`Bandera de ${match.home_team}`}
-      />
-      <p className="text-sm font-semibold text-slate-900 leading-tight text-center break-words max-w-[90px]">
-        {match.home_team}
-      </p>
-    </div>
-
-    {/* VS / SCORE */}
-    <div className="flex flex-col items-center justify-center gap-2 px-2">
-
-      <div className="flex items-center gap-2">
-        <ScoreBox value={match.home_score} />
-        <span className="text-xl font-bold text-slate-400">-</span>
-        <ScoreBox value={match.away_score} />
-      </div>
-
-    </div>
-
-    {/* AWAY */}
-    <div className="flex flex-col items-center gap-2 flex-1">
-      <CountryFlag
-        code={match.away_flag}
-        teamName={match.away_team}
-        alt={`Bandera de ${match.away_team}`}
-      />
-      <p className="text-sm font-semibold text-slate-900 leading-tight text-center break-words max-w-[90px]">
-        {match.away_team}
-      </p>
-    </div>
-
-  </div>
-
-</div>
+            <div className="flex items-center justify-start gap-4 md:justify-end">
+              <div className="min-w-0 text-left md:text-right">
+                <div className="text-lg font-bold text-slate-900 sm:text-2xl">
+                  {match.away_team}
+                </div>
+                <div className="text-sm text-slate-500">Visitante</div>
+              </div>
+              <CountryFlag
+                code={match.away_flag}
+                teamName={match.away_team}
+                alt={`Bandera de ${match.away_team}`}
+              />
+            </div>
+          </div>
 
           {match.stadium || match.city ? (
             <div className="mt-5 text-sm text-slate-500">
@@ -460,50 +455,99 @@ export default async function MatchDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {hasPumaTeam && primaryPumaTeam ? (
+      {hasPumaTeam && pumaTeams.length > 0 ? (
         <section className="overflow-hidden rounded-3xl border border-orange-200 bg-white shadow-sm">
           <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
             <div className="p-5 sm:p-6">
               <div className="mb-3">
                 <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-                  PUMA Highlight
+                  {isDualPuma ? "PUMA Clash" : "PUMA Highlight"}
                 </span>
               </div>
 
               <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
-                {primaryPumaTeam.sponsor_card_title || `PUMA x ${primaryPumaTeam.name}`}
+                {isDualPuma
+                  ? `${pumaTeams[0].name} vs ${pumaTeams[1].name}`
+                  : primaryPumaTeam?.sponsor_card_title ||
+                    `PUMA x ${primaryPumaTeam?.name}`}
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                {primaryPumaTeam.sponsor_card_text ||
-                  `Descubre el contenido destacado de PUMA para ${primaryPumaTeam.name}.`}
+                {isDualPuma
+                  ? `${
+                      pumaTeams[0].sponsor_card_text ||
+                      `Descubre el contenido destacado de PUMA para ${pumaTeams[0].name}.`
+                    } ${
+                      pumaTeams[1].sponsor_card_text
+                        ? `· ${pumaTeams[1].sponsor_card_text}`
+                        : `· Explora también la presencia de PUMA con ${pumaTeams[1].name}.`
+                    }`
+                  : primaryPumaTeam?.sponsor_card_text ||
+                    `Descubre el contenido destacado de PUMA para ${primaryPumaTeam?.name}.`}
               </p>
 
-              {primaryPumaTeam.sponsor_brand ? (
+              {!isDualPuma && primaryPumaTeam?.sponsor_brand ? (
                 <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Sponsor: {primaryPumaTeam.sponsor_brand}
                 </p>
               ) : null}
             </div>
 
-            {pumaImage ? (
-              <div className="min-h-[220px] bg-slate-100">
-                <img
-                  src={pumaImage}
-                  alt={`Imagen PUMA de ${primaryPumaTeam.name}`}
-                  className="h-full w-full object-cover"
-                />
+            {isDualPuma ? (
+              <div className="grid min-h-[220px] grid-cols-2 divide-x divide-white/20 bg-slate-100">
+                {pumaTeams.map((team) => {
+                  const teamImage = getPumaImage(team);
+
+                  return teamImage ? (
+                    <div key={team.id} className="relative min-h-[220px]">
+                      <img
+                        src={teamImage}
+                        alt={`Imagen PUMA de ${team.name}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
+                        <div className="text-sm font-bold text-white">
+                          {team.name}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      key={team.id}
+                      className="flex min-h-[220px] items-center justify-center bg-gradient-to-br from-orange-100 via-white to-red-100 p-6"
+                    >
+                      <div className="text-center">
+                        <div className="text-sm font-bold uppercase tracking-[0.25em] text-orange-600">
+                          PUMA
+                        </div>
+                        <div className="mt-2 text-lg font-semibold text-slate-700">
+                          {team.name}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="flex min-h-[220px] items-center justify-center bg-gradient-to-br from-orange-100 via-white to-red-100 p-6">
-                <div className="text-center">
-                  <div className="text-sm font-bold uppercase tracking-[0.25em] text-orange-600">
-                    PUMA
+              <div className="min-h-[220px] bg-slate-100">
+                {getPumaImage(primaryPumaTeam) ? (
+                  <img
+                    src={getPumaImage(primaryPumaTeam) ?? ""}
+                    alt={`Imagen PUMA de ${primaryPumaTeam?.name}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[220px] items-center justify-center bg-gradient-to-br from-orange-100 via-white to-red-100 p-6">
+                    <div className="text-center">
+                      <div className="text-sm font-bold uppercase tracking-[0.25em] text-orange-600">
+                        PUMA
+                      </div>
+                      <div className="mt-2 text-lg font-semibold text-slate-700">
+                        {primaryPumaTeam?.name}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 text-lg font-semibold text-slate-700">
-                    {primaryPumaTeam.name}
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>

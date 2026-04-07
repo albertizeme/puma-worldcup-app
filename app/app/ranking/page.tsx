@@ -787,7 +787,44 @@ export default async function RankingPage() {
       })}
     </div>
   </section>
-) : null}  
+) : null}
+
+<details className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
+  <summary className="cursor-pointer list-none border-b border-neutral-100 px-4 py-4 font-bold text-neutral-900 sm:px-6">
+    Ver clasificación completa
+  </summary>
+
+  {rankedRows.length === 0 ? (
+    <div className="px-6 py-8 text-sm text-neutral-600">
+      Aún no hay datos suficientes para mostrar el ranking.
+    </div>
+  ) : (
+    <div className="divide-y divide-neutral-100">
+      {rankedRows.map((row, index) => {
+        const isPodium = isPodiumRow(row);
+        const competitiveHint = getCompetitiveHint(rankedRows, index);
+        const movement = latestSnapshotKey
+          ? getMovementInfo(row, previousSnapshotMap, snapshotReference)
+          : null;
+        const movementClass = movement
+          ? getMovementTextClass(movement.positionChange, movement.isNew)
+          : "";
+
+        return (
+          <RankingListItem
+            key={row.user_id}
+            row={row}
+            userId={user.id}
+            isPodium={isPodium}
+            competitiveHint={competitiveHint}
+            movement={movement}
+            movementClass={movementClass}
+          />
+        );
+      })}
+    </div>
+  )}
+</details>
 
       {currentUserRow && (rowAbove || rowBelow) ? (
   <section className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">

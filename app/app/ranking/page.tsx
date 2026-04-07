@@ -299,6 +299,110 @@ function getGapText(fromPoints: number | null, toPoints: number | null) {
   return `${diff} puntos`;
 }
 
+function getTopRows(rows: RankedRow[], limit = 10) {
+  return rows.slice(0, limit);
+}
+
+function getContextRows(rows: RankedRow[], userId: string, radius = 3) {
+  const currentIndex = rows.findIndex((row) => row.user_id === userId);
+
+  if (currentIndex === -1) return [];
+
+  const start = Math.max(0, currentIndex - radius);
+  const end = Math.min(rows.length, currentIndex + radius + 1);
+
+  return rows.slice(start, end);
+}
+
+function RankingListItem({
+  row,
+  userId,
+  isPodium,
+  competitiveHint,
+  movement,
+  movementClass,
+}: {
+  row: RankedRow;
+  userId: string;
+  isPodium: boolean;
+  competitiveHint: string | null;
+  movement: MovementInfo | null;
+  movementClass: string;
+}) {
+  const isCurrentUser = row.user_id === userId;
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 px-4 py-4 sm:px-6 ${
+        isCurrentUser ? "bg-violet-50" : isPodium ? "bg-neutral-50" : "bg-white"
+      }`}
+    >
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black shadow-sm sm:h-11 sm:w-11 ${getPositionBadgeClass(
+            row.position
+          )}`}
+        >
+          #{row.position}
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-bold text-neutral-900 sm:text-base">
+              {getDisplayName(row)}
+            </p>
+
+            {isCurrentUser && (
+              <span className="rounded-full bg-violet-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                Tú
+              </span>
+            )}
+
+            {isPodium && !isCurrentUser && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                Top 3
+              </span>
+            )}
+          </div>
+
+          <p className="mt-1 text-xs text-neutral-500 sm:text-sm">
+            {row.exact_hits ?? 0} exactos · {row.tendency_hits ?? 0} tendencias
+          </p>
+
+          {competitiveHint && (
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-violet-700/85 sm:text-[11px]">
+              {competitiveHint}
+            </p>
+          )}
+
+          {movement && (
+            <div className="mt-1 flex flex-col gap-0.5">
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${movementClass}`}
+              >
+                {movement.movementLabel}
+              </p>
+
+              <p className="text-[10px] font-medium text-neutral-500 sm:text-[11px]">
+                {movement.pointsLabel}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="shrink-0 text-right">
+        <p className="text-xl font-black text-neutral-900 sm:text-2xl">
+          {row.total_points ?? 0}
+        </p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500 sm:text-xs">
+          puntos
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default async function RankingPage() {
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
 
@@ -401,6 +505,8 @@ export default async function RankingPage() {
   const totalParticipants = rankedRows.length;
   const leader = rankedRows[0];
   const podiumCutoffPoints = getPodiumCutoffPoints(rankedRows);
+  const topRows = getTopRows(rankedRows, 10);
+  const contextRows = getContextRows(rankedRows, user.id, 3);
 
   const isPodiumRow = (row: RankedRow) => {
     if (podiumCutoffPoints === null) return false;
@@ -643,7 +749,46 @@ export default async function RankingPage() {
           </p>
         </section>
       )}
-      
+
+    {currentUserRow && contextRows.length > 0 ? (
+  <section className="mb-6 overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
+    <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
+      <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">
+        Tu entorno
+      </h2>
+      <p className="mt-1 text-sm text-neutral-600">
+        Tu posición con los puestos más cercanos por arriba y por abajo.
+      </p>
+    </div>
+
+    <div className="divide-y divide-neutral-100">
+      {contextRows.map((row) => {
+        const globalIndex = rankedRows.findIndex((item) => item.user_id === row.user_id);
+        const isPodium = isPodiumRow(row);
+        const competitiveHint = getCompetitiveHint(rankedRows, globalIndex);
+        const movement = latestSnapshotKey
+          ? getMovementInfo(row, previousSnapshotMap, snapshotReference)
+          : null;
+        const movementClass = movement
+          ? getMovementTextClass(movement.positionChange, movement.isNew)
+          : "";
+
+        return (
+          <RankingListItem
+            key={row.user_id}
+            row={row}
+            userId={user.id}
+            isPodium={isPodium}
+            competitiveHint={competitiveHint}
+            movement={movement}
+            movementClass={movementClass}
+          />
+        );
+      })}
+    </div>
+  </section>
+) : null}  
+
       {currentUserRow && (rowAbove || rowBelow) ? (
   <section className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
     <div className="mb-4">

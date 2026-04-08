@@ -524,11 +524,6 @@ export default async function MatchDetailPage({ params }: Props) {
                 {getPumaCardText(pumaTeams, primaryPumaTeam, isDualPuma)}
               </p>
 
-              {!isDualPuma && primaryPumaTeam?.sponsor_brand ? (
-                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Sponsor: {primaryPumaTeam.sponsor_brand}
-                </p>
-              ) : null}
             </div>
 
             {isDualPuma ? (

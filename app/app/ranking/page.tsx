@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 type RankingRow = {
   user_id: string;
@@ -314,6 +315,39 @@ function getContextRows(rows: RankedRow[], userId: string, radius = 3) {
   return rows.slice(start, end);
 }
 
+function getMomentumBadge(params: {
+  positionChange: number | null;
+  pointsChange: number | null;
+  gapToAbove: number | null;
+  gapToBelow: number | null;
+  isPodium: boolean;
+}) {
+  const { positionChange, pointsChange, gapToAbove, gapToBelow, isPodium } = params;
+
+  if ((positionChange ?? 0) > 0 || (pointsChange ?? 0) >= 3) {
+    return {
+      label: "🔥 En racha",
+      className: "border-rose-200 bg-rose-100 text-rose-700",
+    };
+  }
+
+  if (gapToAbove === 1 || gapToBelow === 1) {
+    return {
+      label: "⚡ Presión total",
+      className: "border-amber-200 bg-amber-100 text-amber-800",
+    };
+  }
+
+  if ((positionChange ?? 0) === 0 || isPodium) {
+    return {
+      label: "🛡️ Aguantando",
+      className: "border-sky-200 bg-sky-100 text-sky-700",
+    };
+  }
+
+  return null;
+}
+
 function RankingListItem({
   row,
   userId,
@@ -539,8 +573,8 @@ export default async function RankingPage() {
 
   const currentUserMovementPillClass = currentUserMovement
     ? getMovementPillClass(currentUserMovement.positionChange, currentUserMovement.isNew)
-    : "";
-  
+    : "";   
+
   const battleRows = currentUserRow
     ? getBattleRows(rankedRows, user.id)
     : {
@@ -559,6 +593,32 @@ export default async function RankingPage() {
     currentUserRow && rowBelow
       ? Math.max((currentUserRow.total_points ?? 0) - (rowBelow.total_points ?? 0), 0)
       : null;  
+  
+  const movementBadge =
+  latestSnapshotKey &&
+  currentUserMovement &&
+  (
+    currentUserMovement.isNew ||
+    (
+      currentUserMovement.positionChange !== null &&
+      currentUserMovement.positionChange !== 0
+    )
+  )
+    ? currentUserMovement
+    : null;
+
+const currentUserMomentum =
+  currentUserRow && currentUserMovement
+    ? getMomentumBadge({
+        positionChange: currentUserMovement.positionChange,
+        pointsChange: currentUserMovement.pointsChange,
+        gapToAbove,
+        gapToBelow,
+        isPodium: isPodiumRow(currentUserRow),
+      })
+    : null;
+
+const momentumBadge = movementBadge ? null : currentUserMomentum; 
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -606,28 +666,27 @@ export default async function RankingPage() {
             <div className="px-5 py-5 sm:px-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
-                    Tu situación
-                  </p>
+  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
+    Tu situación
+  </p>
 
-                  {latestSnapshotKey && currentUserMovement && (
-                    <div
-                      className={`mt-3 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide shadow-sm animate-fade-in-up animate-soft-pulse ${currentUserMovementPillClass}`}
-                    >
-                      <span aria-hidden="true">
-                        {currentUserMovement.isNew
-                          ? "✦"
-                          : currentUserMovement.positionChange === null ||
-                            currentUserMovement.positionChange === 0
-                          ? "→"
-                          : currentUserMovement.positionChange > 0
-                          ? "↑"
-                          : "↓"}
-                      </span>
-                      <span>{currentUserMovement.movementLabel.replace(/^[↑↓→]\s*/, "")}</span>
-                    </div>
-                  )}
-                </div>
+  {movementBadge ? (
+    <div
+      className={`mt-3 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide shadow-sm animate-fade-in-up animate-soft-pulse ${currentUserMovementPillClass}`}
+    >
+      <span aria-hidden="true">
+        {movementBadge.positionChange! > 0 ? "↑" : "↓"}
+      </span>
+      <span>{movementBadge.movementLabel.replace(/^[↑↓→]\s*/, "")}</span>
+    </div>
+  ) : momentumBadge ? (
+    <div
+      className={`mt-3 inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-wide shadow-sm ${momentumBadge.className}`}
+    >
+      {momentumBadge.label}
+    </div>
+  ) : null}
+</div>
               </div>
 
               <div className="mt-4 flex items-end justify-between gap-4">
@@ -799,6 +858,7 @@ export default async function RankingPage() {
       Aún no hay datos suficientes para mostrar el ranking.
     </div>
   ) : (
+    
     <div className="divide-y divide-neutral-100">
       {rankedRows.map((row, index) => {
         const isPodium = isPodiumRow(row);
@@ -927,6 +987,7 @@ export default async function RankingPage() {
     ) : null}
   </section>
 ) : null} 
+
       <section className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
         <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">

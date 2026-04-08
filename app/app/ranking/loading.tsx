@@ -1,17 +1,32 @@
+import Image from "next/image";
+
 export default function Loading() {
   return (
-    <main className="flex items-center justify-center min-h-[60vh]">
+    <main className="flex items-center justify-center min-h-[60vh] bg-black">
       
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-6">
 
-        {/* Balón animado */}
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full bg-white flex items-center justify-center text-2xl animate-spin">
-            ⚽
+        {/* Contenedor balón */}
+        <div className="relative flex flex-col items-center">
+
+          {/* Balón animado */}
+          <div className="animate-[ballBounce_0.8s_ease-in-out_infinite]">
+            <Image
+              src="/puma-logo-ball.png"
+              alt="Ball"
+              width={64}
+              height={64}
+              priority
+            />
           </div>
+
+          {/* Shadow dinámico */}
+          <div className="mt-2 w-10 h-2 bg-black/40 rounded-full blur-sm animate-[shadowBounce_0.8s_ease-in-out_infinite]" />
+
         </div>
 
-        <p className="text-sm text-zinc-400">
+        {/* Texto */}
+        <p className="text-sm text-zinc-400 tracking-wide">
           Cargando ranking...
         </p>
 

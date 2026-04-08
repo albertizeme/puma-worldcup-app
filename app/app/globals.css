@@ -101,3 +101,23 @@ button {
 .animate-soft-pulse {
   animation: softPulseGlow 1.8s ease-in-out 1;
 }
+
+@keyframes ballBounce {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes shadowBounce {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(0.6);
+    opacity: 0.2;
+  }
+}

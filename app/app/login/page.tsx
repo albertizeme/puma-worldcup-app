@@ -102,9 +102,7 @@ export default function LoginPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#140c1f]/95 via-[#140c1f]/40 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                <div className="mt-6 inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 backdrop-blur-sm sm:mt-8">
-                  PUMA Employees
-                </div>
+                
                 <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
                   Accede a la plataforma
                 </h1>
@@ -122,7 +120,7 @@ export default function LoginPage() {
                     htmlFor="email"
                     className="mb-1.5 block text-sm font-medium text-white/85"
                   >
-                    Email corporativo
+                    Email
                   </label>
                   <input
                     id="email"
@@ -131,7 +129,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
-                    placeholder="nombre@empresa.com"
+                    placeholder="tuemail@puma.com"
                     required
                   />
                 </div>

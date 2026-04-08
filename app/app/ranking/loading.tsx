@@ -1,13 +1,22 @@
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-5xl p-4">
-      <div className="space-y-4 animate-pulse">
-        <div className="h-8 w-40 rounded bg-zinc-800" />
-        <div className="h-24 rounded-2xl bg-zinc-900" />
-        <div className="h-24 rounded-2xl bg-zinc-900" />
-        <div className="h-24 rounded-2xl bg-zinc-900" />
-        <div className="h-24 rounded-2xl bg-zinc-900" />
+    <main className="flex items-center justify-center min-h-[60vh]">
+      
+      <div className="flex flex-col items-center gap-4">
+
+        {/* Balón animado */}
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full bg-white flex items-center justify-center text-2xl animate-spin">
+            ⚽
+          </div>
+        </div>
+
+        <p className="text-sm text-zinc-400">
+          Cargando ranking...
+        </p>
+
       </div>
+
     </main>
   );
 }

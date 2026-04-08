@@ -1,0 +1,1010 @@
+[
+  {
+    "match_number": 1,
+    "stage": "Group A",
+    "home_team": "Mexico",
+    "away_team": "South Africa",
+    "home_flag": "mx",
+    "away_flag": "za",
+    "source_kickoff_time": "15:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 2,
+    "stage": "Group A",
+    "home_team": "Korea Republic",
+    "away_team": "Czechia",
+    "home_flag": "kr",
+    "away_flag": "cz",
+    "source_kickoff_time": "22:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 3,
+    "stage": "Group B",
+    "home_team": "Canada",
+    "away_team": "Bosnia and Herzegovina",
+    "home_flag": "ca",
+    "away_flag": "ba",
+    "source_kickoff_time": "15:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 4,
+    "stage": "Group D",
+    "home_team": "USA",
+    "away_team": "Paraguay",
+    "home_flag": "us",
+    "away_flag": "py",
+    "source_kickoff_time": "21:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 5,
+    "stage": "Group C",
+    "home_team": "Haiti",
+    "away_team": "Scotland",
+    "home_flag": "ht",
+    "away_flag": "gb-sct",
+    "source_kickoff_time": "21:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 6,
+    "stage": "Group D",
+    "home_team": "Australia",
+    "away_team": "Türkiye",
+    "home_flag": "au",
+    "away_flag": "tr",
+    "source_kickoff_time": "00:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 7,
+    "stage": "Group C",
+    "home_team": "Brazil",
+    "away_team": "Morocco",
+    "home_flag": "br",
+    "away_flag": "ma",
+    "source_kickoff_time": "18:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 8,
+    "stage": "Group B",
+    "home_team": "Qatar",
+    "away_team": "Switzerland",
+    "home_flag": "qa",
+    "away_flag": "ch",
+    "source_kickoff_time": "15:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 9,
+    "stage": "Group E",
+    "home_team": "Ivory Coast",
+    "away_team": "Ecuador",
+    "home_flag": "ci",
+    "away_flag": "ec",
+    "source_kickoff_time": "19:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 10,
+    "stage": "Group E",
+    "home_team": "Germany",
+    "away_team": "Curaçao",
+    "home_flag": "de",
+    "away_flag": "cw",
+    "source_kickoff_time": "13:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 11,
+    "stage": "Group F",
+    "home_team": "Netherlands",
+    "away_team": "Japan",
+    "home_flag": "nl",
+    "away_flag": "jp",
+    "source_kickoff_time": "16:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 12,
+    "stage": "Group F",
+    "home_team": "Sweden",
+    "away_team": "Tunisia",
+    "home_flag": "se",
+    "away_flag": "tn",
+    "source_kickoff_time": "22:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 13,
+    "stage": "Group H",
+    "home_team": "Saudi Arabia",
+    "away_team": "Uruguay",
+    "home_flag": "sa",
+    "away_flag": "uy",
+    "source_kickoff_time": "18:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 14,
+    "stage": "Group H",
+    "home_team": "Spain",
+    "away_team": "Cabo Verde",
+    "home_flag": "es",
+    "away_flag": "cv",
+    "source_kickoff_time": "12:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 15,
+    "stage": "Group G",
+    "home_team": "IR Iran",
+    "away_team": "New Zealand",
+    "home_flag": "ir",
+    "away_flag": "nz",
+    "source_kickoff_time": "21:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 16,
+    "stage": "Group G",
+    "home_team": "Belgium",
+    "away_team": "Egypt",
+    "home_flag": "be",
+    "away_flag": "eg",
+    "source_kickoff_time": "15:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 17,
+    "stage": "Group I",
+    "home_team": "France",
+    "away_team": "Senegal",
+    "home_flag": "fr",
+    "away_flag": "sn",
+    "source_kickoff_time": "15:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 18,
+    "stage": "Group I",
+    "home_team": "Iraq",
+    "away_team": "Norway",
+    "home_flag": "iq",
+    "away_flag": "no",
+    "source_kickoff_time": "18:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 19,
+    "stage": "Group J",
+    "home_team": "Argentina",
+    "away_team": "Algeria",
+    "home_flag": "ar",
+    "away_flag": "dz",
+    "source_kickoff_time": "21:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 20,
+    "stage": "Group J",
+    "home_team": "Austria",
+    "away_team": "Jordan",
+    "home_flag": "at",
+    "away_flag": "jo",
+    "source_kickoff_time": "00:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 21,
+    "stage": "Group L",
+    "home_team": "Ghana",
+    "away_team": "Panama",
+    "home_flag": "gh",
+    "away_flag": "pa",
+    "source_kickoff_time": "19:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 22,
+    "stage": "Group L",
+    "home_team": "England",
+    "away_team": "Croatia",
+    "home_flag": "gb-eng",
+    "away_flag": "hr",
+    "source_kickoff_time": "16:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 23,
+    "stage": "Group K",
+    "home_team": "Portugal",
+    "away_team": "Congo DR",
+    "home_flag": "pt",
+    "away_flag": "cd",
+    "source_kickoff_time": "13:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 24,
+    "stage": "Group K",
+    "home_team": "Uzbekistan",
+    "away_team": "Colombia",
+    "home_flag": "uz",
+    "away_flag": "co",
+    "source_kickoff_time": "22:00",
+    "group_round": 1
+  },
+  {
+    "match_number": 25,
+    "stage": "Group A",
+    "home_team": "Czechia",
+    "away_team": "South Africa",
+    "home_flag": "cz",
+    "away_flag": "za",
+    "source_kickoff_time": "12:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 26,
+    "stage": "Group B",
+    "home_team": "Switzerland",
+    "away_team": "Bosnia and Herzegovina",
+    "home_flag": "ch",
+    "away_flag": "ba",
+    "source_kickoff_time": "15:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 27,
+    "stage": "Group B",
+    "home_team": "Canada",
+    "away_team": "Qatar",
+    "home_flag": "ca",
+    "away_flag": "qa",
+    "source_kickoff_time": "18:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 28,
+    "stage": "Group A",
+    "home_team": "Mexico",
+    "away_team": "Korea Republic",
+    "home_flag": "mx",
+    "away_flag": "kr",
+    "source_kickoff_time": "21:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 29,
+    "stage": "Group C",
+    "home_team": "Brazil",
+    "away_team": "Haiti",
+    "home_flag": "br",
+    "away_flag": "ht",
+    "source_kickoff_time": "20:30",
+    "group_round": 2
+  },
+  {
+    "match_number": 30,
+    "stage": "Group C",
+    "home_team": "Scotland",
+    "away_team": "Morocco",
+    "home_flag": "gb-sct",
+    "away_flag": "ma",
+    "source_kickoff_time": "18:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 31,
+    "stage": "Group D",
+    "home_team": "Türkiye",
+    "away_team": "Paraguay",
+    "home_flag": "tr",
+    "away_flag": "py",
+    "source_kickoff_time": "23:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 32,
+    "stage": "Group D",
+    "home_team": "USA",
+    "away_team": "Australia",
+    "home_flag": "us",
+    "away_flag": "au",
+    "source_kickoff_time": "15:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 33,
+    "stage": "Group E",
+    "home_team": "Germany",
+    "away_team": "Ivory Coast",
+    "home_flag": "de",
+    "away_flag": "ci",
+    "source_kickoff_time": "16:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 34,
+    "stage": "Group E",
+    "home_team": "Ecuador",
+    "away_team": "Curaçao",
+    "home_flag": "ec",
+    "away_flag": "cw",
+    "source_kickoff_time": "20:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 35,
+    "stage": "Group F",
+    "home_team": "Netherlands",
+    "away_team": "Sweden",
+    "home_flag": "nl",
+    "away_flag": "se",
+    "source_kickoff_time": "13:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 36,
+    "stage": "Group F",
+    "home_team": "Tunisia",
+    "away_team": "Japan",
+    "home_flag": "tn",
+    "away_flag": "jp",
+    "source_kickoff_time": "00:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 37,
+    "stage": "Group H",
+    "home_team": "Uruguay",
+    "away_team": "Cabo Verde",
+    "home_flag": "uy",
+    "away_flag": "cv",
+    "source_kickoff_time": "18:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 38,
+    "stage": "Group H",
+    "home_team": "Spain",
+    "away_team": "Saudi Arabia",
+    "home_flag": "es",
+    "away_flag": "sa",
+    "source_kickoff_time": "12:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 39,
+    "stage": "Group G",
+    "home_team": "Belgium",
+    "away_team": "IR Iran",
+    "home_flag": "be",
+    "away_flag": "ir",
+    "source_kickoff_time": "15:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 40,
+    "stage": "Group G",
+    "home_team": "New Zealand",
+    "away_team": "Egypt",
+    "home_flag": "nz",
+    "away_flag": "eg",
+    "source_kickoff_time": "21:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 41,
+    "stage": "Group I",
+    "home_team": "Norway",
+    "away_team": "Senegal",
+    "home_flag": "no",
+    "away_flag": "sn",
+    "source_kickoff_time": "20:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 42,
+    "stage": "Group I",
+    "home_team": "France",
+    "away_team": "Iraq",
+    "home_flag": "fr",
+    "away_flag": "iq",
+    "source_kickoff_time": "17:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 43,
+    "stage": "Group J",
+    "home_team": "Argentina",
+    "away_team": "Austria",
+    "home_flag": "ar",
+    "away_flag": "at",
+    "source_kickoff_time": "13:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 44,
+    "stage": "Group J",
+    "home_team": "Jordan",
+    "away_team": "Algeria",
+    "home_flag": "jo",
+    "away_flag": "dz",
+    "source_kickoff_time": "23:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 45,
+    "stage": "Group L",
+    "home_team": "England",
+    "away_team": "Ghana",
+    "home_flag": "gb-eng",
+    "away_flag": "gh",
+    "source_kickoff_time": "16:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 46,
+    "stage": "Group L",
+    "home_team": "Panama",
+    "away_team": "Croatia",
+    "home_flag": "pa",
+    "away_flag": "hr",
+    "source_kickoff_time": "19:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 47,
+    "stage": "Group K",
+    "home_team": "Portugal",
+    "away_team": "Uzbekistan",
+    "home_flag": "pt",
+    "away_flag": "uz",
+    "source_kickoff_time": "13:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 48,
+    "stage": "Group K",
+    "home_team": "Colombia",
+    "away_team": "Congo DR",
+    "home_flag": "co",
+    "away_flag": "cd",
+    "source_kickoff_time": "22:00",
+    "group_round": 2
+  },
+  {
+    "match_number": 49,
+    "stage": "Group C",
+    "home_team": "Scotland",
+    "away_team": "Brazil",
+    "home_flag": "gb-sct",
+    "away_flag": "br",
+    "source_kickoff_time": "18:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 50,
+    "stage": "Group C",
+    "home_team": "Morocco",
+    "away_team": "Haiti",
+    "home_flag": "ma",
+    "away_flag": "ht",
+    "source_kickoff_time": "18:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 51,
+    "stage": "Group B",
+    "home_team": "Switzerland",
+    "away_team": "Canada",
+    "home_flag": "ch",
+    "away_flag": "ca",
+    "source_kickoff_time": "15:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 52,
+    "stage": "Group B",
+    "home_team": "Bosnia and Herzegovina",
+    "away_team": "Qatar",
+    "home_flag": "ba",
+    "away_flag": "qa",
+    "source_kickoff_time": "15:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 53,
+    "stage": "Group A",
+    "home_team": "Czechia",
+    "away_team": "Mexico",
+    "home_flag": "cz",
+    "away_flag": "mx",
+    "source_kickoff_time": "21:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 54,
+    "stage": "Group A",
+    "home_team": "South Africa",
+    "away_team": "Korea Republic",
+    "home_flag": "za",
+    "away_flag": "kr",
+    "source_kickoff_time": "21:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 55,
+    "stage": "Group E",
+    "home_team": "Curaçao",
+    "away_team": "Ivory Coast",
+    "home_flag": "cw",
+    "away_flag": "ci",
+    "source_kickoff_time": "16:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 56,
+    "stage": "Group E",
+    "home_team": "Ecuador",
+    "away_team": "Germany",
+    "home_flag": "ec",
+    "away_flag": "de",
+    "source_kickoff_time": "16:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 57,
+    "stage": "Group F",
+    "home_team": "Japan",
+    "away_team": "Sweden",
+    "home_flag": "jp",
+    "away_flag": "se",
+    "source_kickoff_time": "19:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 58,
+    "stage": "Group F",
+    "home_team": "Tunisia",
+    "away_team": "Netherlands",
+    "home_flag": "tn",
+    "away_flag": "nl",
+    "source_kickoff_time": "19:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 59,
+    "stage": "Group D",
+    "home_team": "Türkiye",
+    "away_team": "USA",
+    "home_flag": "tr",
+    "away_flag": "us",
+    "source_kickoff_time": "22:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 60,
+    "stage": "Group D",
+    "home_team": "Paraguay",
+    "away_team": "Australia",
+    "home_flag": "py",
+    "away_flag": "au",
+    "source_kickoff_time": "22:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 61,
+    "stage": "Group I",
+    "home_team": "Norway",
+    "away_team": "France",
+    "home_flag": "no",
+    "away_flag": "fr",
+    "source_kickoff_time": "15:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 62,
+    "stage": "Group I",
+    "home_team": "Senegal",
+    "away_team": "Iraq",
+    "home_flag": "sn",
+    "away_flag": "iq",
+    "source_kickoff_time": "15:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 63,
+    "stage": "Group G",
+    "home_team": "Egypt",
+    "away_team": "IR Iran",
+    "home_flag": "eg",
+    "away_flag": "ir",
+    "source_kickoff_time": "23:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 64,
+    "stage": "Group G",
+    "home_team": "New Zealand",
+    "away_team": "Belgium",
+    "home_flag": "nz",
+    "away_flag": "be",
+    "source_kickoff_time": "23:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 65,
+    "stage": "Group H",
+    "home_team": "Cabo Verde",
+    "away_team": "Saudi Arabia",
+    "home_flag": "cv",
+    "away_flag": "sa",
+    "source_kickoff_time": "20:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 66,
+    "stage": "Group H",
+    "home_team": "Uruguay",
+    "away_team": "Spain",
+    "home_flag": "uy",
+    "away_flag": "es",
+    "source_kickoff_time": "20:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 67,
+    "stage": "Group L",
+    "home_team": "Panama",
+    "away_team": "England",
+    "home_flag": "pa",
+    "away_flag": "gb-eng",
+    "source_kickoff_time": "17:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 68,
+    "stage": "Group L",
+    "home_team": "Croatia",
+    "away_team": "Ghana",
+    "home_flag": "hr",
+    "away_flag": "gh",
+    "source_kickoff_time": "17:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 69,
+    "stage": "Group J",
+    "home_team": "Algeria",
+    "away_team": "Austria",
+    "home_flag": "dz",
+    "away_flag": "at",
+    "source_kickoff_time": "22:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 70,
+    "stage": "Group J",
+    "home_team": "Jordan",
+    "away_team": "Argentina",
+    "home_flag": "jo",
+    "away_flag": "ar",
+    "source_kickoff_time": "22:00",
+    "group_round": 3
+  },
+  {
+    "match_number": 71,
+    "stage": "Group K",
+    "home_team": "Colombia",
+    "away_team": "Portugal",
+    "home_flag": "co",
+    "away_flag": "pt",
+    "source_kickoff_time": "19:30",
+    "group_round": 3
+  },
+  {
+    "match_number": 72,
+    "stage": "Group K",
+    "home_team": "Congo DR",
+    "away_team": "Uzbekistan",
+    "home_flag": "cd",
+    "away_flag": "uz",
+    "source_kickoff_time": "19:30",
+    "group_round": 3
+  },
+  {
+    "match_number": 73,
+    "stage": "Round of 32",
+    "home_team": "2A",
+    "away_team": "2B",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  },
+  {
+    "match_number": 74,
+    "stage": "Round of 32",
+    "home_team": "1E",
+    "away_team": "3ABCDF",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "16:30"
+  },
+  {
+    "match_number": 75,
+    "stage": "Round of 32",
+    "home_team": "1F",
+    "away_team": "2C",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "21:00"
+  },
+  {
+    "match_number": 76,
+    "stage": "Round of 32",
+    "home_team": "1C",
+    "away_team": "2F",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "13:00"
+  },
+  {
+    "match_number": 77,
+    "stage": "Round of 32",
+    "home_team": "1I",
+    "away_team": "3CDFGH",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "17:00"
+  },
+  {
+    "match_number": 78,
+    "stage": "Round of 32",
+    "home_team": "2E",
+    "away_team": "2I",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "13:00"
+  },
+  {
+    "match_number": 79,
+    "stage": "Round of 32",
+    "home_team": "1A",
+    "away_team": "3CEFHI",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "21:00"
+  },
+  {
+    "match_number": 80,
+    "stage": "Round of 32",
+    "home_team": "1L",
+    "away_team": "3EHIJK",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "12:00"
+  },
+  {
+    "match_number": 81,
+    "stage": "Round of 32",
+    "home_team": "1D",
+    "away_team": "3BEFIJ",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "20:00"
+  },
+  {
+    "match_number": 82,
+    "stage": "Round of 32",
+    "home_team": "1G",
+    "away_team": "3AEHIJ",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "16:00"
+  },
+  {
+    "match_number": 83,
+    "stage": "Round of 32",
+    "home_team": "2K",
+    "away_team": "2L",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "19:00"
+  },
+  {
+    "match_number": 84,
+    "stage": "Round of 32",
+    "home_team": "1H",
+    "away_team": "2J",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  },
+  {
+    "match_number": 85,
+    "stage": "Round of 32",
+    "home_team": "1B",
+    "away_team": "3EFGIJ",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "23:00"
+  },
+  {
+    "match_number": 86,
+    "stage": "Round of 32",
+    "home_team": "1J",
+    "away_team": "2H",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "18:00"
+  },
+  {
+    "match_number": 87,
+    "stage": "Round of 32",
+    "home_team": "1K",
+    "away_team": "3DEIJL",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "21:30"
+  },
+  {
+    "match_number": 88,
+    "stage": "Round of 32",
+    "home_team": "2D",
+    "away_team": "2G",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "14:00"
+  },
+  {
+    "match_number": 89,
+    "stage": "Round of 16",
+    "home_team": "Winner 74",
+    "away_team": "Winner 77",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "17:00"
+  },
+  {
+    "match_number": 90,
+    "stage": "Round of 16",
+    "home_team": "Winner 73",
+    "away_team": "Winner 75",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "13:00"
+  },
+  {
+    "match_number": 91,
+    "stage": "Round of 16",
+    "home_team": "Winner 76",
+    "away_team": "Winner 78",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "16:00"
+  },
+  {
+    "match_number": 92,
+    "stage": "Round of 16",
+    "home_team": "Winner 79",
+    "away_team": "Winner 80",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "20:00"
+  },
+  {
+    "match_number": 93,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 83",
+    "away_team": "Winner 84",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  },
+  {
+    "match_number": 94,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 81",
+    "away_team": "Winner 82",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "20:00"
+  },
+  {
+    "match_number": 95,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 86",
+    "away_team": "Winner 88",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "12:00"
+  },
+  {
+    "match_number": 96,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 85",
+    "away_team": "Winner 87",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "16:00"
+  },
+  {
+    "match_number": 97,
+    "stage": "Semi-finals",
+    "home_team": "Winner 89",
+    "away_team": "Winner 90",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "16:00"
+  },
+  {
+    "match_number": 98,
+    "stage": "Semi-finals",
+    "home_team": "Winner 93",
+    "away_team": "Winner 94",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  },
+  {
+    "match_number": 99,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 91",
+    "away_team": "Winner 92",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "17:00"
+  },
+  {
+    "match_number": 100,
+    "stage": "Quarter-finals",
+    "home_team": "Winner 95",
+    "away_team": "Winner 96",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "20:00"
+  },
+  {
+    "match_number": 101,
+    "stage": "Semi-finals",
+    "home_team": "Winner 97",
+    "away_team": "Winner 98",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "14:00"
+  },
+  {
+    "match_number": 102,
+    "stage": "Semi-finals",
+    "home_team": "Winner 99",
+    "away_team": "Winner 100",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  },
+  {
+    "match_number": 103,
+    "stage": "Third-place play-off",
+    "home_team": "Bronze 101",
+    "away_team": "Bronze 102",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "17:00"
+  },
+  {
+    "match_number": 104,
+    "stage": "Final",
+    "home_team": "Winner 101",
+    "away_team": "Winner 102",
+    "home_flag": null,
+    "away_flag": null,
+    "source_kickoff_time": "15:00"
+  }
+]

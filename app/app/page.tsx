@@ -18,6 +18,9 @@ type MatchWithMeta = Match & {
   home_team?: string | null;
   away_team?: string | null;
   is_puma_match?: boolean | null;
+  match_number?: number | null;
+  is_prediction_open?: boolean | null;
+  is_visible?: boolean | null;
 };
 
 type PredictionRow = {
@@ -158,6 +161,10 @@ function getStatusClasses(tone: "green" | "amber" | "red" | "slate") {
 }
 
 function getMatchdayLabel(match: MatchWithMeta) {
+  if (match.stage) {
+    return formatStageLabel(match.stage);
+  }
+
   if (
     match.matchday !== undefined &&
     match.matchday !== null &&
@@ -175,6 +182,18 @@ function getMatchdayLabel(match: MatchWithMeta) {
   }
 
   return formatDateLabel(match.match_datetime);
+}
+
+function formatStageLabel(stage: string | null | undefined) {
+  if (!stage) return "Fecha pendiente";
+
+  const trimmed = stage.trim();
+
+  if (/^Group\s+[A-Z]$/i.test(trimmed)) {
+    return trimmed.replace(/^Group\s+/i, "Grupo ");
+  }
+
+  return trimmed;
 }
 
 function getDateKey(value: string | null | undefined) {
@@ -255,6 +274,7 @@ export default async function HomePage() {
   const { data: matchesData, error: matchesError } = await supabaseServer
     .from("matches")
     .select("*")
+    .eq("is_visible", true)
     .order("match_datetime", { ascending: true });
 
   const { data: teamsData, error: teamsError } = await supabaseServer
@@ -277,6 +297,9 @@ export default async function HomePage() {
   const teams: TeamMeta[] = (teamsData ?? []) as TeamMeta[];
 
   const pumaTeamNames = buildPumaTeamNameSet(teams);
+  const visibleRawMatches = rawMatches.filter(
+    (match) => match.is_visible !== false,
+  );
   const matches = enrichMatchesWithPumaFlag(rawMatches, pumaTeamNames);
 
   let predictionsByMatch = new Map<string, PredictionRow>();
@@ -295,9 +318,11 @@ export default async function HomePage() {
 
   const now = new Date();
 
-  const editableMatches = matches.filter((match) =>
+  const editableMatches = matches.filter(
+  (match) =>
+    match.is_prediction_open !== false &&
     getMatchStatus(match.match_datetime).isEditable,
-  );
+);
 
   const pendingEditableMatches = editableMatches.filter(
     (match) => !predictionsByMatch.has(match.id),
@@ -535,7 +560,12 @@ export default async function HomePage() {
                           >
                             {status.label}
                           </span>
-
+                          
+                          {match.match_number ? (
+                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                              Match {match.match_number}
+                            </span>
+                          ) : null}
                           {timeLeftLabel ? (
                             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                               {timeLeftLabel}

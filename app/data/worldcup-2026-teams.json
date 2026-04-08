@@ -1,0 +1,242 @@
+[
+  {
+    "name": "Mexico",
+    "flag_code": "mx",
+    "is_puma_team": false
+  },
+  {
+    "name": "South Africa",
+    "flag_code": "za",
+    "is_puma_team": false
+  },
+  {
+    "name": "Korea Republic",
+    "flag_code": "kr",
+    "is_puma_team": false
+  },
+  {
+    "name": "Czechia",
+    "flag_code": "cz",
+    "is_puma_team": true
+  },
+  {
+    "name": "Canada",
+    "flag_code": "ca",
+    "is_puma_team": false
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "flag_code": "ba",
+    "is_puma_team": false
+  },
+  {
+    "name": "Switzerland",
+    "flag_code": "ch",
+    "is_puma_team": true
+  },
+  {
+    "name": "Qatar",
+    "flag_code": "qa",
+    "is_puma_team": false
+  },
+  {
+    "name": "Brazil",
+    "flag_code": "br",
+    "is_puma_team": false
+  },
+  {
+    "name": "Morocco",
+    "flag_code": "ma",
+    "is_puma_team": true
+  },
+  {
+    "name": "Scotland",
+    "flag_code": "gb-sct",
+    "is_puma_team": false
+  },
+  {
+    "name": "Haiti",
+    "flag_code": "ht",
+    "is_puma_team": false
+  },
+  {
+    "name": "USA",
+    "flag_code": "us",
+    "is_puma_team": false
+  },
+  {
+    "name": "Paraguay",
+    "flag_code": "py",
+    "is_puma_team": true
+  },
+  {
+    "name": "Australia",
+    "flag_code": "au",
+    "is_puma_team": false
+  },
+  {
+    "name": "Türkiye",
+    "flag_code": "tr",
+    "is_puma_team": false
+  },
+  {
+    "name": "Germany",
+    "flag_code": "de",
+    "is_puma_team": false
+  },
+  {
+    "name": "Ecuador",
+    "flag_code": "ec",
+    "is_puma_team": false
+  },
+  {
+    "name": "Ivory Coast",
+    "flag_code": "ci",
+    "is_puma_team": true
+  },
+  {
+    "name": "Curaçao",
+    "flag_code": "cw",
+    "is_puma_team": false
+  },
+  {
+    "name": "Netherlands",
+    "flag_code": "nl",
+    "is_puma_team": false
+  },
+  {
+    "name": "Japan",
+    "flag_code": "jp",
+    "is_puma_team": false
+  },
+  {
+    "name": "Tunisia",
+    "flag_code": "tn",
+    "is_puma_team": false
+  },
+  {
+    "name": "Sweden",
+    "flag_code": "se",
+    "is_puma_team": false
+  },
+  {
+    "name": "Belgium",
+    "flag_code": "be",
+    "is_puma_team": false
+  },
+  {
+    "name": "IR Iran",
+    "flag_code": "ir",
+    "is_puma_team": false
+  },
+  {
+    "name": "Egypt",
+    "flag_code": "eg",
+    "is_puma_team": true
+  },
+  {
+    "name": "New Zealand",
+    "flag_code": "nz",
+    "is_puma_team": true
+  },
+  {
+    "name": "Spain",
+    "flag_code": "es",
+    "is_puma_team": false
+  },
+  {
+    "name": "Uruguay",
+    "flag_code": "uy",
+    "is_puma_team": false
+  },
+  {
+    "name": "Saudi Arabia",
+    "flag_code": "sa",
+    "is_puma_team": false
+  },
+  {
+    "name": "Cabo Verde",
+    "flag_code": "cv",
+    "is_puma_team": false
+  },
+  {
+    "name": "France",
+    "flag_code": "fr",
+    "is_puma_team": false
+  },
+  {
+    "name": "Senegal",
+    "flag_code": "sn",
+    "is_puma_team": true
+  },
+  {
+    "name": "Norway",
+    "flag_code": "no",
+    "is_puma_team": false
+  },
+  {
+    "name": "Iraq",
+    "flag_code": "iq",
+    "is_puma_team": false
+  },
+  {
+    "name": "Argentina",
+    "flag_code": "ar",
+    "is_puma_team": false
+  },
+  {
+    "name": "Austria",
+    "flag_code": "at",
+    "is_puma_team": true
+  },
+  {
+    "name": "Algeria",
+    "flag_code": "dz",
+    "is_puma_team": false
+  },
+  {
+    "name": "Jordan",
+    "flag_code": "jo",
+    "is_puma_team": false
+  },
+  {
+    "name": "Portugal",
+    "flag_code": "pt",
+    "is_puma_team": true
+  },
+  {
+    "name": "Colombia",
+    "flag_code": "co",
+    "is_puma_team": false
+  },
+  {
+    "name": "Uzbekistan",
+    "flag_code": "uz",
+    "is_puma_team": false
+  },
+  {
+    "name": "Congo DR",
+    "flag_code": "cd",
+    "is_puma_team": false
+  },
+  {
+    "name": "England",
+    "flag_code": "gb-eng",
+    "is_puma_team": false
+  },
+  {
+    "name": "Croatia",
+    "flag_code": "hr",
+    "is_puma_team": false
+  },
+  {
+    "name": "Panama",
+    "flag_code": "pa",
+    "is_puma_team": false
+  },
+  {
+    "name": "Ghana",
+    "flag_code": "gh",
+    "is_puma_team": true
+  }
+]

@@ -14,7 +14,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Madrid is UTC+2 on 10-18 April 2026
+// Barcelona/Madrid está en UTC+2 en abril de 2026
 const MADRID_OFFSET = "+02:00";
 const START_DATE = "2026-04-10";
 
@@ -63,7 +63,7 @@ function normalizeStage(stage: string) {
     case "Final":
       return "Final";
     default:
-      return stage; // Group A, Group B, etc.
+      return stage; // Group A, Group B...
   }
 }
 
@@ -93,6 +93,38 @@ function getDayOffset(match: MatchSeed): number {
   }
 }
 
+function getAssignedKickoffTime(match: MatchSeed, indexWithinBlock: number) {
+  if (match.stage.startsWith("Group ")) {
+    const slots = ["12:00", "15:00", "18:00", "21:00"];
+    return slots[indexWithinBlock % slots.length];
+  }
+
+  switch (match.stage) {
+    case "Round of 32": {
+      const slots = ["12:00", "15:00", "18:00", "21:00"];
+      return slots[indexWithinBlock % slots.length];
+    }
+    case "Round of 16": {
+      const slots = ["12:00", "15:00", "18:00", "21:00"];
+      return slots[indexWithinBlock % slots.length];
+    }
+    case "Quarter-finals": {
+      const slots = ["12:00", "15:00", "18:00", "21:00"];
+      return slots[indexWithinBlock % slots.length];
+    }
+    case "Semi-finals": {
+      const slots = ["18:00", "21:00"];
+      return slots[indexWithinBlock % slots.length];
+    }
+    case "Third-place play-off":
+      return "18:00";
+    case "Final":
+      return "21:00";
+    default:
+      return "18:00";
+  }
+}
+
 async function main() {
   const dataPath = path.resolve(
     process.cwd(),
@@ -111,33 +143,53 @@ async function main() {
     (teams ?? []).filter((t) => t.is_puma_team).map((t) => t.name)
   );
 
-  const rows = matches.map((match) => {
-    const fakeDate = addDaysToDateString(START_DATE, getDayOffset(match));
-    const iso = `${fakeDate}T${match.source_kickoff_time}:00${MADRID_OFFSET}`;
+  const groupedBlocks = new Map<string, MatchSeed[]>();
 
-    const isPumaMatch =
-      pumaTeams.has(match.home_team) || pumaTeams.has(match.away_team);
+  for (const match of matches) {
+    const blockKey = match.stage.startsWith("Group ")
+      ? `${match.stage}__round_${match.group_round}`
+      : match.stage;
 
-    const hasRealTeams =
-      !isPlaceholderTeam(match.home_team) && !isPlaceholderTeam(match.away_team);
+    if (!groupedBlocks.has(blockKey)) {
+      groupedBlocks.set(blockKey, []);
+    }
 
-    return {
-      stage: normalizeStage(match.stage),
-      match_number: match.match_number,
-      match_datetime: iso,
-      home_team: match.home_team,
-      away_team: match.away_team,
-      is_puma_match: isPumaMatch,
-      match_time: match.source_kickoff_time,
-      home_flag: match.home_flag,
-      away_flag: match.away_flag,
-      home_score: null,
-      away_score: null,
-      status: "upcoming",
-      is_prediction_open: hasRealTeams,
-      is_visible: hasRealTeams,
-    };
-  });
+    groupedBlocks.get(blockKey)!.push(match);
+  }
+
+  const rows: Array<Record<string, unknown>> = [];
+
+  for (const blockMatches of groupedBlocks.values()) {
+    blockMatches.forEach((match, indexWithinBlock) => {
+      const fakeDate = addDaysToDateString(START_DATE, getDayOffset(match));
+      const assignedTime = getAssignedKickoffTime(match, indexWithinBlock);
+      const iso = `${fakeDate}T${assignedTime}:00${MADRID_OFFSET}`;
+
+      const isPumaMatch =
+        pumaTeams.has(match.home_team) || pumaTeams.has(match.away_team);
+
+      const hasRealTeams =
+        !isPlaceholderTeam(match.home_team) &&
+        !isPlaceholderTeam(match.away_team);
+
+      rows.push({
+        stage: normalizeStage(match.stage),
+        match_number: match.match_number,
+        match_datetime: iso,
+        home_team: match.home_team,
+        away_team: match.away_team,
+        is_puma_match: isPumaMatch,
+        match_time: assignedTime,
+        home_flag: match.home_flag,
+        away_flag: match.away_flag,
+        home_score: null,
+        away_score: null,
+        status: "upcoming",
+        is_prediction_open: hasRealTeams,
+        is_visible: hasRealTeams,
+      });
+    });
+  }
 
   const { error } = await supabase.from("matches").insert(rows);
   if (error) throw error;

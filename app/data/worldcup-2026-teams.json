@@ -17,7 +17,9 @@
   {
     "name": "Czechia",
     "flag_code": "cz",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Clean Kit? Czech",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Czech-jersey.jpg"
   },
   {
     "name": "Canada",
@@ -32,7 +34,9 @@
   {
     "name": "Switzerland",
     "flag_code": "ch",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Swiss-Made Swagger",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Swiss-jersey.jpg"
   },
   {
     "name": "Qatar",
@@ -47,7 +51,9 @@
   {
     "name": "Morocco",
     "flag_code": "ma",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Cut from a different cloth",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Morocco-jersey.jpg"
   },
   {
     "name": "Scotland",
@@ -67,7 +73,9 @@
   {
     "name": "Paraguay",
     "flag_code": "py",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "La Albirroja Stand Their Ground",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Paraguay-jersey.jpg"
   },
   {
     "name": "Australia",
@@ -92,7 +100,9 @@
   {
     "name": "Ivory Coast",
     "flag_code": "ci",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "One to Remember",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Ivory-jersey.jpg"
   },
   {
     "name": "Curaçao",
@@ -132,12 +142,16 @@
   {
     "name": "Egypt",
     "flag_code": "eg",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Fit for the Pharaohs",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Egypt-jersey.jpg"
   },
   {
     "name": "New Zealand",
     "flag_code": "nz",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Silver Fern Front and Center",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/NZ-jersey.jpg"
   },
   {
     "name": "Spain",
@@ -167,7 +181,9 @@
   {
     "name": "Senegal",
     "flag_code": "sn",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Art that moves",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Senegal-jersey.jpg"
   },
   {
     "name": "Norway",
@@ -187,7 +203,9 @@
   {
     "name": "Austria",
     "flag_code": "at",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Das Team Stepping Out Correct",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Austria-jersey.jpg"
   },
   {
     "name": "Algeria",
@@ -202,7 +220,9 @@
   {
     "name": "Portugal",
     "flag_code": "pt",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "Never Looked Wavier",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Portugal-jersey.jpg"
   },
   {
     "name": "Colombia",
@@ -237,6 +257,8 @@
   {
     "name": "Ghana",
     "flag_code": "gh",
-    "is_puma_team": true
+    "is_puma_team": true,
+    "sponsor_card_text": "From myth to matchday",
+    "sponsor_kit_image": "https://pumaiberia.com/worldcupapp/Ghana-jersey.jpg"
   }
 ]

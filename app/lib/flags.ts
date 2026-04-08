@@ -9,6 +9,8 @@ const TEAM_TO_FLAG: Record<string, string> = {
   Netherlands: "nl",
   France: "fr",
   Japan: "jp",
+  England: "gb-eng",
+  Scotland: "gb-sct",
 };
 
 export function resolveFlagCode(
@@ -17,7 +19,7 @@ export function resolveFlagCode(
 ): string | null {
   const cleanFlag = flagCode?.trim().toLowerCase();
 
-  if (cleanFlag && cleanFlag.length === 2) {
+  if (cleanFlag) {
     return cleanFlag;
   }
 

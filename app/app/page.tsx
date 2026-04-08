@@ -561,11 +561,6 @@ export default async function HomePage() {
                             {status.label}
                           </span>
                           
-                          {match.match_number ? (
-                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                              Match {match.match_number}
-                            </span>
-                          ) : null}
                           {timeLeftLabel ? (
                             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                               {timeLeftLabel}

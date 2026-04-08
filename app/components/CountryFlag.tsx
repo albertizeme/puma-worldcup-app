@@ -22,7 +22,7 @@ export default function CountryFlag({
   className = "",
 }: CountryFlagProps) {
   const resolved = resolveFlagCode(code, teamName);
-
+console.log("FLAG DEBUG", { code, teamName, resolved });
   if (!resolved) {
     return (
       <div

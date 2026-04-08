@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Loading() {
   return (
-    <main className="flex items-center justify-center min-h-[60vh] bg-black">
+    <main className="flex items-center justify-center min-h-[60vh]">
       
       <div className="flex flex-col items-center gap-6">
 

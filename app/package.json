@@ -6,7 +6,6 @@
     "seed:ranking:500": "tsx scripts/seed-ranking-from-predictions.ts 500 40",
     "seed:ranking:200": "tsx scripts/seed-ranking-from-predictions.ts 200 40",
     "clean:ranking:fake": "tsx scripts/clean-fake-ranking-data.ts",
-
     "beta:reset": "tsx scripts/reset-beta-data.ts",
     "beta:teams": "tsx scripts/seed-worldcup-teams.ts",
     "beta:matches": "tsx scripts/seed-worldcup-matches.ts",
@@ -17,7 +16,7 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",
-    "@supabase/supabase-js": "^2.101.0",
+    "@supabase/supabase-js": "^2.103.0",
     "dotenv": "^17.4.1",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
@@ -35,4 +34,3 @@
     "typescript": "^5"
   }
 }
-

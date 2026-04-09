@@ -1,8 +1,6 @@
-import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
 import UserMenu from "@/components/UserMenu";
 import TopNav from "@/components/TopNav";
-import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 

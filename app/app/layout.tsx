@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black",
-    title: "PUMA Predictor",
+    title: "PUMA Play",
   },
   icons: {
     icon: "/favicon.ico",

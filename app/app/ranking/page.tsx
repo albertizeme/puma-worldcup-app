@@ -1,6 +1,7 @@
 // app/ranking/page.tsx
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
+import TopNav from "@/components/TopNav";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
 import { getSupabaseServerClient } from "@/lib/supabase-server";

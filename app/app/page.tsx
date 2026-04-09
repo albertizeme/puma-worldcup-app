@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
 import UserMenu from "@/components/UserMenu";
+import TopNav from "@/components/TopNav";
 import { buttonStyles } from "@/lib/ui";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
@@ -406,22 +407,8 @@ export default async function HomePage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center">
             <UserMenu />
-            {isAdmin ? (
-      <Link href="/admin" className={buttonStyles.nav}>
-        Admin
-      </Link>
-    ) : null}
           </div>
-
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            <Link href="/ranking" className={buttonStyles.nav}>
-              Ranking
-            </Link>
-
-            <Link href="/my-predictions" className={buttonStyles.nav}>
-              Mis predicciones
-            </Link>
-          </div>
+          <TopNav isAdmin={isAdmin} />
         </div>
 
         <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">

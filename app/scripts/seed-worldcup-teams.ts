@@ -18,6 +18,11 @@ type TeamSeed = {
   name: string;
   flag_code: string;
   is_puma_team: boolean;
+  sponsor_brand?: string | null;
+  sponsor_campaign_image?: string | null;
+  sponsor_kit_image?: string | null;
+  sponsor_card_text?: string | null;
+  sponsor_card_title?: string | null;
 };
 
 async function main() {
@@ -27,12 +32,12 @@ async function main() {
 
   const rows = teams.map((team) => ({
     name: team.name,
-    is_puma_team: team.is_puma_team,
-    sponsor_brand: team.is_puma_team ? "PUMA" : null,
-    sponsor_campaign_image: null,
-    sponsor_kit_image: null,
-    sponsor_card_text: null,
-    sponsor_card_title: null,
+    is_puma_team: team.is_puma_team ?? false,
+    sponsor_brand: team.sponsor_brand ?? (team.is_puma_team ? "PUMA" : null),
+    sponsor_campaign_image: team.sponsor_campaign_image ?? null,
+    sponsor_kit_image: team.sponsor_kit_image ?? null,
+    sponsor_card_text: team.sponsor_card_text ?? null,
+    sponsor_card_title: team.sponsor_card_title ?? null,
   }));
 
   const { error } = await supabase.from("teams").upsert(rows, { onConflict: "name" });

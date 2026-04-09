@@ -523,7 +523,7 @@ export default async function HomePage() {
                           ) : null}
                         </div>
 
-                        <MatchCard match={match} />
+                        <MatchCard match={match} navigationMode="quick" ctaLabel="Pronosticar" />
                       </div>
                     );
                   })}

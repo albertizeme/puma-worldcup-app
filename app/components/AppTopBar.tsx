@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import TopNav from "@/components/TopNav";
 import UserMenu from "@/components/UserMenu";
 import MobileNavDrawer from "@/components/MobileNavDrawer";
@@ -12,13 +12,21 @@ type AppTopBarProps = {
 export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleOpenMenu = useCallback(() => {
+    setMobileMenuOpen(true);
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
   return (
     <>
       <div className="relative z-30 mb-5 flex items-center justify-between gap-3 pb-1">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(true)}
+            onClick={handleOpenMenu}
             className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 md:hidden"
             aria-label="Abrir menú"
           >
@@ -50,7 +58,7 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
 
       <MobileNavDrawer
         open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+        onClose={handleCloseMenu}
         isAdmin={isAdmin}
       />
     </>

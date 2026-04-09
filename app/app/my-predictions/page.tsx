@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 import TopNav from "@/components/TopNav";
+import AppTopBar from "@/components/AppTopBar";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
 import UserMenu from "@/components/UserMenu";
@@ -390,13 +391,7 @@ export default async function MyPredictionsPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <section className="mb-6">
           <div className="mb-5 flex items-center gap-3 pb-1">
-  <div className="shrink-0">
-    <UserMenu />
-  </div>
-
-  <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
-    <TopNav isAdmin={isAdmin} />
-  </div>
+  <AppTopBar isAdmin={isAdmin} />
 </div>
 
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">

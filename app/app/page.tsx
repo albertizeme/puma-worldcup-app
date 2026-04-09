@@ -209,24 +209,6 @@ function getDateKey(value: string | null | undefined) {
   }).format(date);
 }
 
-function isSameMadridDay(dateA: Date, dateB: Date) {
-  const a = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Madrid",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(dateA);
-
-  const b = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Madrid",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(dateB);
-
-  return a === b;
-}
-
 function normalizeTeamName(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
 }
@@ -262,10 +244,10 @@ export default async function HomePage() {
   } = await requireAuthenticatedUser();
 
   const { data: profile } = await supabaseServer
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
   const isAdmin = profile?.role === "admin";
 
@@ -295,40 +277,54 @@ export default async function HomePage() {
   const teams: TeamMeta[] = (teamsData ?? []) as TeamMeta[];
 
   const pumaTeamNames = buildPumaTeamNameSet(teams);
+
   const visibleRawMatches = rawMatches.filter(
     (match) => match.is_visible !== false,
   );
-  const matches = enrichMatchesWithPumaFlag(rawMatches, pumaTeamNames);
 
-  let predictionsByMatch = new Map<string, PredictionRow>();
+  const matches = enrichMatchesWithPumaFlag(visibleRawMatches, pumaTeamNames);
 
   const { data: predictions } = await supabaseServer
     .from("predictions")
     .select("match_id, home_score_pred, away_score_pred, created_at")
     .eq("user_id", user.id);
 
-  predictionsByMatch = new Map(
+  const predictionsByMatch = new Map(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
       prediction.match_id,
       prediction,
     ]),
   );
 
-  const now = new Date();
-
   const editableMatches = matches.filter(
-  (match) =>
-    match.is_prediction_open !== false &&
-    getMatchStatus(match.match_datetime).isEditable,
-);
+    (match) =>
+      match.is_prediction_open !== false &&
+      getMatchStatus(match.match_datetime).isEditable,
+  );
 
   const pendingEditableMatches = editableMatches.filter(
     (match) => !predictionsByMatch.has(match.id),
   );
 
-  const closingTodayCount = editableMatches.filter((match) => {
+  const closingTodayCount = pendingEditableMatches.filter((match) => {
     const deadline = getPredictionDeadline(match.match_datetime);
-    return deadline ? isSameMadridDay(deadline, now) : false;
+    if (!deadline) return false;
+
+    const nowKey = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const deadlineKey = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Madrid",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(deadline);
+
+    return nowKey === deadlineKey;
   }).length;
 
   const groupedMap = new Map<
@@ -340,7 +336,7 @@ export default async function HomePage() {
     }
   >();
 
-  for (const match of matches) {
+  for (const match of pendingEditableMatches) {
     const label = getMatchdayLabel(match);
     const key = `${label}__${getDateKey(match.match_datetime)}`;
 
@@ -367,29 +363,11 @@ export default async function HomePage() {
   });
 
   const visibleGroups = groups
-    .map((group) => {
-      const editableCount = group.matches.filter((match) =>
-        getMatchStatus(match.match_datetime).isEditable,
-      ).length;
-
-      const closedCount = group.matches.filter(
-        (match) => !getMatchStatus(match.match_datetime).isEditable,
-      ).length;
-
-      let state: GroupState = "upcoming";
-
-      if (editableCount > 0) {
-        state = "active";
-      } else if (closedCount === group.matches.length) {
-        state = "finished";
-      }
-
-      return {
-        ...group,
-        state,
-      };
-    })
-    .filter((group) => group.state !== "finished");
+    .map((group) => ({
+      ...group,
+      state: "active" as GroupState,
+    }))
+    .filter((group) => group.matches.length > 0);
 
   const activeGroupIndex = visibleGroups.findIndex(
     (group) => group.state === "active",
@@ -457,7 +435,7 @@ export default async function HomePage() {
                   (total, group) => total + group.matches.length,
                   0,
                 )}{" "}
-                partidos visibles
+                partidos pendientes
               </p>
             </div>
           </div>
@@ -481,10 +459,6 @@ export default async function HomePage() {
               return aTime - bTime;
             });
 
-            const groupPredictedCount = prioritizedMatches.filter((match) =>
-              predictionsByMatch.has(match.id),
-            ).length;
-
             return (
               <div
                 key={`${group.label}-${index}`}
@@ -498,23 +472,16 @@ export default async function HomePage() {
                           {group.label}
                         </h4>
 
-                        {group.state === "active" ? (
-                          <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-700">
-                            Activa
-                          </span>
-                        ) : (
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                            Próximamente
-                          </span>
-                        )}
+                        <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-700">
+                          Activa
+                        </span>
                       </div>
 
                       <p className="mt-1 text-sm text-slate-500">
-                        {prioritizedMatches.length} partidos ·{" "}
-                        {groupPredictedCount}{" "}
-                        {groupPredictedCount === 1
-                          ? "predicción guardada"
-                          : "predicciones guardadas"}
+                        {prioritizedMatches.length}{" "}
+                        {prioritizedMatches.length === 1
+                          ? "partido pendiente"
+                          : "partidos pendientes"}
                       </p>
                     </div>
                   </div>
@@ -524,7 +491,6 @@ export default async function HomePage() {
                   {prioritizedMatches.map((match) => {
                     const status = getMatchStatus(match.match_datetime);
                     const timeLeftLabel = getTimeLeftLabel(match.match_datetime);
-                    const savedPrediction = predictionsByMatch.get(match.id);
 
                     return (
                       <div
@@ -539,28 +505,16 @@ export default async function HomePage() {
                           >
                             {status.label}
                           </span>
-                          
+
                           {timeLeftLabel ? (
                             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                               {timeLeftLabel}
                             </span>
                           ) : null}
 
-                          {savedPrediction ? (
-                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-                              Tu pronóstico:{" "}
-                              {savedPrediction.home_score_pred ?? "-"}-
-                              {savedPrediction.away_score_pred ?? "-"}
-                            </span>
-                          ) : status.isEditable ? (
-                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                              Pendiente
-                            </span>
-                          ) : (
-                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-                              Sin predicción
-                            </span>
-                          )}
+                          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                            Pendiente
+                          </span>
 
                           {match.match_datetime ? (
                             <span className="text-xs font-medium text-slate-500">

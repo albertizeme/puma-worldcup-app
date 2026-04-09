@@ -3,13 +3,33 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { buttonStyles } from "@/lib/ui";
 
 type MobileNavDrawerProps = {
   open: boolean;
   onClose: () => void;
   isAdmin?: boolean;
 };
+
+function getItemClass(active: boolean) {
+  return [
+    "flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium transition",
+    active
+      ? "bg-slate-100 text-slate-900"
+      : "text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+  ].join(" ");
+}
+
+function NavIcon({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-slate-500">
+      {children}
+    </span>
+  );
+}
 
 export default function MobileNavDrawer({
   open,
@@ -43,13 +63,10 @@ export default function MobileNavDrawer({
     };
   }, [open, onClose]);
 
-  const getNavClass = (href: string) =>
-    pathname === href ? buttonStyles.navActive : buttonStyles.nav;
-
   return (
     <>
       <div
-        className={`fixed inset-0 z-[90] bg-black/40 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[90] bg-black/35 transition-opacity duration-300 md:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -57,7 +74,7 @@ export default function MobileNavDrawer({
       />
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-full w-[82%] max-w-[320px] flex-col bg-white shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-[100] flex h-full w-[78%] max-w-[300px] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 md:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}
@@ -65,10 +82,10 @@ export default function MobileNavDrawer({
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400">
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">
               Navigation
             </p>
-            <h2 className="text-lg font-extrabold tracking-tight text-slate-900">
+            <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900">
               Menú
             </h2>
           </div>
@@ -76,7 +93,7 @@ export default function MobileNavDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Cerrar menú"
           >
             <svg
@@ -95,38 +112,108 @@ export default function MobileNavDrawer({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-5">
-          <div className="space-y-3">
-            <Link href="/" className={getNavClass("/")} onClick={onClose}>
-              Próximos partidos
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="space-y-1">
+            <Link
+              href="/"
+              onClick={onClose}
+              className={getItemClass(pathname === "/")}
+            >
+              <NavIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m3 9 9-7 9 7" />
+                  <path d="M9 22V12h6v10" />
+                </svg>
+              </NavIcon>
+              <span>Próximos partidos</span>
             </Link>
 
             <Link
               href="/ranking"
-              className={getNavClass("/ranking")}
               onClick={onClose}
+              className={getItemClass(pathname === "/ranking")}
             >
-              Ranking
+              <NavIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 20V10" />
+                  <path d="M18 20V4" />
+                  <path d="M6 20v-4" />
+                </svg>
+              </NavIcon>
+              <span>Ranking</span>
             </Link>
 
             <Link
               href="/my-predictions"
-              className={getNavClass("/my-predictions")}
               onClick={onClose}
+              className={getItemClass(pathname === "/my-predictions")}
             >
-              Mis predicciones
+              <NavIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 11l3 3L22 4" />
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+              </NavIcon>
+              <span>Mis predicciones</span>
             </Link>
-
-            {isAdmin ? (
-              <Link
-                href="/admin"
-                className={getNavClass("/admin")}
-                onClick={onClose}
-              >
-                Admin
-              </Link>
-            ) : null}
           </div>
+
+          {isAdmin ? (
+            <>
+              <div className="my-4 border-t border-slate-200" />
+
+              <div className="space-y-1">
+                <Link
+                  href="/admin"
+                  onClick={onClose}
+                  className={getItemClass(pathname === "/admin")}
+                >
+                  <NavIcon>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 3l8 4v6c0 5-3.5 8-8 8s-8-3-8-8V7l8-4z" />
+                    </svg>
+                  </NavIcon>
+                  <span>Admin</span>
+                </Link>
+              </div>
+            </>
+          ) : null}
         </nav>
       </aside>
     </>

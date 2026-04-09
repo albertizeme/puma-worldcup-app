@@ -1,6 +1,7 @@
 // app/ranking/page.tsx
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
+import AppTopBar from "@/components/AppTopBar";
 import TopNav from "@/components/TopNav";
 import { buttonStyles } from "@/lib/ui";
 import UserMenu from "@/components/UserMenu";
@@ -633,13 +634,7 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-5">
         <div className="mb-5 flex items-center gap-3 pb-1">
-  <div className="shrink-0">
-    <UserMenu />
-  </div>
-
-  <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
-    <TopNav isAdmin={isAdmin} />
-  </div>
+  <AppTopBar isAdmin={isAdmin} />
 </div>
 
         <div>

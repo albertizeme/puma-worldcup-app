@@ -402,7 +402,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <div className="mb-4 flex items-center gap-3 overflow-x-auto">
+        <div className="no-scrollbar mb-4 flex items-center gap-3 overflow-x-auto">
           <div className="flex items-center">
             <UserMenu />
             <TopNav isAdmin={isAdmin} />

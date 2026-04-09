@@ -15,7 +15,7 @@ export default function TopNav({ isAdmin = false }: TopNavProps) {
     pathname === href ? buttonStyles.navActive : buttonStyles.nav;
 
   return (
-    <div className="flex min-w-max items-center gap-3">
+    <div className="hidden min-w-max items-center gap-3 md:flex">
       <Link
         href="/"
         className={getNavClass("/")}

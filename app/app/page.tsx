@@ -1,6 +1,5 @@
 import MatchCard from "@/components/MatchCard";
-import UserMenu from "@/components/UserMenu";
-import TopNav from "@/components/TopNav";
+import AppTopBar from "@/components/AppTopBar";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
@@ -402,15 +401,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <div className="mb-5 flex items-center gap-3 pb-1">
-  <div className="shrink-0">
-    <UserMenu />
-  </div>
-
-  <div className="no-scrollbar min-w-0 flex-1 overflow-x-auto">
-    <TopNav isAdmin={isAdmin} />
-  </div>
-</div>
+        <AppTopBar isAdmin={isAdmin} />
 
         <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">

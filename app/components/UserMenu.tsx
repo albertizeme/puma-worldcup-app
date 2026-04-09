@@ -121,7 +121,7 @@ export default function UserMenu() {
   const initials = getInitials(user.email);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative z-40" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -135,7 +135,7 @@ export default function UserMenu() {
       </button>
 
       {open ? (
-        <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 top-full z-[120] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
               Sesión iniciada

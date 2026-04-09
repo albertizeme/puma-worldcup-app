@@ -14,12 +14,12 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
 
   return (
     <>
-      <div className="mb-5 flex items-center justify-between gap-3 pb-1">
+      <div className="relative z-30 mb-5 flex items-center justify-between gap-3 pb-1">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 md:hidden"
+            className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 md:hidden"
             aria-label="Abrir menú"
           >
             <svg
@@ -43,7 +43,7 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="relative z-20 shrink-0">
           <UserMenu />
         </div>
       </div>

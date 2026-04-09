@@ -49,7 +49,7 @@ export default function MobileNavDrawer({
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[90] bg-black/40 transition-opacity duration-300 md:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -57,7 +57,7 @@ export default function MobileNavDrawer({
       />
 
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-[82%] max-w-[320px] flex-col bg-white shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-[100] flex h-full w-[82%] max-w-[320px] flex-col bg-white shadow-2xl transition-transform duration-300 md:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}

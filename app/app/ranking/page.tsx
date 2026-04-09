@@ -628,16 +628,6 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
           <div className="flex items-center">
             <UserMenu />
           </div>
-
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            <Link href="/my-predictions" className={buttonStyles.nav}>
-              Mis predicciones
-            </Link>
-
-            <Link href="/" className={buttonStyles.nav}>
-              Próximos partidos
-            </Link>
-          </div>
         </div>
 
         <div>

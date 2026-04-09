@@ -35,15 +35,9 @@ export default function TopNav({ isAdmin = false }: TopNavProps) {
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-3">
-      {isAdmin ? (
-        <Link
-          href="/admin"
-          className={getNavClass("/admin")}
-          {...navPressHandlers("/admin")}
-        >
-          Admin
-        </Link>
-      ) : null}
+      <Link href="/" className={getNavClass("/")} {...navPressHandlers("/")}>
+        Próximos partidos
+      </Link>
 
       <Link
         href="/ranking"
@@ -60,6 +54,16 @@ export default function TopNav({ isAdmin = false }: TopNavProps) {
       >
         Mis predicciones
       </Link>
+
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          className={getNavClass("/admin")}
+          {...navPressHandlers("/admin")}
+        >
+          Admin
+        </Link>
+      ) : null}
     </div>
   );
 }

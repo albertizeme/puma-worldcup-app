@@ -440,6 +440,14 @@ function RankingListItem({
 
 export default async function RankingPage() {
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
+  
+  const { data: profile } = await supabaseServer
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+  const isAdmin = profile?.role === "admin";
 
   const { data, error } = await supabaseServer
     .from("prediction_scores")
@@ -628,6 +636,8 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
           <div className="flex items-center">
             <UserMenu />
           </div>
+
+          <TopNav isAdmin={isAdmin} />
         </div>
 
         <div>

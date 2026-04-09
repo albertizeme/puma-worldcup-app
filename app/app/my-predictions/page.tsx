@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
+import TopNav from "@/components/TopNav";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
 import UserMenu from "@/components/UserMenu";
@@ -343,6 +344,13 @@ function PredictionCard({
 
 export default async function MyPredictionsPage() {
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
+  const { data: profile } = await supabaseServer
+  .from("profiles")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+  const isAdmin = profile?.role === "admin";
 
   const { data, error } = await supabaseServer
     .from("my_predictions_view")
@@ -386,6 +394,7 @@ export default async function MyPredictionsPage() {
               <UserMenu />
             </div>
 
+            <TopNav isAdmin={isAdmin} />
             <div className="flex flex-wrap items-center justify-end gap-3">
               <Link href="/ranking" className={buttonStyles.nav}>
                 Ranking

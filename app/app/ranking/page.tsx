@@ -632,12 +632,15 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
       <section className="mb-5">
-        <div className="no-scrollbar mb-4 flex items-center gap-3 overflow-x-auto">
-          <div className="flex items-center">
-            <UserMenu />
-            <TopNav isAdmin={isAdmin} />
-          </div>         
-        </div>
+        <div className="mb-5 grid grid-cols-[auto,minmax(0,1fr)] items-center gap-3 pb-1">
+  <div className="flex items-center">
+    <UserMenu />
+  </div>
+
+  <div className="no-scrollbar min-w-0 overflow-x-auto">
+    <TopNav isAdmin={isAdmin} />
+  </div>
+</div>
 
         <div>
           <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">

@@ -15,24 +15,40 @@ export default function TopNav({ isAdmin = false }: TopNavProps) {
     pathname === href ? buttonStyles.navActive : buttonStyles.nav;
 
   return (
-    <div className="flex items-center gap-3">
-      <Link href="/" className={getNavClass("/")}>
+    <div className="flex min-w-max items-center gap-3">
+      <Link
+        href="/"
+        className={getNavClass("/")}
+        aria-current={pathname === "/" ? "page" : undefined}
+      >
         Próximos partidos
       </Link>
 
-      <Link href="/ranking" className={getNavClass("/ranking")}>
+      <Link
+        href="/ranking"
+        className={getNavClass("/ranking")}
+        aria-current={pathname === "/ranking" ? "page" : undefined}
+      >
         Ranking
       </Link>
 
-      <Link href="/my-predictions" className={getNavClass("/my-predictions")}>
+      <Link
+        href="/my-predictions"
+        className={getNavClass("/my-predictions")}
+        aria-current={pathname === "/my-predictions" ? "page" : undefined}
+      >
         Mis predicciones
       </Link>
 
-      {isAdmin && (
-        <Link href="/admin" className={getNavClass("/admin")}>
+      {isAdmin ? (
+        <Link
+          href="/admin"
+          className={getNavClass("/admin")}
+          aria-current={pathname === "/admin" ? "page" : undefined}
+        >
           Admin
         </Link>
-      )}
+      ) : null}
     </div>
   );
 }

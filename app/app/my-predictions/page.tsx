@@ -389,13 +389,15 @@ export default async function MyPredictionsPage() {
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <section className="mb-6">
-          <div className="no-scrollbar mb-4 flex items-center gap-3 overflow-x-auto">
-            <div className="flex items-center">
-              <UserMenu />
-              <TopNav isAdmin={isAdmin} />
-            </div>
+          <div className="mb-5 grid grid-cols-[auto,minmax(0,1fr)] items-center gap-3 pb-1">
+  <div className="flex items-center">
+    <UserMenu />
+  </div>
 
-          </div>
+  <div className="no-scrollbar min-w-0 overflow-x-auto">
+    <TopNav isAdmin={isAdmin} />
+  </div>
+</div>
 
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">

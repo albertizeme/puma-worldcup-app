@@ -389,12 +389,12 @@ export default async function MyPredictionsPage() {
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
         <section className="mb-6">
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-4 flex items-center gap-3 overflow-x-auto">
             <div className="flex items-center">
               <UserMenu />
+              <TopNav isAdmin={isAdmin} />
             </div>
 
-            <TopNav isAdmin={isAdmin} />
           </div>
 
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">

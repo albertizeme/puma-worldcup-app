@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { buttonStyles } from "@/lib/ui";
 
 type TopNavProps = {
@@ -11,59 +10,29 @@ type TopNavProps = {
 
 export default function TopNav({ isAdmin = false }: TopNavProps) {
   const pathname = usePathname();
-  const [pressedHref, setPressedHref] = useState<string | null>(null);
 
-  const getNavClass = (href: string) => {
-    const isCurrent = pathname === href;
-    const isPressed = pressedHref === href;
-
-    if (isCurrent || isPressed) {
-      return `${buttonStyles.navActive} scale-95`;
-    }
-
-    return buttonStyles.nav;
-  };
-
-  const navPressHandlers = (href: string) => ({
-    onMouseDown: () => setPressedHref(href),
-    onMouseUp: () => setPressedHref(null),
-    onMouseLeave: () => setPressedHref(null),
-    onTouchStart: () => setPressedHref(href),
-    onTouchEnd: () => setPressedHref(null),
-    onTouchCancel: () => setPressedHref(null),
-  });
+  const getNavClass = (href: string) =>
+    pathname === href ? buttonStyles.navActive : buttonStyles.nav;
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-3">
-      <Link href="/" className={getNavClass("/")} {...navPressHandlers("/")}>
+    <div className="flex items-center gap-3">
+      <Link href="/" className={getNavClass("/")}>
         Próximos partidos
       </Link>
 
-      <Link
-        href="/ranking"
-        className={getNavClass("/ranking")}
-        {...navPressHandlers("/ranking")}
-      >
+      <Link href="/ranking" className={getNavClass("/ranking")}>
         Ranking
       </Link>
 
-      <Link
-        href="/my-predictions"
-        className={getNavClass("/my-predictions")}
-        {...navPressHandlers("/my-predictions")}
-      >
+      <Link href="/my-predictions" className={getNavClass("/my-predictions")}>
         Mis predicciones
       </Link>
 
-      {isAdmin ? (
-        <Link
-          href="/admin"
-          className={getNavClass("/admin")}
-          {...navPressHandlers("/admin")}
-        >
+      {isAdmin && (
+        <Link href="/admin" className={getNavClass("/admin")}>
           Admin
         </Link>
-      ) : null}
+      )}
     </div>
   );
 }

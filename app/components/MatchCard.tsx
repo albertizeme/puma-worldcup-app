@@ -4,8 +4,12 @@ import { useRouter } from "next/navigation";
 import CountryFlag from "@/components/CountryFlag";
 import { Match } from "@/types/match";
 
+type MatchCardNavigationMode = "detail" | "quick";
+
 type MatchCardProps = {
   match: Match;
+  navigationMode?: MatchCardNavigationMode;
+  ctaLabel?: string;
 };
 
 function formatMatchDate(value: string | null | undefined) {
@@ -25,11 +29,23 @@ function formatMatchDate(value: string | null | undefined) {
   }).format(date);
 }
 
-export default function MatchCard({ match }: MatchCardProps) {
+export default function MatchCard({
+  match,
+  navigationMode = "detail",
+  ctaLabel,
+}: MatchCardProps) {
   const router = useRouter();
 
+  const href =
+    navigationMode === "quick"
+      ? `/match/${match.id}/quick`
+      : `/match/${match.id}`;
+
+  const buttonLabel =
+    ctaLabel ?? (navigationMode === "quick" ? "Pronosticar" : "Ver detalle");
+
   const goToDetail = () => {
-    router.push(`/match/${match.id}`);
+    router.push(href);
   };
 
   return (
@@ -95,10 +111,10 @@ export default function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="shrink-0 md:self-center">
-  <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
-    Ver detalle
-  </span>
-</div>
+          <span className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-orange-600">
+            {buttonLabel}
+          </span>
+        </div>
       </div>
     </article>
   );

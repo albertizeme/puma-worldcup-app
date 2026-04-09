@@ -395,15 +395,6 @@ export default async function MyPredictionsPage() {
             </div>
 
             <TopNav isAdmin={isAdmin} />
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <Link href="/ranking" className={buttonStyles.nav}>
-                Ranking
-              </Link>
-
-              <Link href="/" className={buttonStyles.nav}>
-                Próximos partidos
-              </Link>
-            </div>
           </div>
 
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">

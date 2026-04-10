@@ -31,7 +31,7 @@ export async function getChampionTeams() {
 
   const { data, error } = await supabase
     .from("teams")
-    .select("id, name, flag_code, is_puma_team")
+    .select("id, name, is_puma_team")
     .order("name", { ascending: true });
 
   if (error) {

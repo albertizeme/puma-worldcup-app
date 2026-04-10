@@ -11,7 +11,7 @@ export default function CloseMatchDetailButton() {
       return;
     }
 
-    router.push("/");
+    router.push("/app");
   }
 
   return (

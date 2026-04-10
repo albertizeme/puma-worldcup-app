@@ -8,6 +8,7 @@ import CountryFlag from "@/components/CountryFlag";
 type Team = {
   id: string;
   name: string;
+  flag_code: string;
   is_puma_team?: boolean | null;
 };
 
@@ -92,7 +93,7 @@ export default function ChampionPageClient({
           {currentTeam && (
             <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800">
               <CountryFlag
-                code={null}
+                code={currentTeam.flag_code}
                 teamName={currentTeam.name}
                 alt={`Bandera de ${currentTeam.name}`}
               />
@@ -137,7 +138,7 @@ export default function ChampionPageClient({
                 ].join(" ")}
               >
                 <CountryFlag
-                  code={null}
+                  code={team.flag_code}
                   teamName={team.name}
                   alt={`Bandera de ${team.name}`}
                 />

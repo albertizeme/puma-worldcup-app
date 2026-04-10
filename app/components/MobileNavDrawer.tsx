@@ -134,9 +134,9 @@ export default function MobileNavDrawer({
             </Link>
 
             <Link
-              href="/app/ranking"
+              href="/ranking"
               onClick={onClose}
-              className={getItemClass(pathname === "/app/ranking")}
+              className={getItemClass(pathname === "/ranking")}
             >
               <NavIcon>
                 <svg
@@ -158,9 +158,9 @@ export default function MobileNavDrawer({
             </Link>
 
             <Link
-              href="/app/my-predictions"
+              href="/my-predictions"
               onClick={onClose}
-              className={getItemClass(pathname === "/app/my-predictions")}
+              className={getItemClass(pathname === "/my-predictions")}
             >
               <NavIcon>
                 <svg
@@ -179,6 +179,32 @@ export default function MobileNavDrawer({
               </NavIcon>
               <span>Mis predicciones</span>
             </Link>
+            <Link
+  href="/champion"
+  onClick={onClose}
+  className={getItemClass(pathname === "/champion")}
+>
+  <NavIcon>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M7 4h10" />
+      <path d="M17 4v2a5 5 0 0 1-10 0V4" />
+      <path d="M5 4h14" />
+      <path d="M6 4v1a6 6 0 0 0 12 0V4" />
+    </svg>
+  </NavIcon>
+  <span>Campeón</span>
+</Link>
           </div>
 
           {isAdmin ? (
@@ -187,9 +213,9 @@ export default function MobileNavDrawer({
 
               <div className="space-y-1">
                 <Link
-                  href="/app/admin"
+                  href="/admin"
                   onClick={onClose}
-                  className={getItemClass(pathname === "/app/admin")}
+                  className={getItemClass(pathname === "/admin")}
                 >
                   <NavIcon>
                     <svg

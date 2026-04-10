@@ -384,7 +384,31 @@ export default async function HomePage() {
             más importantes.
           </p>
         </section>
+        
+      <section className="mb-6 rounded-[1.5rem] border border-orange-200 bg-white p-5 shadow-sm md:p-6">
+  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+        Pronóstico especial
+      </p>
 
+      <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+        Pronostica el campeón del Mundial
+      </h2>
+
+      <p className="mt-2 text-sm text-slate-600 md:text-base">
+        Acierta y consigue <span className="font-bold text-slate-900">20 puntos extra</span> para el ranking.
+      </p>
+    </div>
+
+    <a
+      href="/champion"
+      className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+    >
+      Elegir campeón
+    </a>
+  </div>
+</section>
         <section className="mb-6 rounded-[1.5rem] border border-orange-100 bg-white p-5 shadow-sm md:p-6">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">

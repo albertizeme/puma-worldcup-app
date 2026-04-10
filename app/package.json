@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "seed:ranking:500": "tsx scripts/seed-ranking-from-predictions.ts 500 40",
     "seed:ranking:200": "tsx scripts/seed-ranking-from-predictions.ts 200 40",
     "clean:ranking:fake": "tsx scripts/clean-fake-ranking-data.ts",

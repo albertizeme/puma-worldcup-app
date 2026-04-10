@@ -2,7 +2,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { saveQuickPredictionAction } from "@/(app)/match/[id]/quick/actions";
+import { saveQuickPredictionAction } from "@/app/(authenticated)/match/[id]/quick/actions";
 
 type Props = {
   matchId: string;

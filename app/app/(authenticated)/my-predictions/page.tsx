@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
-import AppTopBar from "@/components/AppTopBar";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
 
@@ -343,14 +342,7 @@ function PredictionCard({
 
 export default async function MyPredictionsPage() {
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
-  const { data: profile } = await supabaseServer
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
-
-  const isAdmin = profile?.role === "admin";
-
+  
   const { data, error } = await supabaseServer
     .from("my_predictions_view")
     .select("*")
@@ -359,15 +351,13 @@ export default async function MyPredictionsPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-6">
-        <div className="mx-auto max-w-5xl">
+      <main className="flex min-h-[40vh] w-full flex-col">
           <section className="rounded-[1.75rem] border border-red-200 bg-red-50 p-6 shadow-sm">
             <h1 className="text-2xl font-bold text-slate-900">Mis predicciones</h1>
             <div className="mt-4 rounded-2xl border border-red-200 bg-white p-4 text-red-700">
               Error al cargar tus predicciones: {error.message}
             </div>
           </section>
-        </div>
       </main>
     );
   }
@@ -385,12 +375,9 @@ export default async function MyPredictionsPage() {
   const sections: PredictionSectionKey[] = ["pending", "closed", "resolved"];
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
+    <main className="flex w-full flex-col">
         <section className="mb-6">
-          <div className="mb-5 flex items-center gap-3 pb-1">
-  <AppTopBar isAdmin={isAdmin} />
-</div>
+          
 
           <div className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
@@ -522,7 +509,6 @@ export default async function MyPredictionsPage() {
             </Link>
           </section>
         )}
-      </div>
     </main>
   );
 }

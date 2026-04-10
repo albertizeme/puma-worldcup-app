@@ -1,11 +1,5 @@
 // app/ranking/page.tsx
-import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
-import AppTopBar from "@/components/AppTopBar";
-import TopNav from "@/components/TopNav";
-import { buttonStyles } from "@/lib/ui";
-import UserMenu from "@/components/UserMenu";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 type RankingRow = {
   user_id: string;
@@ -441,14 +435,6 @@ function RankingListItem({
 
 export default async function RankingPage() {
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
-  
-  const { data: profile } = await supabaseServer
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
-
-  const isAdmin = profile?.role === "admin";
 
   const { data, error } = await supabaseServer
     .from("prediction_scores")
@@ -456,7 +442,7 @@ export default async function RankingPage() {
   
   if (error) {
     return (
-      <main className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+      <main className="flex min-h-[40vh] w-full flex-col">
         <div className="rounded-3xl border border-red-200 bg-red-50 p-5 text-red-700 shadow-sm">
           <h1 className="text-xl font-bold">Ranking</h1>
           <p className="mt-2 text-sm">
@@ -631,12 +617,9 @@ const currentUserMomentum =
 const momentumBadge = movementBadge ? null : currentUserMomentum; 
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+    <main className="flex w-full flex-col">
       <section className="mb-5">
-        <div className="mb-5 flex items-center gap-3 pb-1">
-  <AppTopBar isAdmin={isAdmin} />
-</div>
-
+        
         <div>
           <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
             Ranking

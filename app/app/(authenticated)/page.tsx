@@ -1,10 +1,13 @@
+import Link from "next/link";
 import MatchCard from "@/components/MatchCard";
+import CountryFlag from "@/components/CountryFlag";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
 type TeamMeta = {
   id: string;
   name: string;
+  flag_code: string | null;
   is_puma_team: boolean | null;
 };
 
@@ -25,6 +28,11 @@ type PredictionRow = {
   home_score_pred: number | null;
   away_score_pred: number | null;
   created_at: string;
+};
+
+type ChampionPredictionRow = {
+  id: string;
+  predicted_team_id: string;
 };
 
 type GroupState = "active" | "upcoming" | "finished";
@@ -59,6 +67,23 @@ function formatDateTime(value: string | null | undefined) {
     weekday: "short",
     day: "numeric",
     month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatChampionDeadline(value: string | null | undefined) {
+  if (!value) return "Fecha por confirmar";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Fecha por confirmar";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
@@ -250,7 +275,7 @@ export default async function HomePage() {
 
   const { data: teamsData, error: teamsError } = await supabaseServer
     .from("teams")
-    .select("id, name, is_puma_team");
+    .select("id, name, flag_code, is_puma_team");
 
   if (matchesError || teamsError) {
     return (
@@ -279,6 +304,37 @@ export default async function HomePage() {
     .from("predictions")
     .select("match_id, home_score_pred, away_score_pred, created_at")
     .eq("user_id", user.id);
+
+  const { data: championPrediction } = await supabaseServer
+    .from("champion_predictions")
+    .select("id, predicted_team_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const { data: championDeadlineRow } = await supabaseServer
+    .from("app_settings")
+    .select("value")
+    .eq("key", "champion_prediction_deadline")
+    .maybeSingle();
+
+  const championDeadline = championDeadlineRow?.value ?? null;
+
+  const championDeadlineDate = championDeadline
+    ? new Date(championDeadline)
+    : null;
+
+  const isChampionPredictionOpen =
+    championDeadlineDate && !Number.isNaN(championDeadlineDate.getTime())
+      ? championDeadlineDate.getTime() > Date.now()
+      : false;
+
+  const selectedChampionTeam = championPrediction
+    ? teams.find(
+        (team) =>
+          team.id ===
+          (championPrediction as ChampionPredictionRow).predicted_team_id,
+      ) ?? null
+    : null;
 
   const predictionsByMatch = new Map(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
@@ -369,182 +425,250 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
+      <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">
+          PUMA Internal POC
+        </p>
 
-        <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">
-            PUMA Internal POC
-          </p>
+        <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">
+          World Cup Challenge
+        </h1>
 
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">
-            World Cup Challenge
-          </h1>
+        <p className="mt-3 max-w-2xl text-sm text-white/90 md:text-lg">
+          Completa tus predicciones antes del cierre y sigue los PUMA matches
+          más importantes.
+        </p>
+      </section>
 
-          <p className="mt-3 max-w-2xl text-sm text-white/90 md:text-lg">
-            Completa tus predicciones antes del cierre y sigue los PUMA matches
-            más importantes.
-          </p>
-        </section>
-        
       <section className="mb-6 rounded-[1.5rem] border border-orange-200 bg-white p-5 shadow-sm md:p-6">
-  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
-        Pronóstico especial
-      </p>
-
-      <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-        Pronostica el campeón del Mundial
-      </h2>
-
-      <p className="mt-2 text-sm text-slate-600 md:text-base">
-        Acierta y consigue <span className="font-bold text-slate-900">20 puntos extra</span> para el ranking.
-      </p>
-    </div>
-
-    <a
-      href="/champion"
-      className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-    >
-      Elegir campeón
-    </a>
-  </div>
-</section>
-        <section className="mb-6 rounded-[1.5rem] border border-orange-100 bg-white p-5 shadow-sm md:p-6">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
-              Jornada activa
-            </p>
-
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-              {visibleGroups[normalizedActiveGroupIndex]?.label ??
-                "Próximos partidos"}
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-600">
-              Te faltan{" "}
-              <span className="font-bold text-slate-900">
-                {pendingEditableMatches.length}
-              </span>{" "}
-              predicciones por completar y{" "}
-              <span className="font-bold text-slate-900">
-                {closingTodayCount}
-              </span>{" "}
-              {closingTodayCount === 1
-                ? "partido cierra hoy"
-                : "partidos cierran hoy"}
-              .
-            </p>
-          </div>
-        </section>
-
-        <section className="mb-6">
-          <div className="flex items-end justify-between">
+        {!championPrediction && isChampionPredictionOpen ? (
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h3 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                Próximos partidos
-              </h3>
-              <p className="mt-1 text-sm text-slate-500">
-                {visibleGroups.reduce(
-                  (total, group) => total + group.matches.length,
-                  0,
-                )}{" "}
-                partidos pendientes
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+                Pronóstico especial
+              </p>
+
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                Pronostica el campeón del Mundial
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-600 md:text-base">
+                Acierta y consigue{" "}
+                <span className="font-bold text-slate-900">
+                  20 puntos extra
+                </span>{" "}
+                para el ranking.
+              </p>
+
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                Disponible hasta {formatChampionDeadline(championDeadline)}
               </p>
             </div>
+
+            <Link
+              href="/champion"
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Elegir campeón
+            </Link>
           </div>
-        </section>
+        ) : championPrediction && selectedChampionTeam ? (
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
+              <CountryFlag
+                code={selectedChampionTeam.flag_code}
+                teamName={selectedChampionTeam.name}
+                alt={`Bandera de ${selectedChampionTeam.name}`}
+                className="mt-1"
+              />
 
-        <section className="space-y-5">
-          {visibleGroups.map((group, index) => {
-            const prioritizedMatches = [...group.matches].sort((a, b) => {
-              const aPuma = a.is_puma_match ? 1 : 0;
-              const bPuma = b.is_puma_match ? 1 : 0;
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+                  Pronóstico especial
+                </p>
 
-              if (aPuma !== bPuma) return bPuma - aPuma;
+                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                  Tu campeón elegido: {selectedChampionTeam.name}
+                </h2>
 
-              const aTime = a.match_datetime
-                ? new Date(a.match_datetime).getTime()
-                : 0;
-              const bTime = b.match_datetime
-                ? new Date(b.match_datetime).getTime()
-                : 0;
+                <p className="mt-2 text-sm text-slate-600 md:text-base">
+                  {isChampionPredictionOpen
+                    ? "Todavía puedes cambiar tu selección antes del cierre."
+                    : "El plazo está cerrado y este es tu pronóstico final."}
+                </p>
 
-              return aTime - bTime;
-            });
+                <p className="mt-2 text-xs font-medium text-slate-500">
+                  {isChampionPredictionOpen
+                    ? `Disponible hasta ${formatChampionDeadline(championDeadline)}`
+                    : "Pronóstico cerrado"}
+                </p>
+              </div>
+            </div>
 
-            return (
-              <div
-                key={`${group.label}-${index}`}
-                className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="border-b border-slate-100 px-5 py-4 md:px-6">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-xl font-bold tracking-tight text-slate-900">
-                          {group.label}
-                        </h4>
+            <Link
+              href="/champion"
+              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              {isChampionPredictionOpen ? "Cambiar campeón" : "Ver campeón"}
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
+              Pronóstico especial
+            </p>
 
-                        <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-700">
-                          Activa
-                        </span>
-                      </div>
+            <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+              Pronóstico de campeón cerrado
+            </h2>
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        {prioritizedMatches.length}{" "}
-                        {prioritizedMatches.length === 1
-                          ? "partido pendiente"
-                          : "partidos pendientes"}
-                      </p>
+            <p className="text-sm text-slate-600 md:text-base">
+              El plazo para pronosticar el campeón ya ha terminado.
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-6 rounded-[1.5rem] border border-orange-100 bg-white p-5 shadow-sm md:p-6">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
+            Jornada activa
+          </p>
+
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+            {visibleGroups[normalizedActiveGroupIndex]?.label ??
+              "Próximos partidos"}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-600">
+            Te faltan{" "}
+            <span className="font-bold text-slate-900">
+              {pendingEditableMatches.length}
+            </span>{" "}
+            predicciones por completar y{" "}
+            <span className="font-bold text-slate-900">
+              {closingTodayCount}
+            </span>{" "}
+            {closingTodayCount === 1
+              ? "partido cierra hoy"
+              : "partidos cierran hoy"}
+            .
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <div className="flex items-end justify-between">
+          <div>
+            <h3 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+              Próximos partidos
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              {visibleGroups.reduce(
+                (total, group) => total + group.matches.length,
+                0,
+              )}{" "}
+              partidos pendientes
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-5">
+        {visibleGroups.map((group, index) => {
+          const prioritizedMatches = [...group.matches].sort((a, b) => {
+            const aPuma = a.is_puma_match ? 1 : 0;
+            const bPuma = b.is_puma_match ? 1 : 0;
+
+            if (aPuma !== bPuma) return bPuma - aPuma;
+
+            const aTime = a.match_datetime
+              ? new Date(a.match_datetime).getTime()
+              : 0;
+            const bTime = b.match_datetime
+              ? new Date(b.match_datetime).getTime()
+              : 0;
+
+            return aTime - bTime;
+          });
+
+          return (
+            <div
+              key={`${group.label}-${index}`}
+              className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="border-b border-slate-100 px-5 py-4 md:px-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xl font-bold tracking-tight text-slate-900">
+                        {group.label}
+                      </h4>
+
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-orange-700">
+                        Activa
+                      </span>
                     </div>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      {prioritizedMatches.length}{" "}
+                      {prioritizedMatches.length === 1
+                        ? "partido pendiente"
+                        : "partidos pendientes"}
+                    </p>
                   </div>
                 </div>
-
-                <div className="grid gap-4 p-4 md:p-6">
-                  {prioritizedMatches.map((match) => {
-                    const status = getMatchStatus(match.match_datetime);
-                    const timeLeftLabel = getTimeLeftLabel(match.match_datetime);
-
-                    return (
-                      <div
-                        key={match.id}
-                        className="rounded-[1.25rem] border border-slate-100 bg-slate-50/70 p-3 md:p-4"
-                      >
-                        <div className="mb-3 flex flex-wrap items-center gap-2">
-                          <span
-                            className={`rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${getStatusClasses(
-                              status.tone,
-                            )}`}
-                          >
-                            {status.label}
-                          </span>
-
-                          {timeLeftLabel ? (
-                            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                              {timeLeftLabel}
-                            </span>
-                          ) : null}
-
-                          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                            Pendiente
-                          </span>
-
-                          {match.match_datetime ? (
-                            <span className="text-xs font-medium text-slate-500">
-                              {formatDateTime(match.match_datetime)}
-                            </span>
-                          ) : null}
-                        </div>
-
-                        <MatchCard match={match} navigationMode="quick" ctaLabel="Pronosticar" />
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
-            );
-          })}
-        </section>
+
+              <div className="grid gap-4 p-4 md:p-6">
+                {prioritizedMatches.map((match) => {
+                  const status = getMatchStatus(match.match_datetime);
+                  const timeLeftLabel = getTimeLeftLabel(match.match_datetime);
+
+                  return (
+                    <div
+                      key={match.id}
+                      className="rounded-[1.25rem] border border-slate-100 bg-slate-50/70 p-3 md:p-4"
+                    >
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${getStatusClasses(
+                            status.tone,
+                          )}`}
+                        >
+                          {status.label}
+                        </span>
+
+                        {timeLeftLabel ? (
+                          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                            {timeLeftLabel}
+                          </span>
+                        ) : null}
+
+                        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                          Pendiente
+                        </span>
+
+                        {match.match_datetime ? (
+                          <span className="text-xs font-medium text-slate-500">
+                            {formatDateTime(match.match_datetime)}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <MatchCard
+                        match={match}
+                        navigationMode="quick"
+                        ctaLabel="Pronosticar"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </section>
     </main>
   );
 }

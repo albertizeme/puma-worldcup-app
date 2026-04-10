@@ -317,7 +317,7 @@ export function getPumaCardText(
   if (isDualPuma && pumaTeams.length === 2) {
     const firstText = pumaTeams[0].sponsor_card_text?.trim();
     const secondText = pumaTeams[1].sponsor_card_text?.trim();
-
+/*
     if (firstText && secondText) {
       return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${firstText} ${secondText}`;
     }
@@ -329,7 +329,7 @@ export function getPumaCardText(
     if (secondText) {
       return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${secondText}`;
     }
-
+*/
     return `Wherever you play, play For the Love of the Shirt ❤👕`;
   }
 

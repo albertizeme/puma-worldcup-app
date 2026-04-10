@@ -225,7 +225,7 @@ function PredictionCard({
 
   return (
     <Link
-      href={`/app/match/${row.match_id}`}
+      href={`/match/${row.match_id}`}
       className="group block rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">

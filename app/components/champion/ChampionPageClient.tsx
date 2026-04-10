@@ -65,33 +65,33 @@ export default function ChampionPageClient({
 
   return (
     <section className="space-y-6">
-      <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div className="space-y-2">
-          <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
+      <header className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
             Pronóstico especial
-          </span>
+          </p>
 
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
             Pronóstico de campeón
           </h1>
 
-          <p className="text-sm text-slate-600 sm:text-base">
+          <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
             Elige la selección que crees que ganará el Mundial. Este pronóstico
             solo puede hacerse hasta la fecha límite.
           </p>
 
-          <p className="text-sm font-medium text-slate-700">
+          <p className="mt-3 text-sm font-medium text-slate-700">
             Cierre: {formatChampionDeadline(deadline)}
           </p>
 
           {!isOpen && (
-            <p className="text-sm font-semibold text-red-600">
+            <p className="mt-3 text-sm font-semibold text-red-600">
               El plazo está cerrado.
             </p>
           )}
 
           {currentTeam && (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800">
+            <div className="mt-5 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800">
               <CountryFlag
                 code={currentTeam.flag_code}
                 teamName={currentTeam.name}
@@ -103,7 +103,7 @@ export default function ChampionPageClient({
         </div>
       </header>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-slate-900">
             Selecciona tu campeón

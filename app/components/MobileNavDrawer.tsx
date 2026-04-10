@@ -19,11 +19,7 @@ function getItemClass(active: boolean) {
   ].join(" ");
 }
 
-function NavIcon({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function NavIcon({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-slate-500">
       {children}
@@ -66,7 +62,7 @@ export default function MobileNavDrawer({
   return (
     <>
       <div
-        className={`fixed inset-0 z-[90] bg-black/35 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 z-[90] bg-black/35 transition-opacity duration-300 ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -74,7 +70,7 @@ export default function MobileNavDrawer({
       />
 
       <aside
-        className={`fixed left-0 top-0 z-[100] flex h-full w-[78%] max-w-[300px] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-[100] flex h-full w-[82%] max-w-[340px] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}
@@ -83,7 +79,7 @@ export default function MobileNavDrawer({
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-400">
-              Navigation
+              World Cup Challenge
             </p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900">
               Menú
@@ -115,9 +111,9 @@ export default function MobileNavDrawer({
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-1">
             <Link
-              href="/"
+              href="/app"
               onClick={onClose}
-              className={getItemClass(pathname === "/")}
+              className={getItemClass(pathname === "/app")}
             >
               <NavIcon>
                 <svg
@@ -138,9 +134,9 @@ export default function MobileNavDrawer({
             </Link>
 
             <Link
-              href="/ranking"
+              href="/app/ranking"
               onClick={onClose}
-              className={getItemClass(pathname === "/ranking")}
+              className={getItemClass(pathname === "/app/ranking")}
             >
               <NavIcon>
                 <svg
@@ -162,9 +158,9 @@ export default function MobileNavDrawer({
             </Link>
 
             <Link
-              href="/my-predictions"
+              href="/app/my-predictions"
               onClick={onClose}
-              className={getItemClass(pathname === "/my-predictions")}
+              className={getItemClass(pathname === "/app/my-predictions")}
             >
               <NavIcon>
                 <svg
@@ -191,9 +187,9 @@ export default function MobileNavDrawer({
 
               <div className="space-y-1">
                 <Link
-                  href="/admin"
+                  href="/app/admin"
                   onClick={onClose}
-                  className={getItemClass(pathname === "/admin")}
+                  className={getItemClass(pathname === "/app/admin")}
                 >
                   <NavIcon>
                     <svg

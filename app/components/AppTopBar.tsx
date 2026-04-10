@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import TopNav from "@/components/TopNav";
 import UserMenu from "@/components/UserMenu";
 import MobileNavDrawer from "@/components/MobileNavDrawer";
 
@@ -10,14 +9,14 @@ type AppTopBarProps = {
 };
 
 export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleOpenMenu = useCallback(() => {
-    setMobileMenuOpen(true);
+    setMenuOpen(true);
   }, []);
 
   const handleCloseMenu = useCallback(() => {
-    setMobileMenuOpen(false);
+    setMenuOpen(false);
   }, []);
 
   return (
@@ -27,7 +26,7 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
           <button
             type="button"
             onClick={handleOpenMenu}
-            className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 md:hidden"
+            className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:shadow-md"
             aria-label="Abrir menú"
           >
             <svg
@@ -46,8 +45,8 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
             </svg>
           </button>
 
-          <div className="hidden min-w-0 flex-1 overflow-x-auto no-scrollbar md:block">
-            <TopNav isAdmin={isAdmin} />
+          <div className="hidden sm:block">
+            <p className="text-sm font-semibold text-slate-500">Menú</p>
           </div>
         </div>
 
@@ -57,7 +56,7 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
       </div>
 
       <MobileNavDrawer
-        open={mobileMenuOpen}
+        open={menuOpen}
         onClose={handleCloseMenu}
         isAdmin={isAdmin}
       />

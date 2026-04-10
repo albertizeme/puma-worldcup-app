@@ -1,5 +1,4 @@
 import MatchCard from "@/components/MatchCard";
-import AppTopBar from "@/components/AppTopBar";
 import { Match } from "@/types/match";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
@@ -243,14 +242,6 @@ export default async function HomePage() {
     user,
   } = await requireAuthenticatedUser();
 
-  const { data: profile } = await supabaseServer
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const isAdmin = profile?.role === "admin";
-
   const { data: matchesData, error: matchesError } = await supabaseServer
     .from("matches")
     .select("*")
@@ -378,8 +369,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <AppTopBar isAdmin={isAdmin} />
 
         <section className="mb-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-7 text-white shadow-lg md:px-8 md:py-8">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-white/80 md:text-xs">
@@ -532,7 +521,6 @@ export default async function HomePage() {
             );
           })}
         </section>
-      </div>
     </main>
   );
 }

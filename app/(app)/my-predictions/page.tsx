@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
-import TopNav from "@/components/TopNav";
 import AppTopBar from "@/components/AppTopBar";
 import { buttonStyles } from "@/lib/ui";
 import CountryFlag from "@/components/CountryFlag";
-import UserMenu from "@/components/UserMenu";
 
 type MyPredictionRow = {
   prediction_id: string;

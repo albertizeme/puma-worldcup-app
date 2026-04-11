@@ -1,7 +1,63 @@
 import Link from "next/link";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { generateRankingSnapshotAction } from "./actions";
+import GenerateSnapshotButton from "./GenerateSnapshotButton";
 
-export default async function AdminHomePage() {
+type SearchParams = Promise<{
+  success?: string;
+  error?: string;
+}>;
+
+function getAlertFromQuery(success?: string, error?: string) {
+  if (error) {
+    switch (error) {
+      case "snapshot-missing-key":
+        return {
+          type: "error" as const,
+          message: "Debes indicar una clave de snapshot.",
+        };
+      case "snapshot-generate":
+        return {
+          type: "error" as const,
+          message: "No se pudo generar el snapshot del ranking.",
+        };
+      default:
+        return {
+          type: "error" as const,
+          message: "Ha ocurrido un error en la administración.",
+        };
+    }
+  }
+
+  if (success) {
+    switch (success) {
+      case "snapshot-generated":
+        return {
+          type: "success" as const,
+          message: "Snapshot del ranking generado correctamente.",
+        };
+      default:
+        return {
+          type: "success" as const,
+          message: "Operación completada correctamente.",
+        };
+    }
+  }
+
+  return null;
+}
+
+export default async function AdminHomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const alert = getAlertFromQuery(
+    resolvedSearchParams.success,
+    resolvedSearchParams.error
+  );
+
   const supabase = await getSupabaseServerClient();
 
   const [{ data: users }, { data: matches }] = await Promise.all([
@@ -69,9 +125,9 @@ export default async function AdminHomePage() {
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <Card title="Partidos" value={totalMatches} href="/admin/matches" />
-          <Card title="Upcoming" value={upcoming} href="/admin/matches" />
-          <Card title="Live" value={live} href="/admin/matches" />
-          <Card title="Finished" value={finished} href="/admin/matches" />
+          <Card title="Upcoming" value={upcoming} href="/admin/matches?status=upcoming" />
+          <Card title="Live" value={live} href="/admin/matches?status=live" />
+          <Card title="Finished" value={finished} href="/admin/matches?status=finished" />
           <Card title="Partidos PUMA" value={pumaMatches} href="/admin/matches" />
         </div>
       </section>
@@ -96,6 +152,64 @@ export default async function AdminHomePage() {
             Alta de partidos, actualización de resultados, estados y partidos PUMA.
           </p>
         </Link>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-slate-900">Snapshots del ranking</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Genera una foto del ranking para conservar la clasificación en un momento concreto del torneo.
+        </p>
+
+        {alert && (
+          <div
+            className={`mt-6 rounded-2xl border p-4 text-sm ${
+              alert.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {alert.message}
+          </div>
+        )}
+
+        <form action={generateRankingSnapshotAction} className="mt-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Clave del snapshot
+              </label>
+              <select
+                name="snapshot_key"
+                defaultValue="group_md1"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="group_md1">group_md1</option>
+                <option value="group_md2">group_md2</option>
+                <option value="group_md3">group_md3</option>
+                <option value="round_16">round_16</option>
+                <option value="quarterfinals">quarterfinals</option>
+                <option value="semifinals">semifinals</option>
+                <option value="final">final</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Etiqueta visible
+              </label>
+              <input
+                name="snapshot_label"
+                defaultValue="Fase de grupos · Jornada 1"
+                placeholder="Ej. Fase de grupos · Jornada 1"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <GenerateSnapshotButton />
+          </div>
+        </form>
       </section>
     </div>
   );

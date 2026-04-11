@@ -78,12 +78,35 @@ function revalidateAdminSurfaces() {
   revalidatePath("/my-predictions");
 }
 
-function redirectMatchError(code: string): never {
-  redirect(`/admin/matches?error=${code}`);
+function buildMatchesRedirectUrl(params: {
+  filterStatus?: string | null;
+  success?: string;
+  error?: string;
+}) {
+  const searchParams = new URLSearchParams();
+
+  if (params.filterStatus && params.filterStatus !== "all") {
+    searchParams.set("status", params.filterStatus);
+  }
+
+  if (params.success) {
+    searchParams.set("success", params.success);
+  }
+
+  if (params.error) {
+    searchParams.set("error", params.error);
+  }
+
+  const query = searchParams.toString();
+  return query ? `/admin/matches?${query}` : "/admin/matches";
 }
 
-function redirectMatchSuccess(code: string): never {
-  redirect(`/admin/matches?success=${code}`);
+function redirectMatchError(code: string, filterStatus?: string | null): never {
+  redirect(buildMatchesRedirectUrl({ filterStatus, error: code }));
+}
+
+function redirectMatchSuccess(code: string, filterStatus?: string | null): never {
+  redirect(buildMatchesRedirectUrl({ filterStatus, success: code }));
 }
 
 function redirectUserError(code: string): never {
@@ -94,9 +117,19 @@ function redirectUserSuccess(code: string): never {
   redirect(`/admin/users?success=${code}`);
 }
 
+function redirectAdminError(code: string): never {
+  redirect(`/admin?error=${code}`);
+}
+
+function redirectAdminSuccess(code: string): never {
+  redirect(`/admin?success=${code}`);
+}
+
 export async function createMatchAction(formData: FormData) {
   await requireAdmin();
   const supabaseAdmin = getSupabaseAdminClient();
+
+  const filterStatus = String(formData.get("filter_status") ?? "all");
 
   const stage = parseNullableText(formData.get("stage"));
   const matchDatetime = parseNullableDateTime(formData.get("match_datetime"));
@@ -104,15 +137,17 @@ export async function createMatchAction(formData: FormData) {
   const awayTeam = parseNullableText(formData.get("away_team"));
   const homeFlag = parseNullableText(formData.get("home_flag"));
   const awayFlag = parseNullableText(formData.get("away_flag"));
-  const status = String(formData.get("status") ?? "upcoming") as MatchStatus;
+  const matchStatus = String(
+    formData.get("match_status") ?? "upcoming"
+  ) as MatchStatus;
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
 
   if (!homeTeam || !awayTeam) {
-    redirectMatchError("match-create");
+    redirectMatchError("match-create", filterStatus);
   }
 
   if (homeTeam === awayTeam) {
-    redirectMatchError("match-create");
+    redirectMatchError("match-create", filterStatus);
   }
 
   const payload = {
@@ -122,7 +157,7 @@ export async function createMatchAction(formData: FormData) {
     away_team: awayTeam,
     home_flag: homeFlag,
     away_flag: awayFlag,
-    status,
+    status: matchStatus,
     is_puma_match: isPumaMatch,
     home_score: null,
     away_score: null,
@@ -132,11 +167,11 @@ export async function createMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[createMatchAction]", error);
-    redirectMatchError("match-create");
+    redirectMatchError("match-create", filterStatus);
   }
 
   revalidateAdminSurfaces();
-  redirectMatchSuccess("match-created");
+  redirectMatchSuccess("match-created", filterStatus);
 }
 
 export async function updateMatchAction(formData: FormData) {
@@ -144,31 +179,35 @@ export async function updateMatchAction(formData: FormData) {
   const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
+  const filterStatus = String(formData.get("filter_status") ?? "all");
+
   const stage = parseNullableText(formData.get("stage"));
   const matchDatetime = parseNullableDateTime(formData.get("match_datetime"));
   const homeTeam = parseNullableText(formData.get("home_team"));
   const awayTeam = parseNullableText(formData.get("away_team"));
   const homeFlag = parseNullableText(formData.get("home_flag"));
   const awayFlag = parseNullableText(formData.get("away_flag"));
-  const status = String(formData.get("status") ?? "upcoming") as MatchStatus;
+  const matchStatus = String(
+    formData.get("match_status") ?? "upcoming"
+  ) as MatchStatus;
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
   const homeScore = parseNullableScore(formData.get("home_score"));
   const awayScore = parseNullableScore(formData.get("away_score"));
 
   if (!id) {
-    redirectMatchError("match-update");
+    redirectMatchError("match-update", filterStatus);
   }
 
   if (!homeTeam || !awayTeam) {
-    redirectMatchError("match-update");
+    redirectMatchError("match-update", filterStatus);
   }
 
   if (homeTeam === awayTeam) {
-    redirectMatchError("match-update");
+    redirectMatchError("match-update", filterStatus);
   }
 
   if ((homeScore !== null && homeScore < 0) || (awayScore !== null && awayScore < 0)) {
-    redirectMatchError("match-update");
+    redirectMatchError("match-update", filterStatus);
   }
 
   const payload: {
@@ -189,13 +228,13 @@ export async function updateMatchAction(formData: FormData) {
     away_team: awayTeam,
     home_flag: homeFlag,
     away_flag: awayFlag,
-    status,
+    status: matchStatus,
     is_puma_match: isPumaMatch,
     home_score: homeScore,
     away_score: awayScore,
   };
 
-  if (status !== "finished") {
+  if (matchStatus !== "finished") {
     payload.home_score = null;
     payload.away_score = null;
   }
@@ -207,11 +246,11 @@ export async function updateMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[updateMatchAction]", error);
-    redirectMatchError("match-update");
+    redirectMatchError("match-update", filterStatus);
   }
 
   revalidateAdminSurfaces();
-  redirectMatchSuccess("match-updated");
+  redirectMatchSuccess("match-updated", filterStatus);
 }
 
 export async function deleteMatchAction(formData: FormData) {
@@ -219,20 +258,21 @@ export async function deleteMatchAction(formData: FormData) {
   const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
+  const filterStatus = String(formData.get("filter_status") ?? "all");
 
   if (!id) {
-    redirectMatchError("match-delete");
+    redirectMatchError("match-delete", filterStatus);
   }
 
   const { error } = await supabaseAdmin.from("matches").delete().eq("id", id);
 
   if (error) {
     console.error("[deleteMatchAction]", error);
-    redirectMatchError("match-delete");
+    redirectMatchError("match-delete", filterStatus);
   }
 
   revalidateAdminSurfaces();
-  redirectMatchSuccess("match-deleted");
+  redirectMatchSuccess("match-deleted", filterStatus);
 }
 
 export async function toggleUserActiveAction(formData: FormData) {
@@ -293,4 +333,35 @@ export async function toggleUserActiveAction(formData: FormData) {
 
   revalidateAdminSurfaces();
   redirectUserSuccess(nextIsActive ? "user-activated" : "user-deactivated");
+}
+
+export async function generateRankingSnapshotAction(formData: FormData) {
+  await requireAdmin();
+
+  const snapshotKey = String(formData.get("snapshot_key") ?? "").trim();
+  const snapshotLabel = String(formData.get("snapshot_label") ?? "").trim();
+
+  if (!snapshotKey) {
+    redirectAdminError("snapshot-missing-key");
+  }
+
+  try {
+    const supabase = await getSupabaseServerClient();
+
+    const { error } = await supabase.rpc("generate_ranking_snapshot", {
+      p_snapshot_key: snapshotKey,
+      p_snapshot_label: snapshotLabel || null,
+    });
+
+    if (error) {
+      console.error("[generateRankingSnapshotAction]", error);
+      redirectAdminError("snapshot-generate");
+    }
+  } catch (err) {
+    console.error("[generateRankingSnapshotAction][unexpected]", err);
+    redirectAdminError("snapshot-generate");
+  }
+
+  revalidateAdminSurfaces();
+  redirectAdminSuccess("snapshot-generated");
 }

@@ -190,6 +190,8 @@ export default async function AdminMatchesPage({
         )}
 
         <form action={createMatchAction} className="mt-6">
+          <input type="hidden" name="filter_status" value={selectedStatus} />
+
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -262,7 +264,7 @@ export default async function AdminMatchesPage({
                 Estado
               </label>
               <select
-                name="status"
+                name="match_status"
                 defaultValue="upcoming"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
@@ -390,6 +392,11 @@ export default async function AdminMatchesPage({
 
                   <form action={deleteMatchAction}>
                     <input type="hidden" name="id" value={match.id} />
+                    <input
+                      type="hidden"
+                      name="filter_status"
+                      value={selectedStatus}
+                    />
                     <DeleteMatchButton
                       label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
                     />
@@ -398,6 +405,11 @@ export default async function AdminMatchesPage({
 
                 <form action={updateMatchAction}>
                   <input type="hidden" name="id" value={match.id} />
+                  <input
+                    type="hidden"
+                    name="filter_status"
+                    value={selectedStatus}
+                  />
 
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div>
@@ -472,7 +484,7 @@ export default async function AdminMatchesPage({
                         Estado
                       </label>
                       <select
-                        name="status"
+                        name="match_status"
                         defaultValue={match.status}
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                       >

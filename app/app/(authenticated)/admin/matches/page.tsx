@@ -18,6 +18,8 @@ type MatchRow = {
   home_score: number | null;
   away_score: number | null;
   is_puma_match: boolean | null;
+  is_visible: boolean;
+  is_prediction_open: boolean;
   home_flag: string | null;
   away_flag: string | null;
 };
@@ -153,7 +155,7 @@ export default async function AdminMatchesPage({
   let matchesQuery = supabase
     .from("matches")
     .select(
-      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, home_flag, away_flag"
+      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag"
     )
     .order("match_datetime", { ascending: true });
 
@@ -274,7 +276,7 @@ export default async function AdminMatchesPage({
               </select>
             </div>
 
-            <div className="flex items-end">
+            <div className="flex flex-col justify-end gap-3">
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -283,6 +285,28 @@ export default async function AdminMatchesPage({
                   className="h-4 w-4 rounded border-slate-300"
                 />
                 Partido PUMA
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  name="is_visible"
+                  value="true"
+                  defaultChecked
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Visible en la app
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  name="is_prediction_open"
+                  value="true"
+                  defaultChecked
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Predicción abierta
               </label>
             </div>
           </div>
@@ -373,6 +397,26 @@ export default async function AdminMatchesPage({
                       {match.is_puma_match && (
                         <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
                           PUMA
+                        </span>
+                      )}
+
+                      {match.is_visible ? (
+                        <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                          Visible
+                        </span>
+                      ) : (
+                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                          Oculto
+                        </span>
+                      )}
+
+                      {match.is_prediction_open ? (
+                        <span className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                          Predicción abierta
+                        </span>
+                      ) : (
+                        <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                          Predicción cerrada
                         </span>
                       )}
                     </div>
@@ -494,7 +538,7 @@ export default async function AdminMatchesPage({
                       </select>
                     </div>
 
-                    <div className="flex items-end">
+                    <div className="flex flex-col justify-end gap-3">
                       <label className="flex items-center gap-2 text-sm text-slate-700">
                         <input
                           type="checkbox"
@@ -504,6 +548,28 @@ export default async function AdminMatchesPage({
                           className="h-4 w-4 rounded border-slate-300"
                         />
                         Partido PUMA
+                      </label>
+
+                      <label className="flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          name="is_visible"
+                          value="true"
+                          defaultChecked={Boolean(match.is_visible)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        Visible en la app
+                      </label>
+
+                      <label className="flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          name="is_prediction_open"
+                          value="true"
+                          defaultChecked={Boolean(match.is_prediction_open)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        Predicción abierta
                       </label>
                     </div>
 

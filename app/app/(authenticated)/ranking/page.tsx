@@ -7,6 +7,7 @@ type RankingRow = {
   total_points: number | null;
   exact_hits: number | null;
   tendency_hits: number | null;
+  champion_bonus_points: number | null;
 };
 
 type RankedRow = RankingRow & {
@@ -438,7 +439,7 @@ export default async function RankingPage() {
 
   const { data, error } = await supabaseServer
     .from("prediction_scores")
-    .select("user_id, display_name, total_points, exact_hits, tendency_hits");
+    .select("user_id, display_name, total_points, exact_hits, tendency_hits, champion_bonus_points");
   
   if (error) {
     return (
@@ -465,6 +466,7 @@ export default async function RankingPage() {
       total_points: row.total_points ?? 0,
       exact_hits: row.exact_hits ?? 0,
       tendency_hits: row.tendency_hits ?? 0,
+      champion_bonus_points: row.champion_bonus_points ?? 0,
     }))
     .sort((a, b) => {
       const pointsDiff = (b.total_points ?? 0) - (a.total_points ?? 0);

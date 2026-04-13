@@ -140,7 +140,10 @@ export async function createMatchAction(formData: FormData) {
   const matchStatus = String(
     formData.get("match_status") ?? "upcoming"
   ) as MatchStatus;
+
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
+  const isVisible = parseCheckbox(formData.get("is_visible"));
+  const isPredictionOpen = parseCheckbox(formData.get("is_prediction_open"));
 
   if (!homeTeam || !awayTeam) {
     redirectMatchError("match-create", filterStatus);
@@ -159,6 +162,8 @@ export async function createMatchAction(formData: FormData) {
     away_flag: awayFlag,
     status: matchStatus,
     is_puma_match: isPumaMatch,
+    is_visible: isVisible,
+    is_prediction_open: isPredictionOpen,
     home_score: null,
     away_score: null,
   };
@@ -190,7 +195,11 @@ export async function updateMatchAction(formData: FormData) {
   const matchStatus = String(
     formData.get("match_status") ?? "upcoming"
   ) as MatchStatus;
+
   const isPumaMatch = parseCheckbox(formData.get("is_puma_match"));
+  const isVisible = parseCheckbox(formData.get("is_visible"));
+  const isPredictionOpen = parseCheckbox(formData.get("is_prediction_open"));
+
   const homeScore = parseNullableScore(formData.get("home_score"));
   const awayScore = parseNullableScore(formData.get("away_score"));
 
@@ -219,6 +228,8 @@ export async function updateMatchAction(formData: FormData) {
     away_flag: string | null;
     status: MatchStatus;
     is_puma_match: boolean;
+    is_visible: boolean;
+    is_prediction_open: boolean;
     home_score: number | null;
     away_score: number | null;
   } = {
@@ -230,6 +241,8 @@ export async function updateMatchAction(formData: FormData) {
     away_flag: awayFlag,
     status: matchStatus,
     is_puma_match: isPumaMatch,
+    is_visible: isVisible,
+    is_prediction_open: isPredictionOpen,
     home_score: homeScore,
     away_score: awayScore,
   };
@@ -346,9 +359,9 @@ export async function generateRankingSnapshotAction(formData: FormData) {
   }
 
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabaseAdmin = getSupabaseAdminClient();
 
-    const { error } = await supabase.rpc("generate_ranking_snapshot", {
+    const { error } = await supabaseAdmin.rpc("generate_ranking_snapshot", {
       p_snapshot_key: snapshotKey,
       p_snapshot_label: snapshotLabel || null,
     });

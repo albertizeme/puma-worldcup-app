@@ -398,6 +398,11 @@ function RankingListItem({
 
           <p className="mt-1 text-xs text-neutral-500 sm:text-sm">
             {row.exact_hits ?? 0} exactos · {row.tendency_hits ?? 0} tendencias
+            {(row.champion_bonus_points ?? 0) > 0 && (
+              <span className="font-semibold text-amber-700">
+                {" "}· 🏆 Campeón
+              </span>
+            )}
           </p>
 
           {competitiveHint && (

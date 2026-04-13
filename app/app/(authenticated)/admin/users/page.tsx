@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import ResetPasswordButton from "../ResetPasswordButton";
 import ToggleUserActiveButton from "../ToggleUserActiveButton";
+import CreateUserForm from "./CreateUserForm";
 
 type UserRole = "all" | "user" | "admin";
 type UserState = "all" | "active" | "inactive";
@@ -260,7 +261,9 @@ export default async function AdminUsersPage({
           {alert.message}
         </div>
       )}
-
+      <div className="mt-6">
+        <CreateUserForm />
+      </div>
       <div className="mt-6 overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-y-2">
           <thead>

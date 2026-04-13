@@ -378,3 +378,97 @@ export async function generateRankingSnapshotAction(formData: FormData) {
   revalidateAdminSurfaces();
   redirectAdminSuccess("snapshot-generated");
 }
+
+function parseBoolean(value: FormDataEntryValue | null) {
+  return String(value ?? "") === "true";
+}
+
+function parseText(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim();
+}
+
+function isValidRole(value: string): value is "user" | "admin" {
+  return value === "user" || value === "admin";
+}
+
+export async function createUserAction(formData: FormData) {
+  const supabase = await getSupabaseServerClient();
+  const admin = getSupabaseAdminClient();
+
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    redirect("/admin/users?error=user-create-auth");
+  }
+
+  const email = parseText(formData.get("email")).toLowerCase();
+  const displayName = parseText(formData.get("display_name"));
+  const roleRaw = parseText(formData.get("role"));
+  const temporaryPassword = parseText(formData.get("temporaryPassword"));
+  const isActive = parseBoolean(formData.get("is_active"));
+
+  if (!email || !temporaryPassword || !isValidRole(roleRaw)) {
+    redirect("/admin/users?error=user-create-invalid");
+  }
+
+  if (temporaryPassword.length < 8) {
+    redirect("/admin/users?error=user-create-password");
+  }
+
+  const role: "user" | "admin" = roleRaw;
+
+  const { data: existingProfile } = await admin
+    .from("profiles")
+    .select("id, email")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (existingProfile) {
+    redirect("/admin/users?error=user-create-exists");
+  }
+
+  const { data: createdUser, error: createError } =
+    await admin.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: {
+        display_name: displayName || null,
+      },
+    });
+
+  if (createError || !createdUser.user) {
+    redirect("/admin/users?error=user-create");
+  }
+
+  const userId = createdUser.user.id;
+
+  /**
+   * Si tienes trigger en profiles al crear auth.users:
+   * esto actualiza el registro.
+   * Si NO tienes trigger, el upsert lo deja igualmente creado.
+   */
+  const { error: profileError } = await admin
+    .from("profiles")
+    .upsert(
+      {
+        id: userId,
+        email,
+        display_name: displayName || null,
+        role,
+        is_active: isActive,
+        must_change_password: true,
+        last_password_reset_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+
+  if (profileError) {
+    // rollback básico para no dejar auth creado sin perfil
+    await admin.auth.admin.deleteUser(userId);
+    redirect("/admin/users?error=user-create-profile");
+  }
+
+  revalidatePath("/admin/users");
+  redirect("/admin/users?success=user-created");
+}

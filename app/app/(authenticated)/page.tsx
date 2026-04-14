@@ -505,12 +505,14 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <Link
-              href="/champion"
-              className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              {isChampionPredictionOpen ? "Cambiar campeón" : "Ver campeón"}
-            </Link>
+            {isChampionPredictionOpen ? (
+              <Link
+                href="/champion"
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Cambiar campeón
+              </Link>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col gap-3">

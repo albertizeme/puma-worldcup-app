@@ -186,10 +186,11 @@ export default async function AdminHomePage({
                 <option value="group_md1">group_md1</option>
                 <option value="group_md2">group_md2</option>
                 <option value="group_md3">group_md3</option>
-                <option value="round_16">round_16</option>
-                <option value="quarterfinals">quarterfinals</option>
-                <option value="semifinals">semifinals</option>
-                <option value="final">final</option>
+                <option value="round_32">Dieciseisavos de final</option>
+                <option value="round_16">Octavos de final</option>
+                <option value="quarterfinals">Cuartos de final</option>
+                <option value="semifinals">Semifinales</option>
+                <option value="final">Final</option>
               </select>
             </div>
 

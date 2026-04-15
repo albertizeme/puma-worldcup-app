@@ -1,4 +1,30 @@
-// app/[locale]/layout.tsx
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+import AppTopBar from "@/components/AppTopBar";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
+
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const {
+    supabase: supabaseServer,
+    user,
+  } = await requireAuthenticatedUser();
+
+  const { data: profile } = await supabaseServer
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "admin";
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
+        <AppTopBar isAdmin={isAdmin} />
+        {children}
+      </div>
+    </div>
+  );
 }

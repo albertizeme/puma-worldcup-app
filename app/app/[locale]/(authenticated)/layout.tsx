@@ -1,30 +1,23 @@
-import AppTopBar from "@/components/AppTopBar";
-import { requireAuthenticatedUser } from "@/lib/auth-guard";
+import {NextIntlClientProvider} from 'next-intl';
 
-export default async function AppLayout({
+export default async function LocaleLayout({
   children,
+  params
 }: {
   children: React.ReactNode;
+  params: {locale: string};
 }) {
-  const {
-    supabase: supabaseServer,
-    user,
-  } = await requireAuthenticatedUser();
+  const {locale} = params;
 
-  const { data: profile } = await supabaseServer
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const isAdmin = profile?.role === "admin";
+  const messages = (await import(`@/messages/${locale}.json`)).default;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
-        <AppTopBar isAdmin={isAdmin} />
-        {children}
-      </div>
-    </div>
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

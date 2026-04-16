@@ -6,18 +6,9 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const {
-    supabase: supabaseServer,
-    user,
-  } = await requireAuthenticatedUser();
+  const { profile } = await requireAuthenticatedUser();
 
-  const { data: profile } = await supabaseServer
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = profile.role === "admin";
 
   return (
     <div className="min-h-screen bg-slate-50">

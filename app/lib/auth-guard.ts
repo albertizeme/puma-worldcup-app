@@ -1,4 +1,3 @@
-// lib/auth-guard.ts
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
@@ -17,11 +16,7 @@ export async function requireAuthenticatedUser(
     error: userError,
   } = await supabase.auth.getUser();
 
-  console.log("[auth-guard] userError:", userError?.message);
-  console.log("[auth-guard] user:", user?.id, user?.email);
-
   if (userError || !user) {
-    console.log("[auth-guard] redirect -> /login (no user)");
     redirect("/login");
   }
 
@@ -31,26 +26,24 @@ export async function requireAuthenticatedUser(
     .eq("id", user.id)
     .single();
 
-  console.log("[auth-guard] profileError:", profileError?.message);
-  console.log("[auth-guard] profile:", profile);
+  if (profileError) {
+    console.error("[auth-guard] Error loading profile:", profileError);
+    throw new Error("No se pudo cargar el perfil del usuario autenticado.");
+  }
 
-  if (profileError || !profile) {
-    console.log("[auth-guard] redirect -> /login (no profile)");
-    redirect("/login");
+  if (!profile) {
+    throw new Error("El usuario autenticado no tiene perfil en public.profiles.");
   }
 
   if (!profile.is_active) {
-    console.log("[auth-guard] redirect -> /login (inactive)");
-    redirect("/login");
+    redirect("/login?error=inactive");
   }
 
   if (!options.allowPasswordChangePage && profile.must_change_password) {
-    console.log("[auth-guard] redirect -> /change-password");
     redirect("/change-password");
   }
 
   if (options.requireAdmin && profile.role !== "admin") {
-    console.log("[auth-guard] redirect -> / (not admin)");
     redirect("/");
   }
 

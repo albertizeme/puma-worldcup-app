@@ -1,5 +1,5 @@
-// app/ranking/page.tsx
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
+import { getLocale, getTranslations } from "next-intl/server";
 
 type RankingRow = {
   user_id: string;
@@ -34,8 +34,10 @@ type MovementInfo = {
   isNew: boolean;
 };
 
-function getDisplayName(row: RankingRow) {
-  return row.display_name?.trim() || "Usuario";
+type Translator = Awaited<ReturnType<typeof getTranslations>>;
+
+function getDisplayName(row: RankingRow, fallbackUserLabel: string) {
+  return row.display_name?.trim() || fallbackUserLabel;
 }
 
 function getPositionBadgeClass(position: number) {
@@ -51,12 +53,14 @@ function getPositionBadgeClass(position: number) {
   return "bg-neutral-100 text-neutral-700";
 }
 
-function formatPointsLabel(points: number, compact = false) {
-  if (points === 1) {
-    return compact ? "1 pt" : "1 punto";
+function formatPointsLabel(points: number, t: Translator, compact = false) {
+  if (compact) {
+    return points === 1 ? t("pt", { count: 1 }) : t("pts", { count: points });
   }
 
-  return compact ? `${points} pts` : `${points} puntos`;
+  return points === 1
+    ? t("pointCount_one", { count: 1 })
+    : t("pointCount_other", { count: points });
 }
 
 function getPodiumCutoffPoints(rows: RankedRow[]) {
@@ -73,7 +77,7 @@ function getPodiumCutoffPoints(rows: RankedRow[]) {
   return uniquePointValues[2];
 }
 
-function getCompetitiveHint(rows: RankedRow[], index: number) {
+function getCompetitiveHint(rows: RankedRow[], index: number, t: Translator) {
   const currentRow = rows[index];
   if (!currentRow) return null;
 
@@ -84,20 +88,20 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
   const podiumPoints = getPodiumCutoffPoints(rows);
 
   if (index === 0) {
-    if (!nextRow) return "Líder";
+    if (!nextRow) return t("hintLeader");
 
     const cushion = currentPoints - (nextRow.total_points ?? 0);
 
-    if (cushion <= 0) return "Líder";
-    if (cushion === 1) return "Lidera por 1 pt";
-    return `Lidera por ${cushion} pts`;
+    if (cushion <= 0) return t("hintLeader");
+    if (cushion === 1) return t("hintLeadingBy_one", { count: 1 });
+    return t("hintLeadingBy_other", { count: cushion });
   }
 
   if (previousRow) {
     const gapToPrevious = (previousRow.total_points ?? 0) - currentPoints;
 
     if (gapToPrevious <= 0) {
-      return "Empatado con el de arriba";
+      return t("hintTiedAbove");
     }
   }
 
@@ -105,7 +109,7 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
     const gapToPodium = Math.max(podiumPoints - currentPoints, 0);
 
     if (gapToPodium > 0) {
-      return `A ${formatPointsLabel(gapToPodium, true)} del podio`;
+      return t("hintToPodium", { points: formatPointsLabel(gapToPodium, t, true) });
     }
   }
 
@@ -113,7 +117,7 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
     const gapToLeader = Math.max((leader.total_points ?? 0) - currentPoints, 0);
 
     if (gapToLeader > 0) {
-      return `A ${formatPointsLabel(gapToLeader, true)} del líder`;
+      return t("hintToLeader", { points: formatPointsLabel(gapToLeader, t, true) });
     }
   }
 
@@ -121,31 +125,32 @@ function getCompetitiveHint(rows: RankedRow[], index: number) {
     const gapToPrevious = Math.max((previousRow.total_points ?? 0) - currentPoints, 0);
 
     if (gapToPrevious > 0) {
-      return `A ${formatPointsLabel(gapToPrevious, true)} de alcanzarle`;
+      return t("hintToCatchUp", { points: formatPointsLabel(gapToPrevious, t, true) });
     }
   }
 
   return null;
 }
 
-function getComparisonReference(snapshotReference: string | null) {
-  return snapshotReference ?? "el último corte";
+function getComparisonReference(snapshotReference: string | null, t: Translator) {
+  return snapshotReference ?? t("lastCutoff");
 }
 
 function getMovementInfo(
   row: RankedRow,
   previousSnapshotMap: Map<string, { user_id: string; position: number; total_points: number }>,
-  snapshotReference: string | null
+  snapshotReference: string | null,
+  t: Translator
 ): MovementInfo {
   const previous = previousSnapshotMap.get(row.user_id);
-  const reference = getComparisonReference(snapshotReference);
+  const reference = getComparisonReference(snapshotReference, t);
 
   if (!previous) {
     return {
       positionChange: null,
       pointsChange: null,
-      movementLabel: "Nuevo en el ranking",
-      pointsLabel: `Sin comparación previa respecto a ${reference}`,
+      movementLabel: t("movementNew"),
+      pointsLabel: t("movementNoPreviousComparison", { reference }),
       isNew: true,
     };
   }
@@ -158,28 +163,34 @@ function getMovementInfo(
   const positionDelta = previousPosition - currentPosition;
   const pointsDelta = currentPoints - previousPoints;
 
-  let movementLabel = "→ Se mantiene";
+  let movementLabel = t("movementStay");
 
   if (positionDelta > 0) {
-    movementLabel = `↑ Sube ${positionDelta} ${positionDelta === 1 ? "puesto" : "puestos"}`;
+    movementLabel =
+      positionDelta === 1
+        ? t("movementUp_one", { count: 1 })
+        : t("movementUp_other", { count: positionDelta });
   } else if (positionDelta < 0) {
     const fallen = Math.abs(positionDelta);
-    movementLabel = `↓ Baja ${fallen} ${fallen === 1 ? "puesto" : "puestos"}`;
+    movementLabel =
+      fallen === 1
+        ? t("movementDown_one", { count: 1 })
+        : t("movementDown_other", { count: fallen });
   }
 
-  let pointsLabel: string | null = `Mismos puntos que en ${reference}`;
+  let pointsLabel: string | null = t("movementSamePoints", { reference });
 
   if (pointsDelta > 0) {
     pointsLabel =
       pointsDelta === 1
-        ? `1 punto más que en ${reference}`
-        : `${pointsDelta} puntos más que en ${reference}`;
+        ? t("movementMorePoints_one", { reference, count: 1 })
+        : t("movementMorePoints_other", { reference, count: pointsDelta });
   } else if (pointsDelta < 0) {
     const diff = Math.abs(pointsDelta);
     pointsLabel =
       diff === 1
-        ? `1 punto menos que en ${reference}`
-        : `${diff} puntos menos que en ${reference}`;
+        ? t("movementFewerPoints_one", { reference, count: 1 })
+        : t("movementFewerPoints_other", { reference, count: diff });
   }
 
   return {
@@ -227,46 +238,56 @@ function getPointsChangeTextClass(pointsChange: number | null) {
   return "text-orange-100";
 }
 
-function getMovementSummaryText(movement: MovementInfo, snapshotReference: string | null) {
-  const reference = getComparisonReference(snapshotReference);
+function getMovementSummaryText(
+  movement: MovementInfo,
+  snapshotReference: string | null,
+  t: Translator
+) {
+  const reference = getComparisonReference(snapshotReference, t);
 
   if (movement.isNew) {
-    return `Has entrado en el ranking desde ${reference}.`;
+    return t("summaryEnteredRanking", { reference });
   }
 
   if (movement.positionChange === null || movement.positionChange === 0) {
-    return `Mantienes tu posición desde ${reference}.`;
+    return t("summaryPositionUnchanged", { reference });
   }
 
   if (movement.positionChange > 0) {
-    return `Has subido ${movement.positionChange} ${
-      movement.positionChange === 1 ? "puesto" : "puestos"
-    } desde ${reference}.`;
+    return movement.positionChange === 1
+      ? t("summaryMovedUp_one", { count: 1, reference })
+      : t("summaryMovedUp_other", { count: movement.positionChange, reference });
   }
 
   const fallen = Math.abs(movement.positionChange);
-  return `Has bajado ${fallen} ${fallen === 1 ? "puesto" : "puestos"} desde ${reference}.`;
+  return fallen === 1
+    ? t("summaryMovedDown_one", { count: 1, reference })
+    : t("summaryMovedDown_other", { count: fallen, reference });
 }
 
-function getPointsChangeSummaryText(movement: MovementInfo, snapshotReference: string | null) {
+function getPointsChangeSummaryText(
+  movement: MovementInfo,
+  snapshotReference: string | null,
+  t: Translator
+) {
   if (movement.pointsChange === null) return null;
 
-  const reference = getComparisonReference(snapshotReference);
+  const reference = getComparisonReference(snapshotReference, t);
 
   if (movement.pointsChange === 0) {
-    return `Sin variación de puntos respecto a ${reference}.`;
+    return t("summaryPointsNoChange", { reference });
   }
 
   if (movement.pointsChange > 0) {
     return movement.pointsChange === 1
-      ? `Tienes 1 punto más que en ${reference}.`
-      : `Tienes ${movement.pointsChange} puntos más que en ${reference}.`;
+      ? t("summaryPointsMore_one", { count: 1, reference })
+      : t("summaryPointsMore_other", { count: movement.pointsChange, reference });
   }
 
   const diff = Math.abs(movement.pointsChange);
   return diff === 1
-    ? `Tienes 1 punto menos que en ${reference}.`
-    : `Tienes ${diff} puntos menos que en ${reference}.`;
+    ? t("summaryPointsLess_one", { count: 1, reference })
+    : t("summaryPointsLess_other", { count: diff, reference });
 }
 
 function getBattleRows(rows: RankedRow[], userId: string) {
@@ -289,12 +310,12 @@ function getBattleRows(rows: RankedRow[], userId: string) {
   };
 }
 
-function getGapText(fromPoints: number | null, toPoints: number | null) {
+function getGapText(fromPoints: number | null, toPoints: number | null, t: Translator) {
   const diff = Math.abs((fromPoints ?? 0) - (toPoints ?? 0));
 
-  if (diff === 0) return "Empatados";
-  if (diff === 1) return "1 punto";
-  return `${diff} puntos`;
+  if (diff === 0) return t("gapTied");
+  if (diff === 1) return t("gap_one", { count: 1 });
+  return t("gap_other", { count: diff });
 }
 
 function getTopRows(rows: RankedRow[], limit = 10) {
@@ -318,26 +339,27 @@ function getMomentumBadge(params: {
   gapToAbove: number | null;
   gapToBelow: number | null;
   isPodium: boolean;
+  t: Translator;
 }) {
-  const { positionChange, pointsChange, gapToAbove, gapToBelow, isPodium } = params;
+  const { positionChange, pointsChange, gapToAbove, gapToBelow, isPodium, t } = params;
 
   if ((positionChange ?? 0) > 0 || (pointsChange ?? 0) >= 3) {
     return {
-      label: "🔥 En racha",
+      label: t("momentumHotStreak"),
       className: "border-rose-200 bg-rose-100 text-rose-700",
     };
   }
 
   if (gapToAbove === 1 || gapToBelow === 1) {
     return {
-      label: "⚡ Presión total",
+      label: t("momentumPressure"),
       className: "border-amber-200 bg-amber-100 text-amber-800",
     };
   }
 
   if ((positionChange ?? 0) === 0 || isPodium) {
     return {
-      label: "🛡️ Aguantando",
+      label: t("momentumHolding"),
       className: "border-sky-200 bg-sky-100 text-sky-700",
     };
   }
@@ -352,6 +374,7 @@ function RankingListItem({
   competitiveHint,
   movement,
   movementClass,
+  t,
 }: {
   row: RankedRow;
   userId: string;
@@ -359,6 +382,7 @@ function RankingListItem({
   competitiveHint: string | null;
   movement: MovementInfo | null;
   movementClass: string;
+  t: Translator;
 }) {
   const isCurrentUser = row.user_id === userId;
 
@@ -380,28 +404,27 @@ function RankingListItem({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-bold text-neutral-900 sm:text-base">
-              {getDisplayName(row)}
+              {getDisplayName(row, t("userFallback"))}
             </p>
 
             {isCurrentUser && (
               <span className="rounded-full bg-violet-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                Tú
+                {t("you")}
               </span>
             )}
 
             {isPodium && !isCurrentUser && (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
-                Top 3
+                {t("top3")}
               </span>
             )}
           </div>
 
           <p className="mt-1 text-xs text-neutral-500 sm:text-sm">
-            {row.exact_hits ?? 0} exactos · {row.tendency_hits ?? 0} tendencias
+            {row.exact_hits ?? 0} {t("exactHitsLower")} · {row.tendency_hits ?? 0}{" "}
+            {t("tendencyHitsLower")}
             {(row.champion_bonus_points ?? 0) > 0 && (
-              <span className="font-semibold text-amber-700">
-                {" "}· 🏆 Campeón
-              </span>
+              <span className="font-semibold text-amber-700"> · 🏆 {t("champion")}</span>
             )}
           </p>
 
@@ -432,7 +455,7 @@ function RankingListItem({
           {row.total_points ?? 0}
         </p>
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500 sm:text-xs">
-          puntos
+          {t("pointsLabel")}
         </p>
       </div>
     </div>
@@ -440,23 +463,27 @@ function RankingListItem({
 }
 
 export default async function RankingPage() {
+  const t = await getTranslations("ranking");
+  const locale = await getLocale();
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
 
   const { data, error } = await supabaseServer
     .from("prediction_scores")
     .select("user_id, display_name, total_points, exact_hits, tendency_hits, champion_bonus_points");
-  
+
   if (error) {
     return (
       <main className="flex min-h-[40vh] w-full flex-col">
         <div className="rounded-3xl border border-red-200 bg-red-50 p-5 text-red-700 shadow-sm">
-          <h1 className="text-xl font-bold">Ranking</h1>
+          <h1 className="text-xl font-bold">{t("title")}</h1>
           <p className="mt-2 text-sm">
-            No se pudo cargar el ranking. Revisa la vista{" "}
-            <code className="rounded bg-red-100 px-1 py-0.5 text-xs">
-              prediction_scores
-            </code>
-            .
+            {t.rich("loadErrorMessage", {
+              viewName: () => (
+                <code className="rounded bg-red-100 px-1 py-0.5 text-xs">
+                  prediction_scores
+                </code>
+              ),
+            })}
           </p>
           <p className="mt-2 text-sm opacity-80">{error.message}</p>
         </div>
@@ -483,7 +510,10 @@ export default async function RankingPage() {
       const tendencyDiff = (b.tendency_hits ?? 0) - (a.tendency_hits ?? 0);
       if (tendencyDiff !== 0) return tendencyDiff;
 
-      return getDisplayName(a).localeCompare(getDisplayName(b), "es");
+      return getDisplayName(a, t("userFallback")).localeCompare(
+        getDisplayName(b, t("userFallback")),
+        locale
+      );
     });
 
   const rankedRows: RankedRow[] = ranking.map((row, index, rows) => {
@@ -542,7 +572,7 @@ export default async function RankingPage() {
   const totalParticipants = rankedRows.length;
   const leader = rankedRows[0];
   const podiumCutoffPoints = getPodiumCutoffPoints(rankedRows);
-  const topRows = getTopRows(rankedRows, 10);
+  getTopRows(rankedRows, 10);
   const contextRows = getContextRows(rankedRows, user.id, 3);
 
   const isPodiumRow = (row: RankedRow) => {
@@ -571,12 +601,12 @@ export default async function RankingPage() {
 
   const currentUserMovement =
     currentUserRow && latestSnapshotKey
-      ? getMovementInfo(currentUserRow, previousSnapshotMap, snapshotReference)
+      ? getMovementInfo(currentUserRow, previousSnapshotMap, snapshotReference, t)
       : null;
 
   const currentUserMovementPillClass = currentUserMovement
     ? getMovementPillClass(currentUserMovement.positionChange, currentUserMovement.isNew)
-    : "";   
+    : "";
 
   const battleRows = currentUserRow
     ? getBattleRows(rankedRows, user.id)
@@ -595,54 +625,46 @@ export default async function RankingPage() {
   const gapToBelow =
     currentUserRow && rowBelow
       ? Math.max((currentUserRow.total_points ?? 0) - (rowBelow.total_points ?? 0), 0)
-      : null;  
-  
+      : null;
+
   const movementBadge =
-  latestSnapshotKey &&
-  currentUserMovement &&
-  (
-    currentUserMovement.isNew ||
-    (
-      currentUserMovement.positionChange !== null &&
-      currentUserMovement.positionChange !== 0
-    )
-  )
-    ? currentUserMovement
-    : null;
+    latestSnapshotKey &&
+    currentUserMovement &&
+    (currentUserMovement.isNew ||
+      (currentUserMovement.positionChange !== null && currentUserMovement.positionChange !== 0))
+      ? currentUserMovement
+      : null;
 
-const currentUserMomentum =
-  currentUserRow && currentUserMovement
-    ? getMomentumBadge({
-        positionChange: currentUserMovement.positionChange,
-        pointsChange: currentUserMovement.pointsChange,
-        gapToAbove,
-        gapToBelow,
-        isPodium: isPodiumRow(currentUserRow),
-      })
-    : null;
+  const currentUserMomentum =
+    currentUserRow && currentUserMovement
+      ? getMomentumBadge({
+          positionChange: currentUserMovement.positionChange,
+          pointsChange: currentUserMovement.pointsChange,
+          gapToAbove,
+          gapToBelow,
+          isPodium: isPodiumRow(currentUserRow),
+          t,
+        })
+      : null;
 
-const momentumBadge = movementBadge ? null : currentUserMomentum; 
+  const momentumBadge = movementBadge ? null : currentUserMomentum;
 
   return (
     <main className="flex w-full flex-col">
       <section className="mb-5">
-        
         <div>
           <h1 className="text-2xl font-black tracking-tight text-neutral-900 sm:text-3xl">
-            Ranking
+            {t("title")}
           </h1>
 
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-            Tu posición actual y la clasificación completa del torneo.
-          </p>
-          <p className="mt-2 max-w-2xl text-xs text-neutral-500">
-            Los PUMA Match suman 1 punto extra por acierto.
-          </p>
-          
+          <p className="mt-1 max-w-2xl text-sm text-neutral-600">{t("intro")}</p>
+          <p className="mt-2 max-w-2xl text-xs text-neutral-500">{t("pumaMatchBonus")}</p>
+
           {latestSnapshotKey && (
             <p className="mt-2 text-xs text-neutral-500">
-              Comparativa respecto a{" "}
-              <span className="font-semibold text-neutral-700">{snapshotReference}</span>
+              {t("comparisonWith", {
+                reference: snapshotReference ?? t("lastCutoff"),
+              })}
             </p>
           )}
         </div>
@@ -654,54 +676,56 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
             <div className="px-5 py-5 sm:px-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
-    Tu situación
-  </p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
+                    {t("yourSituation")}
+                  </p>
 
-  {movementBadge ? (
-    <div
-      className={`mt-3 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide shadow-sm animate-fade-in-up animate-soft-pulse ${currentUserMovementPillClass}`}
-    >
-      <span aria-hidden="true">
-        {movementBadge.positionChange! > 0 ? "↑" : "↓"}
-      </span>
-      <span>{movementBadge.movementLabel.replace(/^[↑↓→]\s*/, "")}</span>
-    </div>
-  ) : momentumBadge ? (
-    <div
-      className={`mt-3 inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-wide shadow-sm ${momentumBadge.className}`}
-    >
-      {momentumBadge.label}
-    </div>
-  ) : null}
-</div>
+                  {movementBadge ? (
+                    <div
+                      className={`mt-3 inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide shadow-sm animate-fade-in-up animate-soft-pulse ${currentUserMovementPillClass}`}
+                    >
+                      <span aria-hidden="true">
+                        {movementBadge.positionChange! > 0 ? "↑" : "↓"}
+                      </span>
+                      <span>{movementBadge.movementLabel.replace(/^[↑↓→]\s*/, "")}</span>
+                    </div>
+                  ) : momentumBadge ? (
+                    <div
+                      className={`mt-3 inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-wide shadow-sm ${momentumBadge.className}`}
+                    >
+                      {momentumBadge.label}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="mt-4 flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-sm text-white/75">Vas</p>
+                  <p className="text-sm text-white/75">{t("youAre")}</p>
                   <div className="mt-1 flex items-end gap-2">
                     <span className="text-4xl font-black leading-none sm:text-5xl">
                       #{currentUserRow.position}
                     </span>
-                    <span className="pb-1 text-sm text-white/75">de {totalParticipants}</span>
+                    <span className="pb-1 text-sm text-white/75">
+                      {t("outOf", { total: totalParticipants })}
+                    </span>
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
                   <p className="text-[11px] uppercase tracking-wide text-white/70">
-                    Tus puntos
+                    {t("yourPoints")}
                   </p>
                   <p className="text-2xl font-black text-white">
-                    {currentUserRow.total_points ?? 0} pts
+                    {t("pts", { count: currentUserRow.total_points ?? 0 })}
                   </p>
                 </div>
               </div>
 
               <p className="mt-4 text-sm text-white/80">
                 {isPodiumRow(currentUserRow)
-                  ? "Ahora mismo estás en posiciones de premio."
-                  : `Estás por delante del ${percentileAhead}% de participantes.`}
+                  ? t("insidePrizePositions")
+                  : t("aheadOfParticipants", { percent: percentileAhead })}
               </p>
 
               {latestSnapshotKey && currentUserMovement && (
@@ -712,7 +736,7 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
                       currentUserMovement.isNew
                     )}`}
                   >
-                    {getMovementSummaryText(currentUserMovement, snapshotReference)}
+                    {getMovementSummaryText(currentUserMovement, snapshotReference, t)}
                   </p>
 
                   <p
@@ -720,53 +744,53 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
                       currentUserMovement.pointsChange
                     )}`}
                   >
-                    {getPointsChangeSummaryText(currentUserMovement, snapshotReference)}
+                    {getPointsChangeSummaryText(currentUserMovement, snapshotReference, t)}
                   </p>
                 </div>
-              )}                   
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 bg-white/95 px-4 py-4 text-neutral-900 sm:px-6 xl:grid-cols-4">
               <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
-                  Podio
+                  {t("podium")}
                 </p>
                 <p className="mt-2 text-xl font-black">
-                  {isPodiumRow(currentUserRow) ? "Dentro" : `${pointsToPodium ?? 0} pts`}
-                </p>
-                <p className="mt-1 text-xs text-neutral-500">
                   {isPodiumRow(currentUserRow)
-                    ? "Defiende tu plaza en el podio"
-                    : "Lo que te falta para entrar en el podio"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
-                  Líder
-                </p>
-                <p className="mt-2 text-xl font-black">
-                  {currentUserRow.position === 1 ? "Eres tú" : `${pointsToLeader ?? 0} pts`}
+                    ? t("inside")
+                    : t("pts", { count: pointsToPodium ?? 0 })}
                 </p>
                 <p className="mt-1 text-xs text-neutral-500">
-                  Distancia respecto al liderato
+                  {isPodiumRow(currentUserRow) ? t("podiumHintInside") : t("podiumHintOutside")}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
-                  Exactos
+                  {t("leader")}
+                </p>
+                <p className="mt-2 text-xl font-black">
+                  {currentUserRow.position === 1
+                    ? t("leaderIsYou")
+                    : t("pts", { count: pointsToLeader ?? 0 })}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">{t("distanceToLeader")}</p>
+              </div>
+
+              <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
+                  {t("exactHits")}
                 </p>
                 <p className="mt-2 text-xl font-black">{currentUserRow.exact_hits ?? 0}</p>
-                <p className="mt-1 text-xs text-neutral-500">Marcadores clavados</p>
+                <p className="mt-1 text-xs text-neutral-500">{t("exactHitsHint")}</p>
               </div>
 
               <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 shadow-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-700">
-                  Tendencias
+                  {t("tendencyHits")}
                 </p>
                 <p className="mt-2 text-xl font-black">{currentUserRow.tendency_hits ?? 0}</p>
-                <p className="mt-1 text-xs text-neutral-500">Ganador o empate acertado</p>
+                <p className="mt-1 text-xs text-neutral-500">{t("tendencyHitsHint")}</p>
               </div>
             </div>
           </section>
@@ -775,10 +799,10 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
             <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/80">
-                  PUMA Challenge
+                  {t("pumaChallenge")}
                 </p>
                 <p className="mt-1 text-sm font-semibold sm:text-base">
-                  Los mejores del ranking optarán a premios finales.
+                  {t("pumaChallengeText")}
                 </p>
               </div>
               <div className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white sm:text-xs">
@@ -789,198 +813,177 @@ const momentumBadge = movementBadge ? null : currentUserMomentum;
         </>
       ) : (
         <section className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm">
-          <h2 className="text-lg font-bold">Aún no apareces en el ranking</h2>
-          <p className="mt-2 text-sm">
-            En cuanto registres tus primeras predicciones puntuables, verás aquí tu posición y
-            tus estadísticas.
-          </p>
+          <h2 className="text-lg font-bold">{t("notRankedTitle")}</h2>
+          <p className="mt-2 text-sm">{t("notRankedText")}</p>
         </section>
       )}
 
-    {currentUserRow && contextRows.length > 0 ? (
-  <section className="mb-6 overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
-    <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
-      <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">
-        Tu entorno
-      </h2>
-      <p className="mt-1 text-sm text-neutral-600">
-        Tu posición con los puestos más cercanos por arriba y por abajo.
-      </p>
-    </div>
-
-    <div className="divide-y divide-neutral-100">
-      {contextRows.map((row) => {
-        const globalIndex = rankedRows.findIndex((item) => item.user_id === row.user_id);
-        const isPodium = isPodiumRow(row);
-        const competitiveHint = getCompetitiveHint(rankedRows, globalIndex);
-        const movement = latestSnapshotKey
-          ? getMovementInfo(row, previousSnapshotMap, snapshotReference)
-          : null;
-        const movementClass = movement
-          ? getMovementTextClass(movement.positionChange, movement.isNew)
-          : "";
-
-        return (
-          <RankingListItem
-            key={row.user_id}
-            row={row}
-            userId={user.id}
-            isPodium={isPodium}
-            competitiveHint={competitiveHint}
-            movement={movement}
-            movementClass={movementClass}
-          />
-        );
-      })}
-    </div>
-  </section>
-) : null}
-
-  {currentUserRow && (rowAbove || rowBelow) ? (
-  <section className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
-    <div className="mb-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-violet-600">
-        Tu batalla ahora
-      </p>
-      <h2 className="mt-2 text-xl font-black tracking-tight text-neutral-900 sm:text-2xl">
-        Lo que te separa del siguiente puesto
-      </h2>
-      <p className="mt-1 text-sm text-neutral-600">
-        Tu referencia inmediata por arriba y por abajo en la clasificación.
-      </p>
-    </div>
-
-    <div className="space-y-3">
-      {rowAbove ? (
-        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Justo encima
-            </p>
-            <p className="truncate text-sm font-bold text-neutral-900">
-              #{rowAbove.position} · {getDisplayName(rowAbove)}
-            </p>
+      {currentUserRow && contextRows.length > 0 ? (
+        <section className="mb-6 overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
+          <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
+            <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">{t("yourSurroundings")}</h2>
+            <p className="mt-1 text-sm text-neutral-600">{t("yourSurroundingsText")}</p>
           </div>
 
-          <div className="text-right">
-            <p className="text-lg font-black text-neutral-900">
-              {rowAbove.total_points ?? 0}
-            </p>
-            <p className="text-[11px] text-neutral-500">
-              A {getGapText(rowAbove.total_points, currentUserRow.total_points)}
-            </p>
+          <div className="divide-y divide-neutral-100">
+            {contextRows.map((row) => {
+              const globalIndex = rankedRows.findIndex((item) => item.user_id === row.user_id);
+              const isPodium = isPodiumRow(row);
+              const competitiveHint = getCompetitiveHint(rankedRows, globalIndex, t);
+              const movement = latestSnapshotKey
+                ? getMovementInfo(row, previousSnapshotMap, snapshotReference, t)
+                : null;
+              const movementClass = movement
+                ? getMovementTextClass(movement.positionChange, movement.isNew)
+                : "";
+
+              return (
+                <RankingListItem
+                  key={row.user_id}
+                  row={row}
+                  userId={user.id}
+                  isPodium={isPodium}
+                  competitiveHint={competitiveHint}
+                  movement={movement}
+                  movementClass={movementClass}
+                  t={t}
+                />
+              );
+            })}
           </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <p className="text-sm font-bold text-emerald-700">
-            Vas primero. Todos te persiguen.
-          </p>
-        </div>
-      )}
+        </section>
+      ) : null}
 
-      <div className="flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
-            Tú
-          </p>
-          <p className="truncate text-sm font-bold text-neutral-900">
-            #{currentUserRow.position} · {getDisplayName(currentUserRow)}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="text-lg font-black text-neutral-900">
-            {currentUserRow.total_points ?? 0}
-          </p>
-          <p className="text-[11px] text-neutral-500">Tus puntos</p>
-        </div>
-      </div>
-
-      {rowBelow ? (
-        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Justo debajo
+      {currentUserRow && (rowAbove || rowBelow) ? (
+        <section className="mb-6 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-violet-600">
+              {t("yourBattleNow")}
             </p>
-            <p className="truncate text-sm font-bold text-neutral-900">
-              #{rowBelow.position} · {getDisplayName(rowBelow)}
-            </p>
+            <h2 className="mt-2 text-xl font-black tracking-tight text-neutral-900 sm:text-2xl">
+              {t("whatSeparatesYou")}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600">{t("battleReference")}</p>
           </div>
 
-          <div className="text-right">
-            <p className="text-lg font-black text-neutral-900">
-              {rowBelow.total_points ?? 0}
-            </p>
-            <p className="text-[11px] text-neutral-500">
-              Le llevas {getGapText(currentUserRow.total_points, rowBelow.total_points)}
-            </p>
+          <div className="space-y-3">
+            {rowAbove ? (
+              <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                    {t("justAbove")}
+                  </p>
+                  <p className="truncate text-sm font-bold text-neutral-900">
+                    #{rowAbove.position} · {getDisplayName(rowAbove, t("userFallback"))}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-lg font-black text-neutral-900">{rowAbove.total_points ?? 0}</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {t("gapAbove", {
+                      gap: getGapText(rowAbove.total_points, currentUserRow.total_points, t),
+                    })}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="text-sm font-bold text-emerald-700">{t("youAreFirst")}</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">
+                  {t("you")}
+                </p>
+                <p className="truncate text-sm font-bold text-neutral-900">
+                  #{currentUserRow.position} · {getDisplayName(currentUserRow, t("userFallback"))}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <p className="text-lg font-black text-neutral-900">
+                  {currentUserRow.total_points ?? 0}
+                </p>
+                <p className="text-[11px] text-neutral-500">{t("yourPointsShort")}</p>
+              </div>
+            </div>
+
+            {rowBelow ? (
+              <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                    {t("justBelow")}
+                  </p>
+                  <p className="truncate text-sm font-bold text-neutral-900">
+                    #{rowBelow.position} · {getDisplayName(rowBelow, t("userFallback"))}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-lg font-black text-neutral-900">{rowBelow.total_points ?? 0}</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {t("gapBelow", {
+                      gap: getGapText(currentUserRow.total_points, rowBelow.total_points, t),
+                    })}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                <p className="text-sm font-bold text-neutral-900">{t("youCloseRanking")}</p>
+              </div>
+            )}
           </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-          <p className="text-sm font-bold text-neutral-900">
-            Cierras el ranking por ahora.
-          </p>
-        </div>
-      )}
-    </div>
 
-    {gapToAbove !== null && gapToAbove > 0 ? (
-      <p className="mt-4 text-sm font-medium text-violet-700">
-        Estás a {formatPointsLabel(gapToAbove)} del siguiente puesto.
-      </p>
-    ) : rowAbove ? (
-      <p className="mt-4 text-sm font-medium text-violet-700">
-        Estás empatado con el de arriba. El desempate manda.
-      </p>
-    ) : null}
-  </section>
-) : null} 
+          {gapToAbove !== null && gapToAbove > 0 ? (
+            <p className="mt-4 text-sm font-medium text-violet-700">
+              {t("pointsToNextPlace", { points: formatPointsLabel(gapToAbove, t) })}
+            </p>
+          ) : rowAbove ? (
+            <p className="mt-4 text-sm font-medium text-violet-700">{t("youAreTiedAbove")}</p>
+          ) : null}
+        </section>
+      ) : null}
 
-      
-<details className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
-  <summary className="cursor-pointer list-none border-b border-neutral-100 px-4 py-4 font-bold text-neutral-900 sm:px-6">
-    <div className="font-bold text-neutral-900">
-    Ver clasificación completa
-  </div>
-  <p className="mt-1 text-sm font-normal text-neutral-600">
-    Ordenada por puntos, exactos y tendencias.
-  </p>
-  </summary>
+      <details className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-lg">
+        <summary className="cursor-pointer list-none border-b border-neutral-100 px-4 py-4 font-bold text-neutral-900 sm:px-6">
+          <div className="font-bold text-neutral-900">{t("fullRankingTitle")}</div>
+          <p className="mt-1 text-sm font-normal text-neutral-600">{t("fullRankingText")}</p>
+        </summary>
 
-  {rankedRows.length === 0 ? (
-    <div className="px-6 py-8 text-sm text-neutral-600">
-      Aún no hay datos suficientes para mostrar el ranking.
-    </div>
-  ) : (
-    
-    <div className="divide-y divide-neutral-100">
-      {rankedRows.map((row, index) => {
-        const isPodium = isPodiumRow(row);
-        const competitiveHint = getCompetitiveHint(rankedRows, index);
-        const movement = latestSnapshotKey
-          ? getMovementInfo(row, previousSnapshotMap, snapshotReference)
-          : null;
-        const movementClass = movement
-          ? getMovementTextClass(movement.positionChange, movement.isNew)
-          : "";
+        {rankedRows.length === 0 ? (
+          <div className="px-6 py-8 text-sm text-neutral-600">{t("emptyRanking")}</div>
+        ) : (
+          <div className="divide-y divide-neutral-100">
+            {rankedRows.map((row, index) => {
+              const isPodium = isPodiumRow(row);
+              const competitiveHint = getCompetitiveHint(rankedRows, index, t);
+              const movement = latestSnapshotKey
+                ? getMovementInfo(row, previousSnapshotMap, snapshotReference, t)
+                : null;
+              const movementClass = movement
+                ? getMovementTextClass(movement.positionChange, movement.isNew)
+                : "";
 
-        return (
-          <RankingListItem
-            key={row.user_id}
-            row={row}
-            userId={user.id}
-            isPodium={isPodium}
-            competitiveHint={competitiveHint}
-            movement={movement}
-            movementClass={movementClass}
-          />
-        );
-      })}
-    </div>
-  )}
-</details>
+              return (
+                <RankingListItem
+                  key={row.user_id}
+                  row={row}
+                  userId={user.id}
+                  isPodium={isPodium}
+                  competitiveHint={competitiveHint}
+                  movement={movement}
+                  movementClass={movementClass}
+                  t={t}
+                />
+              );
+            })}
+          </div>
+        )}
+      </details>
     </main>
   );
 }

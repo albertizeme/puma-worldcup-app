@@ -99,6 +99,7 @@
     "title": "Pronóstico de campeón",
     "description": "Elige la selección que crees que ganará el Mundial. Este pronóstico solo puede hacerse hasta la fecha límite.",
     "deadlineLabel": "Cierre",
+    "deadlineTbd": "Fecha por confirmar",
     "closed": "El plazo está cerrado.",
     "currentChampion": "Tu campeón actual: {team}",
     "selectTitle": "Selecciona tu campeón",
@@ -106,7 +107,69 @@
     "saveButton": "Guardar campeón",
     "updateButton": "Actualizar campeón",
     "saving": "Guardando...",
-    "flagAlt": "Bandera de {team}"
+    "flagAlt": "Bandera de {team}"    
+  },
+
+  "myPredictions": {
+    "title": "Mis predicciones",
+    "eyebrow": "Seguimiento personal",
+    "subtitle": "Revisa qué te falta, qué está pendiente de resolverse y cómo van tus puntos.",
+    "loadError": "Error al cargar tus predicciones:",
+    "sections": {
+      "pending": "Por completar",
+      "closed": "Esperando resultado",
+      "resolved": "Resueltas"
+    },
+    "chips": {
+      "pending": "Editable",
+      "closed": "Cerrada",
+      "resolved": "Resuelta"
+    },
+    "resolution": {
+      "pending": "Pendiente de resultado",
+      "exact": "Marcador exacto",
+      "exactWithPuma": "Marcador exacto + bonus PUMA",
+      "tendency": "Tendencia acertada",
+      "tendencyWithPuma": "Tendencia acertada + bonus PUMA",
+      "miss": "Sin acierto"
+    },
+    "stats": {
+      "total": "Total",
+      "totalHint": "Predicciones registradas",
+      "editable": "Editables",
+      "editableHint": "Aún puedes cambiarlas",
+      "inPlay": "En juego",
+      "inPlayHint": "Esperando resultado",
+      "points": "Puntos",
+      "resolvedHint": "{count} partidos resueltos"
+    },
+    "sectionMatchCount": "{count} partidos",
+    "card": {
+      "yourPrediction": "Tu predicción",
+      "realResult": "Resultado real",
+      "status": "Estado",
+      "viewDetail": "Ver detalle"
+    },
+    "empty": {
+      "title": "Aún no has hecho predicciones",
+      "subtitle": "Ve a la lista de partidos y empieza a jugar.",
+      "cta": "Ir a partidos"
+    },
+    "detail": {
+      "title": "Detalle de predicción",
+      "back": "Volver",
+      "match": "Partido",
+      "matchResult": "Resultado del partido",
+      "pendingToPlay": "Pendiente de jugar",
+      "yourPrediction": "Tu predicción",
+      "points": "Puntos",
+      "outcomes": {
+        "pending": "Pendiente",
+        "exact": "Marcador exacto",
+        "tendency": "Acertaste el signo",
+        "miss": "Predicción fallada"
+      }
+    }
   },
 
   "ranking": {
@@ -203,4 +266,5 @@
     "momentumPressure": "⚡ Presión total",
     "momentumHolding": "🛡️ Aguantando"
   }
+
 }

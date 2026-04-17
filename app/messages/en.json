@@ -98,6 +98,7 @@
     "title": "Champion prediction",
     "description": "Choose the team you think will win the World Cup. This prediction can only be submitted until the deadline.",
     "deadlineLabel": "Deadline",
+    "deadlineTbd": "Date to be confirmed",
     "closed": "The deadline is closed.",
     "currentChampion": "Your current champion: {team}",
     "selectTitle": "Select your champion",
@@ -106,6 +107,68 @@
     "updateButton": "Update champion",
     "saving": "Saving...",
     "flagAlt": "Flag of {team}"
+  },
+
+  "myPredictions": {
+    "title": "My predictions",
+    "eyebrow": "Personal tracking",
+    "subtitle": "Review what is still pending, what is waiting to be resolved and how your points are going.",
+    "loadError": "Error loading your predictions:",
+    "sections": {
+      "pending": "To complete",
+      "closed": "Waiting for result",
+      "resolved": "Resolved"
+    },
+    "chips": {
+      "pending": "Editable",
+      "closed": "Closed",
+      "resolved": "Resolved"
+    },
+    "resolution": {
+      "pending": "Waiting for result",
+      "exact": "Exact score",
+      "exactWithPuma": "Exact score + PUMA bonus",
+      "tendency": "Correct tendency",
+      "tendencyWithPuma": "Correct tendency + PUMA bonus",
+      "miss": "No hit"
+    },
+    "stats": {
+      "total": "Total",
+      "totalHint": "Registered predictions",
+      "editable": "Editable",
+      "editableHint": "You can still change them",
+      "inPlay": "In play",
+      "inPlayHint": "Waiting for result",
+      "points": "Points",
+      "resolvedHint": "{count} resolved matches"
+    },
+    "sectionMatchCount": "{count} matches",
+    "card": {
+      "yourPrediction": "Your prediction",
+      "realResult": "Actual result",
+      "status": "Status",
+      "viewDetail": "View detail"
+    },
+    "empty": {
+      "title": "You haven't made any predictions yet",
+      "subtitle": "Go to the matches list and start playing.",
+      "cta": "Go to matches"
+    },
+    "detail": {
+      "title": "Prediction detail",
+      "back": "Back",
+      "match": "Match",
+      "matchResult": "Match result",
+      "pendingToPlay": "Pending to be played",
+      "yourPrediction": "Your prediction",
+      "points": "Points",
+      "outcomes": {
+        "pending": "Pending",
+        "exact": "Exact score",
+        "tendency": "You got the tendency right",
+        "miss": "Wrong prediction"
+      }
+    }
   },
 
   "ranking": {

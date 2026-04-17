@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useFormatter, useTranslations } from "next-intl";
 import { saveChampionPredictionAction } from "@/lib/champion/actions";
 import { formatChampionDeadline } from "@/lib/champion/utils";
 import CountryFlag from "@/components/CountryFlag";
@@ -36,6 +36,7 @@ export default function ChampionPageClient({
 }: Props) {
   const t = useTranslations("champion");
   const locale = useLocale();
+  const format = useFormatter();
 
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(
     prediction?.predicted_team_id ?? null
@@ -84,8 +85,18 @@ export default function ChampionPageClient({
           </p>
 
           <p className="mt-3 text-sm font-medium text-slate-700">
-            {t("deadlineLabel")}: {formatChampionDeadline(deadline, locale)}
-          </p>
+  {t("deadlineLabel")}:{" "}
+  {deadline
+    ? format.dateTime(new Date(deadline), {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Madrid",
+      })
+    : t("deadlineTbd")}
+</p>
 
           {!isOpen && (
             <p className="mt-3 text-sm font-semibold text-red-600">

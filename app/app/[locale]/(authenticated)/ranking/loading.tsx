@@ -3,6 +3,7 @@ import { useTranslations, useLocale } from "next-intl";
 
 export default function Loading() {
   const t = useTranslations("ranking");
+
   return (    
     <main className="flex items-center justify-center min-h-[60vh]">
       
@@ -29,7 +30,7 @@ export default function Loading() {
 
         {/* Texto */}
         <p className="text-sm text-zinc-400 tracking-wide">
-          {t("Loading")}
+          {t("loading")}
         </p>
 
       </div>

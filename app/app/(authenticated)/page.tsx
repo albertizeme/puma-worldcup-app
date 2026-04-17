@@ -680,6 +680,141 @@ export default async function HomePage() {
         </div>
       </section>
 
+            {currentUserRow && (rowAbove || rowBelow) ? (
+        <section className="mb-6 overflow-hidden rounded-[1.5rem] border border-violet-200 bg-white shadow-sm">
+          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-white px-5 py-4 md:px-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-600">
+                  Tu batalla 🔥
+                </p>
+
+                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                  {rowAbove
+                    ? gapToAbove === 0
+                      ? `Empatado con el #${rowAbove.position}`
+                      : `Estás a ${formatPointsLabel(gapToAbove ?? 0)} del #${rowAbove.position}`
+                    : "Vas líder. No aflojes."}
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-600">
+                  {rowAbove
+                    ? "Tu rival más cercano por arriba y quién te pisa por abajo."
+                    : rowBelow
+                      ? "Miras desde arriba, pero todavía tienes presión por detrás."
+                      : "Ahora mismo no tienes referencias cercanas en la clasificación."}
+                </p>
+              </div>
+
+              <Link
+                href="/ranking"
+                className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+              >
+                Ver ranking
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3 p-4 md:p-5">
+            {rowAbove ? (
+              <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    Justo encima
+                  </p>
+                  <p className="truncate text-base font-bold text-slate-900">
+                    #{rowAbove.position} · {getDisplayName(rowAbove)}
+                  </p>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="text-2xl font-black text-slate-900">
+                    {rowAbove.total_points ?? 0}
+                  </p>
+                  <p className="text-[11px] font-medium text-slate-500">
+                    A {getGapText(rowAbove.total_points, currentUserRow.total_points)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="text-sm font-bold text-emerald-700">
+                  Vas primero. Todos te persiguen.
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between rounded-[1.25rem] border border-violet-200 bg-violet-50 px-4 py-3 shadow-sm">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-violet-600">
+                  Tú
+                </p>
+                <p className="truncate text-base font-bold text-slate-900">
+                  #{currentUserRow.position} · {getDisplayName(currentUserRow)}
+                </p>
+              </div>
+
+              <div className="shrink-0 text-right">
+                <p className="text-2xl font-black text-slate-900">
+                  {currentUserRow.total_points ?? 0}
+                </p>
+                <p className="text-[11px] font-medium text-slate-500">
+                  Tus puntos
+                </p>
+              </div>
+            </div>
+
+            {rowBelow ? (
+              <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    Justo debajo
+                  </p>
+                  <p className="truncate text-base font-bold text-slate-900">
+                    #{rowBelow.position} · {getDisplayName(rowBelow)}
+                  </p>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="text-2xl font-black text-slate-900">
+                    {rowBelow.total_points ?? 0}
+                  </p>
+                  <p className="text-[11px] font-medium text-slate-500">
+                    Le llevas {getGapText(currentUserRow.total_points, rowBelow.total_points)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-sm font-bold text-slate-900">
+                  Cierras el ranking por ahora.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {rowAbove ? (
+            <div className="px-4 pb-4 md:px-5 md:pb-5">
+              <div className="rounded-2xl bg-violet-600 px-4 py-3 text-white">
+                <p className="text-sm font-semibold">
+                  {gapToAbove !== null && gapToAbove > 0
+                    ? `Te faltan ${formatPointsLabel(gapToAbove)} para adelantar al siguiente.`
+                    : "Estás empatado con el de arriba. El desempate decide."}
+                </p>
+
+                {gapToBelow !== null ? (
+                  <p className="mt-1 text-xs text-white/80">
+                    {gapToBelow === 0
+                      ? "Y ojo: también estás empatado con quien viene justo detrás."
+                      : `Por abajo tienes un colchón de ${formatPointsLabel(gapToBelow)}.`}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="mb-6">
         <div className="flex items-end justify-between">
           <div>

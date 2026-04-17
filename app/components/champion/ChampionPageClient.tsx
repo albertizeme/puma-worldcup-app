@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { saveChampionPredictionAction } from "@/lib/champion/actions";
 import { formatChampionDeadline } from "@/lib/champion/utils";
 import CountryFlag from "@/components/CountryFlag";
@@ -33,6 +34,9 @@ export default function ChampionPageClient({
   deadline,
   isOpen,
 }: Props) {
+  const t = useTranslations("champion");
+  const locale = useLocale();
+
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(
     prediction?.predicted_team_id ?? null
   );
@@ -68,25 +72,24 @@ export default function ChampionPageClient({
       <header className="rounded-[1.75rem] bg-white p-6 shadow-lg ring-1 ring-slate-200 md:p-8">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-slate-400 md:text-xs">
-            Pronóstico especial
+            {t("eyebrow")}
           </p>
 
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-            Pronóstico de campeón
+            {t("title")}
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">
-            Elige la selección que crees que ganará el Mundial. Este pronóstico
-            solo puede hacerse hasta la fecha límite.
+            {t("description")}
           </p>
 
           <p className="mt-3 text-sm font-medium text-slate-700">
-            Cierre: {formatChampionDeadline(deadline)}
+            {t("deadlineLabel")}: {formatChampionDeadline(deadline, locale)}
           </p>
 
           {!isOpen && (
             <p className="mt-3 text-sm font-semibold text-red-600">
-              El plazo está cerrado.
+              {t("closed")}
             </p>
           )}
 
@@ -95,9 +98,9 @@ export default function ChampionPageClient({
               <CountryFlag
                 code={currentTeam.flag_code}
                 teamName={currentTeam.name}
-                alt={`Bandera de ${currentTeam.name}`}
+                alt={t("flagAlt", { team: currentTeam.name })}
               />
-              Tu campeón actual: {currentTeam.name}
+              {t("currentChampion", { team: currentTeam.name })}
             </div>
           )}
         </div>
@@ -106,12 +109,12 @@ export default function ChampionPageClient({
       <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-slate-900">
-            Selecciona tu campeón
+            {t("selectTitle")}
           </h2>
 
           {selectedTeam && (
             <div className="text-sm text-slate-600">
-              Selección actual:{" "}
+              {t("currentSelectionLabel")}{" "}
               <span className="font-semibold text-slate-900">
                 {selectedTeam.name}
               </span>
@@ -140,7 +143,7 @@ export default function ChampionPageClient({
                 <CountryFlag
                   code={team.flag_code}
                   teamName={team.name}
-                  alt={`Bandera de ${team.name}`}
+                  alt={t("flagAlt", { team: team.name })}
                 />
                 <span className="font-semibold text-slate-900">{team.name}</span>
               </button>
@@ -156,10 +159,10 @@ export default function ChampionPageClient({
             className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending
-              ? "Guardando..."
+              ? t("saving")
               : prediction
-                ? "Actualizar campeón"
-                : "Guardar campeón"}
+                ? t("updateButton")
+                : t("saveButton")}
           </button>
 
           {message && (

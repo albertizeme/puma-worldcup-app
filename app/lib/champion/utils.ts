@@ -7,13 +7,20 @@ export function isChampionPredictionOpen(deadline: string | null) {
   return Date.now() < deadlineDate.getTime();
 }
 
-export function formatChampionDeadline(deadline: string | null) {
-  if (!deadline) return "Fecha por confirmar";
+export function formatChampionDeadline(
+  deadline: string | null,
+  locale: string = "es"
+) {
+  if (!deadline) {
+    return locale === "es" ? "Fecha por confirmar" : "Date to be confirmed";
+  }
 
   const date = new Date(deadline);
-  if (Number.isNaN(date.getTime())) return "Fecha por confirmar";
+  if (Number.isNaN(date.getTime())) {
+    return locale === "es" ? "Fecha por confirmar" : "Date to be confirmed";
+  }
 
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-GB", {
     timeZone: "Europe/Madrid",
     day: "2-digit",
     month: "2-digit",

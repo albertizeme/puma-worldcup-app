@@ -1,7 +1,9 @@
 import Image from "next/image";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function Loading() {
-  return (
+  const t = useTranslations("ranking");
+  return (    
     <main className="flex items-center justify-center min-h-[60vh]">
       
       <div className="flex flex-col items-center gap-6">
@@ -27,7 +29,7 @@ export default function Loading() {
 
         {/* Texto */}
         <p className="text-sm text-zinc-400 tracking-wide">
-          Cargando ranking...
+          {t("Loading")}
         </p>
 
       </div>

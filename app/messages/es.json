@@ -1,10 +1,26 @@
 {
+
+  "login": {
+    "title": "Accede a la plataforma",
+    "subtitle": "Accede a la experiencia interna para empleados, participa y sigue la competición.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "tuemail@puma.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "submit": "Entrar",
+    "submitLoading": "Entrando...",
+    "invalidCredentials": "Credenciales no válidas.",
+    "helpText": "Si has olvidado tu contraseña, contacta con IT para que te asignemos una temporal.",
+    "loading": "Cargando..."
+  },
+  
   "ranking": {
     "title": "Ranking",
     "intro": "Tu posición actual y la clasificación completa del torneo.",
     "pumaMatchBonus": "Los PUMA Match suman 1 punto extra por acierto.",
     "comparisonWith": "Comparativa respecto a {reference}",
     "loadErrorMessage": "No se pudo cargar el ranking. Revisa la vista {viewName}.",
+    "loading":"Cargando ranking...",
     "yourSituation": "Tu situación",
     "youAre": "Vas",
     "outOf": "de {total}",

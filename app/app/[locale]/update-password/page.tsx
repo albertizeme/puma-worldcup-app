@@ -1,9 +1,16 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import UpdatePasswordForm from "./UpdatePasswordForm";
 
-export default async function UpdatePasswordPage() {
+export default async function UpdatePasswordPage({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations("updatePassword");
   const supabase = await getSupabaseServerClient();
 
   const {
@@ -12,7 +19,7 @@ export default async function UpdatePasswordPage() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -22,7 +29,7 @@ export default async function UpdatePasswordPage() {
     .maybeSingle();
 
   if (profileError || !profile || !profile.is_active) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   return (
@@ -35,33 +42,31 @@ export default async function UpdatePasswordPage() {
       <div className="relative mx-auto flex min-h-screen max-w-lg items-center px-4 py-8">
         <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
-            Seguridad
+            {t("security")}
           </p>
 
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-            Actualiza tu contraseña
+            {t("title")}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-white/70">
-            Tu cuenta requiere cambiar la contraseña antes de continuar.
+            {t("subtitle")}
           </p>
 
           <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-400/10 p-3 text-sm text-amber-50">
-            Usuario: <span className="font-semibold">{profile.email}</span>
+            {t("userLabel")} <span className="font-semibold">{profile.email}</span>
           </div>
 
           <div className="mt-6">
-            <UpdatePasswordForm
-              mustChangePassword={profile.must_change_password}
-            />
+            <UpdatePasswordForm mustChangePassword={profile.must_change_password} />
           </div>
 
           <div className="mt-6">
             <Link
-              href="/"
+              href={`/${locale}`}
               className="text-sm font-medium text-white/65 underline-offset-4 transition hover:text-white hover:underline"
             >
-              ← Volver
+              ← {t("back")}
             </Link>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type Props = {
@@ -10,6 +11,9 @@ type Props = {
 
 export default function UpdatePasswordForm({ mustChangePassword }: Props) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("updatePassword");
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,17 +27,17 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
     setSuccess(null);
 
     if (!password || !confirmPassword) {
-      setError("Debes completar ambos campos.");
+      setError(t("errors.missingFields"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("errors.passwordMismatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("La nueva contraseña debe tener al menos 8 caracteres.");
+      setError(t("errors.passwordTooShort"));
       return;
     }
 
@@ -47,9 +51,7 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
       });
 
       if (authError) {
-        throw new Error(
-          authError.message || "No se pudo actualizar la contraseña"
-        );
+        throw new Error(authError.message || t("errors.updatePasswordFailed"));
       }
 
       const response = await fetch("/api/account/complete-password-change", {
@@ -59,20 +61,20 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "No se pudo actualizar el perfil");
+        throw new Error(result.error || t("errors.updateProfileFailed"));
       }
 
-      setSuccess("Contraseña actualizada correctamente.");
+      setSuccess(t("success"));
 
       setTimeout(() => {
-        router.push("/");
+        router.push(`/${locale}`);
         router.refresh();
       }, 1000);
     } catch (err) {
       setError(
-        err instanceof Error
+        err instanceof Error && err.message
           ? err.message
-          : "Error inesperado al actualizar la contraseña"
+          : t("errors.unexpected")
       );
     } finally {
       setLoading(false);
@@ -83,13 +85,13 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {mustChangePassword && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/70">
-          Debes establecer una contraseña nueva para seguir usando la app.
+          {t("mustChangeNotice")}
         </div>
       )}
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-white/85">
-          Nueva contraseña
+          {t("newPasswordLabel")}
         </label>
         <input
           type="password"
@@ -97,14 +99,14 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
           className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
-          placeholder="Introduce la nueva contraseña"
+          placeholder={t("newPasswordPlaceholder")}
           required
         />
       </div>
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-white/85">
-          Confirmar contraseña
+          {t("confirmPasswordLabel")}
         </label>
         <input
           type="password"
@@ -112,7 +114,7 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
           className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-violet-300/60 focus:bg-white/15"
-          placeholder="Repite la nueva contraseña"
+          placeholder={t("confirmPasswordPlaceholder")}
           required
         />
       </div>
@@ -122,7 +124,7 @@ export default function UpdatePasswordForm({ mustChangePassword }: Props) {
         disabled={loading}
         className="inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/30 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {loading ? "Actualizando..." : "Guardar nueva contraseña"}
+        {loading ? t("submitLoading") : t("submit")}
       </button>
 
       {success && (

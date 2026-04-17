@@ -12,7 +12,52 @@
     "helpText": "If you forgot your password, contact IT so we can assign you a temporary one.",
     "loading": "Loading..."
   },
-  
+
+  "changePassword": {
+    "checkingSession": "Validating session...",
+    "security": "Security",
+    "title": "Change password",
+    "subtitle": "You must change your temporary password before continuing.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "Enter the new password",
+    "confirmPasswordLabel": "Confirm new password",
+    "confirmPasswordPlaceholder": "Repeat the new password",
+    "submit": "Save new password",
+    "submitLoading": "Saving...",
+    "success": "Password updated successfully.",
+    "errors": {
+      "passwordTooShort": "The new password must be at least 8 characters long.",
+      "passwordMismatch": "Passwords do not match.",
+      "sessionValidationFailed": "The session could not be validated.",
+      "unexpected": "An unexpected error occurred."
+    }
+  },
+
+  "updatePassword": {
+    "loading": "Loading...",
+    "security": "Security",
+    "title": "Update your password",
+    "subtitle": "Your account must change its password before continuing.",
+    "userLabel": "User: ",
+    "back": "Back",
+    "mustChangeNotice": "You must set a new password to continue using the app.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "Enter the new password",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat the new password",
+    "submit": "Save new password",
+    "submitLoading": "Updating...",
+    "success": "Password updated successfully.",
+    "errors": {
+      "missingFields": "You must complete both fields.",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordTooShort": "The new password must be at least 8 characters long.",
+      "updatePasswordFailed": "The password could not be updated.",
+      "updateProfileFailed": "The profile could not be updated.",
+      "unexpected": "Unexpected error while updating the password."
+    }
+  },
+
   "ranking": {
     "title": "Ranking",
     "intro": "Your current position and the full tournament standings.",

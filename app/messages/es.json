@@ -13,7 +13,52 @@
     "helpText": "Si has olvidado tu contraseña, contacta con IT para que te asignemos una temporal.",
     "loading": "Cargando..."
   },
-  
+
+  "changePassword": {
+    "checkingSession": "Validando sesión...",
+    "security": "Seguridad",
+    "title": "Cambiar contraseña",
+    "subtitle": "Debes cambiar tu contraseña temporal antes de continuar.",
+    "newPasswordLabel": "Nueva contraseña",
+    "newPasswordPlaceholder": "Introduce la nueva contraseña",
+    "confirmPasswordLabel": "Confirmar nueva contraseña",
+    "confirmPasswordPlaceholder": "Repite la nueva contraseña",
+    "submit": "Guardar nueva contraseña",
+    "submitLoading": "Guardando...",
+    "success": "Contraseña actualizada correctamente.",
+    "errors": {
+      "passwordTooShort": "La nueva contraseña debe tener al menos 8 caracteres.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "sessionValidationFailed": "No se ha podido validar la sesión.",
+      "unexpected": "Ha ocurrido un error inesperado."
+    }
+  },
+
+  "updatePassword": {
+    "loading": "Cargando...",
+    "security": "Seguridad",
+    "title": "Actualiza tu contraseña",
+    "subtitle": "Tu cuenta requiere cambiar la contraseña antes de continuar.",
+    "userLabel": "Usuario: ",
+    "back": "Volver",
+    "mustChangeNotice": "Debes establecer una contraseña nueva para seguir usando la app.",
+    "newPasswordLabel": "Nueva contraseña",
+    "newPasswordPlaceholder": "Introduce la nueva contraseña",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "confirmPasswordPlaceholder": "Repite la nueva contraseña",
+    "submit": "Guardar nueva contraseña",
+    "submitLoading": "Actualizando...",
+    "success": "Contraseña actualizada correctamente.",
+    "errors": {
+      "missingFields": "Debes completar ambos campos.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordTooShort": "La nueva contraseña debe tener al menos 8 caracteres.",
+      "updatePasswordFailed": "No se pudo actualizar la contraseña.",
+      "updateProfileFailed": "No se pudo actualizar el perfil.",
+      "unexpected": "Error inesperado al actualizar la contraseña."
+    }
+  },
+
   "ranking": {
     "title": "Ranking",
     "intro": "Tu posición actual y la clasificación completa del torneo.",

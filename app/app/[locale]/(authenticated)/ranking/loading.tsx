@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 
 export default function Loading() {
   const t = useTranslations("ranking");

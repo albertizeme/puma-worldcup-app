@@ -1,29 +1,21 @@
-import {NextIntlClientProvider} from "next-intl";
-import {hasLocale} from "next-intl";
-import {notFound} from "next/navigation";
-import {setRequestLocale} from "next-intl/server";
-import {routing} from "@/i18n/routing";
+import AppTopBar from "@/components/AppTopBar";
+import { requireAuthenticatedUser } from "@/lib/auth-guard";
 
-export default async function LocaleLayout({
+export default async function AppLayout({
   children,
-  params
 }: {
   children: React.ReactNode;
-  params: Promise<{locale: string}>;
 }) {
-  const {locale} = await params;
+  const { profile } = await requireAuthenticatedUser();
 
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
-  }
-
-  setRequestLocale(locale);
-
-  const messages = (await import(`@/messages/${locale}.json`)).default;
+  const isAdmin = profile.role === "admin";
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
-    </NextIntlClientProvider>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
+        <AppTopBar isAdmin={isAdmin} />
+        {children}
+      </div>
+    </div>
   );
 }

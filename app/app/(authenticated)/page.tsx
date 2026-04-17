@@ -37,6 +37,19 @@ type ChampionPredictionRow = {
 
 type GroupState = "active" | "upcoming" | "finished";
 
+type RankingRow = {
+  user_id: string;
+  display_name: string | null;
+  total_points: number | null;
+  exact_hits: number | null;
+  tendency_hits: number | null;
+  champion_bonus_points: number | null;
+};
+
+type RankedRow = RankingRow & {
+  position: number;
+};
+
 const DEADLINE_BUFFER_HOURS = 1;
 const SOON_THRESHOLD_HOURS = 6;
 
@@ -237,6 +250,46 @@ function normalizeTeamName(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
 }
 
+function getDisplayName(row: { display_name: string | null }) {
+  return row.display_name?.trim() || "Usuario";
+}
+
+function formatPointsLabel(points: number, compact = false) {
+  if (points === 1) {
+    return compact ? "1 pt" : "1 punto";
+  }
+
+  return compact ? `${points} pts` : `${points} puntos`;
+}
+
+function getBattleRows(rows: RankedRow[], userId: string) {
+  const currentIndex = rows.findIndex((row) => row.user_id === userId);
+
+  if (currentIndex === -1) {
+    return {
+      currentIndex: -1,
+      rowAbove: null,
+      currentRow: null,
+      rowBelow: null,
+    };
+  }
+
+  return {
+    currentIndex,
+    rowAbove: currentIndex > 0 ? rows[currentIndex - 1] : null,
+    currentRow: rows[currentIndex] ?? null,
+    rowBelow: currentIndex < rows.length - 1 ? rows[currentIndex + 1] : null,
+  };
+}
+
+function getGapText(fromPoints: number | null, toPoints: number | null) {
+  const diff = Math.abs((fromPoints ?? 0) - (toPoints ?? 0));
+
+  if (diff === 0) return "Empatados";
+  if (diff === 1) return "1 punto";
+  return `${diff} puntos`;
+}
+
 function buildPumaTeamNameSet(teams: TeamMeta[]) {
   return new Set(
     teams
@@ -335,7 +388,13 @@ export default async function HomePage() {
           (championPrediction as ChampionPredictionRow).predicted_team_id,
       ) ?? null
     : null;
-
+  
+  const { data: rankingData } = await supabaseServer
+    .from("prediction_scores")
+    .select(
+      "user_id, display_name, total_points, exact_hits, tendency_hits, champion_bonus_points",
+    );
+    
   const predictionsByMatch = new Map(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
       prediction.match_id,
@@ -422,6 +481,68 @@ export default async function HomePage() {
 
   const normalizedActiveGroupIndex =
     activeGroupIndex >= 0 ? activeGroupIndex : 0;
+
+    const ranking: RankingRow[] = [...(rankingData ?? [])]
+    .map((row) => ({
+      user_id: row.user_id,
+      display_name: row.display_name,
+      total_points: row.total_points ?? 0,
+      exact_hits: row.exact_hits ?? 0,
+      tendency_hits: row.tendency_hits ?? 0,
+      champion_bonus_points: row.champion_bonus_points ?? 0,
+    }))
+    .sort((a, b) => {
+      const pointsDiff = (b.total_points ?? 0) - (a.total_points ?? 0);
+      if (pointsDiff !== 0) return pointsDiff;
+
+      const exactDiff = (b.exact_hits ?? 0) - (a.exact_hits ?? 0);
+      if (exactDiff !== 0) return exactDiff;
+
+      const tendencyDiff = (b.tendency_hits ?? 0) - (a.tendency_hits ?? 0);
+      if (tendencyDiff !== 0) return tendencyDiff;
+
+      return getDisplayName(a).localeCompare(getDisplayName(b), "es");
+    });
+
+  const rankedRows: RankedRow[] = ranking.map((row, index, rows) => {
+    if (index === 0) {
+      return {
+        ...row,
+        position: 1,
+      };
+    }
+
+    const previousRow = rows[index - 1];
+    const samePoints = (row.total_points ?? 0) === (previousRow.total_points ?? 0);
+
+    return {
+      ...row,
+      position: samePoints ? index : index + 1,
+    };
+  });
+
+  const currentUserRow = rankedRows.find((row) => row.user_id === user.id) ?? null;
+
+  const battleRows = currentUserRow
+    ? getBattleRows(rankedRows, user.id)
+    : {
+        currentIndex: -1,
+        rowAbove: null,
+        currentRow: null,
+        rowBelow: null,
+      };
+
+  const { rowAbove, rowBelow } = battleRows;
+
+  const gapToAbove =
+    currentUserRow && rowAbove
+      ? Math.max((rowAbove.total_points ?? 0) - (currentUserRow.total_points ?? 0), 0)
+      : null;
+
+  const gapToBelow =
+    currentUserRow && rowBelow
+      ? Math.max((currentUserRow.total_points ?? 0) - (rowBelow.total_points ?? 0), 0)
+      : null;  
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -536,7 +657,7 @@ export default async function HomePage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-orange-500">
             Jornada activa
           </p>
-
+          
           <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
             {visibleGroups[normalizedActiveGroupIndex]?.label ??
               "Próximos partidos"}

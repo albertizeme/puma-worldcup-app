@@ -511,7 +511,9 @@ export async function saveWorldCupChampionAction(formData: FormData) {
     redirect("/admin?error=champion-invalid-team");
   }
 
-  const { error: upsertError } = await supabase
+  const supabaseAdmin = getSupabaseAdminClient();
+
+  const { error: upsertError } = await supabaseAdmin
     .from("app_settings")
     .upsert(
       {

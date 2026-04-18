@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { generateRankingSnapshotAction } from "./actions";
+import { generateRankingSnapshotAction, saveWorldCupChampionAction } from "./actions";
 import GenerateSnapshotButton from "./GenerateSnapshotButton";
+import SaveChampionButton from "./SaveChampionButton";
 
 type SearchParams = Promise<{
   success?: string;
@@ -21,6 +22,21 @@ function getAlertFromQuery(success?: string, error?: string) {
           type: "error" as const,
           message: "No se pudo generar el snapshot del ranking.",
         };
+      case "champion-missing-team":
+        return {
+          type: "error" as const,
+          message: "Debes seleccionar un equipo campeón.",
+        };
+      case "champion-invalid-team":
+        return {
+          type: "error" as const,
+          message: "El equipo seleccionado no es válido.",
+        };
+      case "champion-save":
+        return {
+          type: "error" as const,
+          message: "No se pudo guardar el campeón oficial.",
+        };
       default:
         return {
           type: "error" as const,
@@ -35,6 +51,11 @@ function getAlertFromQuery(success?: string, error?: string) {
         return {
           type: "success" as const,
           message: "Snapshot del ranking generado correctamente.",
+        };
+      case "champion-saved":
+        return {
+          type: "success" as const,
+          message: "Campeón oficial guardado correctamente.",
         };
       default:
         return {
@@ -60,14 +81,32 @@ export default async function AdminHomePage({
 
   const supabase = await getSupabaseServerClient();
 
-  const [{ data: users }, { data: matches }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, role, is_active, must_change_password"),
-    supabase
-      .from("matches")
-      .select("id, status, is_puma_match"),
-  ]);
+  const [
+  { data: users },
+  { data: matches },
+  { data: teams },
+  { data: championSetting },
+] = await Promise.all([
+  supabase
+    .from("profiles")
+    .select("id, role, is_active, must_change_password"),
+  supabase
+    .from("matches")
+    .select("id, status, is_puma_match"),
+  supabase
+    .from("teams")
+    .select("id, name")
+    .order("name", { ascending: true }),
+  supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "world_cup_winner_team_id")
+    .maybeSingle(),
+]);
+
+  const safeTeams = teams ?? [];
+  const currentChampionTeamId = championSetting?.value ?? null;
+  const currentChampionTeam = safeTeams.find((team) => team.id === currentChampionTeamId) ?? null;
 
   const safeUsers = users ?? [];
   const safeMatches = matches ?? [];
@@ -212,6 +251,57 @@ export default async function AdminHomePage({
           </div>
         </form>
       </section>
+      
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+  <h2 className="text-xl font-bold text-slate-900">Pronóstico de campeón</h2>
+  <p className="mt-1 text-sm text-slate-500">
+    Selecciona el campeón oficial del Mundial para aplicar automáticamente los
+    puntos extra en el ranking.
+  </p>
+
+  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+    El bonus configurado es de <span className="font-bold">20 puntos</span>.
+  </div>
+
+  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+    {currentChampionTeam ? (
+      <>
+        Campeón oficial actual:{" "}
+        <span className="font-bold text-slate-900">{currentChampionTeam.name}</span>
+      </>
+    ) : (
+      <>Todavía no hay campeón oficial configurado.</>
+    )}
+  </div>
+
+  <form action={saveWorldCupChampionAction} className="mt-6">
+    <div className="grid gap-4 md:grid-cols-2">
+      <div>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Equipo campeón
+        </label>
+
+        <select
+          name="champion_team_id"
+          defaultValue={currentChampionTeamId ?? ""}
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">Selecciona un equipo</option>
+          {safeTeams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div className="mt-4">
+      <SaveChampionButton />
+    </div>
+  </form>
+</section>
+
     </div>
   );
 }

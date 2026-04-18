@@ -472,3 +472,65 @@ export async function createUserAction(formData: FormData) {
   revalidatePath("/admin/users");
   redirect("/admin/users?success=user-created");
 }
+
+export async function saveWorldCupChampionAction(formData: FormData) {
+  const championTeamId = String(formData.get("champion_team_id") ?? "").trim();
+
+  if (!championTeamId) {
+    redirect("/admin?error=champion-missing-team");
+  }
+
+  const supabase = await getSupabaseServerClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    redirect("/login");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile || profile.role !== "admin") {
+    redirect("/app");
+  }
+
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("id, name")
+    .eq("id", championTeamId)
+    .maybeSingle();
+
+  if (teamError || !team) {
+    redirect("/admin?error=champion-invalid-team");
+  }
+
+  const { error: upsertError } = await supabase
+    .from("app_settings")
+    .upsert(
+      {
+        key: "world_cup_winner_team_id",
+        value: championTeamId,
+      },
+      {
+        onConflict: "key",
+      }
+    );
+
+  if (upsertError) {
+    console.error("Error saving world cup champion:", upsertError);
+    redirect("/admin?error=champion-save");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/ranking");
+  revalidatePath("/app/ranking");
+
+  redirect("/admin?success=champion-saved");
+}

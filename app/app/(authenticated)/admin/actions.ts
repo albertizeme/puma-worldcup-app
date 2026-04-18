@@ -491,13 +491,13 @@ export async function saveWorldCupChampionAction(formData: FormData) {
     redirect("/login");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
+  const { data: userRow, error: userRowError } = await supabase
+    .from("users")
+    .select("is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profileError || !profile || profile.role !== "admin") {
+  if (userRowError || !userRow || !userRow.is_admin) {
     redirect("/app");
   }
 

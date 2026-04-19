@@ -4,16 +4,19 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 export default async function AdminLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const supabase = await getSupabaseServerClient();
 
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
 
   if (claimsError || !claimsData?.claims?.sub) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   const userId = claimsData.claims.sub;
@@ -25,7 +28,7 @@ export default async function AdminLayout({
     .maybeSingle();
 
   if (meError || !me || me.role !== "admin" || !me.is_active) {
-    redirect("/");
+    redirect(`/${locale}`);
   }
 
   return (
@@ -58,31 +61,31 @@ export default async function AdminLayout({
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/admin"
+              href={`/${locale}/admin`}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Resumen
             </Link>
             <Link
-              href="/admin/users"
+              href={`/${locale}/admin/users`}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Usuarios
             </Link>
             <Link
-              href="/admin/matches"
+              href={`/${locale}/admin/matches`}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Partidos
             </Link>
             <Link
-                href="/admin/kpis"
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              href={`/${locale}/admin/kpis`}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-                KPIs
+              KPIs
             </Link>
             <Link
-              href="/"
+              href={`/${locale}`}
               className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
             >
               ← Volver a la app

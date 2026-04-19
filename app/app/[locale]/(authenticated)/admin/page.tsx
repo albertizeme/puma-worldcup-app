@@ -49,9 +49,12 @@ function getAlertFromQuery(success?: string, error?: string) {
 
 export default async function AdminHomePage({
   searchParams,
+  params,
 }: {
   searchParams: SearchParams;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const resolvedSearchParams = await searchParams;
   const alert = getAlertFromQuery(
     resolvedSearchParams.success,
@@ -113,28 +116,28 @@ export default async function AdminHomePage({
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card title="Usuarios" value={totalUsers} href="/admin/users" />
-          <Card title="Admins" value={admins} href="/admin/users" />
-          <Card title="Usuarios activos" value={activeUsers} href="/admin/users" />
+          <Card title="Usuarios" value={totalUsers} href={`/${locale}/admin/users`} />
+          <Card title="Admins" value={admins} href={`/${locale}/admin/users`} />
+          <Card title="Usuarios activos" value={activeUsers} href={`/${locale}/admin/users`} />
           <Card
             title="Cambio password pendiente"
             value={pendingPassword}
-            href="/admin/users"
+            href={`/${locale}/admin/users`}
           />
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <Card title="Partidos" value={totalMatches} href="/admin/matches" />
-          <Card title="Upcoming" value={upcoming} href="/admin/matches?status=upcoming" />
-          <Card title="Live" value={live} href="/admin/matches?status=live" />
-          <Card title="Finished" value={finished} href="/admin/matches?status=finished" />
-          <Card title="Partidos PUMA" value={pumaMatches} href="/admin/matches" />
+          <Card title="Partidos" value={totalMatches} href={`/${locale}/admin/matches`} />
+          <Card title="Upcoming" value={upcoming} href={`/${locale}/admin/matches?status=upcoming`} />
+          <Card title="Live" value={live} href={`/${locale}/admin/matches?status=live`} />
+          <Card title="Finished" value={finished} href={`/${locale}/admin/matches?status=finished`} />
+          <Card title="Partidos PUMA" value={pumaMatches} href={`/${locale}/admin/matches`} />
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         <Link
-          href="/admin/users"
+          href={`/${locale}/admin/users`}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50"
         >
           <h3 className="text-lg font-bold text-slate-900">Gestión de usuarios</h3>
@@ -144,7 +147,7 @@ export default async function AdminHomePage({
         </Link>
 
         <Link
-          href="/admin/matches"
+          href={`/${locale}/admin/matches`}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50"
         >
           <h3 className="text-lg font-bold text-slate-900">Gestión de partidos</h3>

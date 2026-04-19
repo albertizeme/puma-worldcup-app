@@ -49,10 +49,13 @@ export default async function MatchDetailPage({ params }: Props) {
     user,
   } = await requireAuthenticatedUser();
 
+  const t = await getTranslations("matchDetail");
+
   const data = await getMatchDetailData({
     supabaseServer,
     matchId: id,
     userId: user.id,
+    t,
   });
 
   if (!data) {

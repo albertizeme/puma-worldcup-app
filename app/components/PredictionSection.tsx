@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import PredictionForm from "@/components/PredictionForm";
 
 type PredictionRow = {
@@ -34,29 +35,30 @@ function isMatchFinished(homeScore: number | null, awayScore: number | null) {
   return homeScore !== null && awayScore !== null;
 }
 
-function getPredictionOutcomeLabel(prediction: PredictionRow | null) {
+function getPredictionOutcomeLabel(
+  prediction: PredictionRow | null,
+  t: ReturnType<typeof useTranslations>
+) {
   if (!prediction) return null;
 
   const points = prediction.points ?? 0;
 
   if (points <= 0) {
     return {
-      label: "Sin puntos",
+      label: t("outcome.noPoints"),
       badgeClass: "bg-slate-100 text-slate-700 border-slate-200",
     };
   }
 
-  const pointsLabel = points === 1 ? "punto" : "puntos";
-
   if (prediction.exact_hit) {
     return {
-      label: `+${points} ${pointsLabel} · Exacta`,
+      label: t("outcome.exact", { points }),
       badgeClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
   }
 
   return {
-    label: `+${points} ${pointsLabel} · Tendencia`,
+    label: t("outcome.tendency", { points }),
     badgeClass: "bg-sky-100 text-sky-700 border-sky-200",
   };
 }
@@ -66,17 +68,19 @@ function TeamScoreRow({
   awayTeam,
   homeValue,
   awayValue,
+  t,
 }: {
   homeTeam: string;
   awayTeam: string;
   homeValue: number | null;
   awayValue: number | null;
+  t: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:gap-4 sm:px-5">
       <div className="min-w-0 text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
-          Local
+          {t("labels.home")}
         </p>
         <p className="mt-2 text-sm font-semibold leading-tight text-slate-800 sm:text-base">
           {homeTeam}
@@ -97,7 +101,7 @@ function TeamScoreRow({
 
       <div className="min-w-0 text-center">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">
-          Visitante
+          {t("labels.away")}
         </p>
         <p className="mt-2 text-sm font-semibold leading-tight text-slate-800 sm:text-base">
           {awayTeam}
@@ -138,11 +142,13 @@ function SectionCard({
 }
 
 function LoggedOutState() {
+  const t = useTranslations("predictionSection");
+
   return (
     <SectionCard
-      eyebrow="Tu predicción"
-      title="Inicia sesión para participar"
-      description="Accede con tu cuenta para guardar tu predicción antes de que empiece el partido."
+      eyebrow={t("loggedOut.eyebrow")}
+      title={t("loggedOut.title")}
+      description={t("loggedOut.description")}
     />
   );
 }
@@ -158,11 +164,13 @@ function OpenPredictionState({
   matchDatetime: string | null;
   prediction: PredictionRow | null;
 }) {
+  const t = useTranslations("predictionSection");
+
   return (
     <SectionCard
-      eyebrow="Tu predicción"
-      title={prediction ? "Edita tu predicción" : "¿Cómo quedará el partido?"}
-      description="Puedes modificar tu marcador hasta el inicio del partido."
+      eyebrow={t("open.eyebrow")}
+      title={prediction ? t("open.editTitle") : t("open.newTitle")}
+      description={t("open.description")}
     >
       <PredictionForm
         matchId={matchId}
@@ -184,15 +192,17 @@ function ClosedPendingState({
   homeTeam: string;
   awayTeam: string;
 }) {
+  const t = useTranslations("predictionSection");
+
   return (
     <SectionCard
-      eyebrow="Predicción cerrada"
+      eyebrow={t("closed.eyebrow")}
       title={
         prediction
-          ? "Ya no puedes modificar tu predicción"
-          : "No hiciste tu predicción a tiempo"
+          ? t("closed.withPredictionTitle")
+          : t("closed.withoutPredictionTitle")
       }
-      description="Las predicciones se cerraron al comenzar el partido."
+      description={t("closed.description")}
     >
       {prediction ? (
         <div className="space-y-4">
@@ -201,15 +211,16 @@ function ClosedPendingState({
             awayTeam={awayTeam}
             homeValue={prediction.home_score_pred}
             awayValue={prediction.away_score_pred}
+            t={t}
           />
-        
+
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Tu predicción ha quedado guardada y se evaluará cuando el partido finalice.
+            {t("closed.savedMessage")}
           </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 shadow-sm">
-          Esta vez te has quedado fuera. Cuando se publique el resultado final, no sumarás puntos en este partido.
+          {t("closed.missedMessage")}
         </div>
       )}
     </SectionCard>
@@ -229,7 +240,8 @@ function FinishedState({
   homeScore: number | null;
   awayScore: number | null;
 }) {
-  const outcome = getPredictionOutcomeLabel(prediction);
+  const t = useTranslations("predictionSection");
+  const outcome = getPredictionOutcomeLabel(prediction, t);
 
   const points = prediction?.points ?? 0;
   const hasPumaBonus = prediction
@@ -244,31 +256,44 @@ function FinishedState({
         ? 3
         : points
       : hasPumaBonus
-      ? 1
-      : points
+        ? 1
+        : points
     : 0;
 
   return (
     <SectionCard
-      eyebrow="Partido finalizado"
-      title="Resultado y puntuación"
-      description="Aquí puedes comparar el marcador real con tu predicción."
+      eyebrow={t("finished.eyebrow")}
+      title={t("finished.title")}
+      description={t("finished.description")}
     >
       <div className="space-y-5">
         <div>
-          <p className="mb-3 text-sm font-semibold text-slate-700">Resultado real</p>
+          <p className="mb-3 text-sm font-semibold text-slate-700">
+            {t("finished.realResult")}
+          </p>
           <TeamScoreRow
             homeTeam={homeTeam}
             awayTeam={awayTeam}
             homeValue={homeScore}
             awayValue={awayScore}
+            t={t}
           />
         </div>
 
         {prediction ? (
           <div>
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-slate-700">Tu predicción</p>             
+              <p className="text-sm font-semibold text-slate-700">
+                {t("finished.yourPrediction")}
+              </p>
+
+              {outcome ? (
+                <span
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${outcome.badgeClass}`}
+                >
+                  {outcome.label}
+                </span>
+              ) : null}
             </div>
 
             <TeamScoreRow
@@ -276,16 +301,32 @@ function FinishedState({
               awayTeam={awayTeam}
               homeValue={prediction.home_score_pred}
               awayValue={prediction.away_score_pred}
+              t={t}
             />
-            
+
+            {prediction ? (
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-bold text-white">
+                    {t("finished.pointsEarned", { points })}
+                  </div>
+
+                  {hasPumaBonus ? (
+                    <div className="rounded-xl bg-orange-100 px-3 py-2 text-sm font-semibold text-orange-800">
+                      {t("finished.pumaBonus", { points: points - basePoints })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
             <p className="text-sm font-semibold text-slate-900">
-              No registraste predicción para este partido
+              {t("finished.noPredictionTitle")}
             </p>
             <p className="mt-1 text-sm leading-relaxed text-slate-600">
-              Como no llegaste a enviar marcador antes del inicio, aquí no sumas puntos.
+              {t("finished.noPredictionDescription")}
             </p>
           </div>
         )}

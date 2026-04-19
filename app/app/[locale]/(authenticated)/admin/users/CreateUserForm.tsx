@@ -1,11 +1,17 @@
 import { createUserAction } from "../actions";
 
-export default function CreateUserForm() {
+type Props = {
+  locale: string;
+};
+
+export default function CreateUserForm({ locale }: Props) {
   return (
     <form
       action={createUserAction}
       className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5"
     >
+      <input type="hidden" name="locale" value={locale} />
+
       <div className="mb-4">
         <h3 className="text-sm font-bold text-slate-900">Añadir nuevo usuario</h3>
         <p className="mt-1 text-sm text-slate-500">

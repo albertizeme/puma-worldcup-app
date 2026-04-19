@@ -213,7 +213,12 @@ function MiniBarChart({
   );
 }
 
-export default async function AdminKpisPage() {
+export default async function AdminKpisPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   const supabase = await getSupabaseServerClient();
 
   const [
@@ -589,7 +594,7 @@ export default async function AdminKpisPage() {
           </div>
 
           <Link
-            href="/admin"
+            href={`/${locale}/admin`}
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             ← Volver al resumen

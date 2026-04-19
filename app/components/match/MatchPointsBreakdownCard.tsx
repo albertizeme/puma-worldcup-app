@@ -1,4 +1,6 @@
-// components/match/MatchPointsBreakdownCard.tsx
+"use client";
+
+import { useTranslations } from "next-intl";
 import { BreakdownItem } from "@/lib/match-detail";
 
 type Props = {
@@ -10,10 +12,12 @@ export default function MatchPointsBreakdownCard({
   breakdown,
   totalPoints,
 }: Props) {
+  const t = useTranslations("matchDetail");
+
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-bold text-slate-900">
-        Cómo se calculó
+        {t("breakdown.title")}
       </h2>
 
       <div className="mt-4 space-y-3">
@@ -45,10 +49,10 @@ export default function MatchPointsBreakdownCard({
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-4">
           <span className="text-base font-semibold text-slate-900">
-            Total
+            {t("breakdown.total")}
           </span>
           <span className="text-xl font-extrabold text-slate-900">
-            {totalPoints} pts
+            {t("breakdown.totalPoints", { points: totalPoints })}
           </span>
         </div>
       </div>

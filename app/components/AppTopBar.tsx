@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import UserMenu from "@/components/UserMenu";
 import MobileNavDrawer from "@/components/MobileNavDrawer";
 
@@ -10,6 +11,7 @@ type AppTopBarProps = {
 
 export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const t = useTranslations("navigation");
 
   const handleOpenMenu = useCallback(() => {
     setMenuOpen(true);
@@ -26,8 +28,8 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
           <button
             type="button"
             onClick={handleOpenMenu}
-            className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:shadow-md"
-            aria-label="Abrir menú"
+            className="relative z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
+            aria-label={t("openMenu")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -46,7 +48,7 @@ export default function AppTopBar({ isAdmin = false }: AppTopBarProps) {
           </button>
 
           <div className="hidden sm:block">
-            <p className="text-sm font-semibold text-slate-500">Menú</p>
+            <p className="text-sm font-semibold text-slate-500">{t("menu")}</p>
           </div>
         </div>
 

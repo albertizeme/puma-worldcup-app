@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { buttonStyles } from "@/lib/ui";
 
 type TopNavProps = {
@@ -10,6 +11,13 @@ type TopNavProps = {
 
 export default function TopNav({ isAdmin = false }: TopNavProps) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("navigation");
+
+  const homeHref = `/${locale}`;
+  const rankingHref = `/${locale}/ranking`;
+  const myPredictionsHref = `/${locale}/my-predictions`;
+  const adminHref = `/${locale}/admin`;
 
   const getNavClass = (href: string) =>
     pathname === href ? buttonStyles.navActive : buttonStyles.nav;
@@ -17,36 +25,36 @@ export default function TopNav({ isAdmin = false }: TopNavProps) {
   return (
     <div className="hidden min-w-max items-center gap-3 md:flex">
       <Link
-        href="/"
-        className={getNavClass("/")}
-        aria-current={pathname === "/" ? "page" : undefined}
+        href={homeHref}
+        className={getNavClass(homeHref)}
+        aria-current={pathname === homeHref ? "page" : undefined}
       >
-        Próximos partidos
+        {t("upcomingMatches")}
       </Link>
 
       <Link
-        href="/ranking"
-        className={getNavClass("/ranking")}
-        aria-current={pathname === "/ranking" ? "page" : undefined}
+        href={rankingHref}
+        className={getNavClass(rankingHref)}
+        aria-current={pathname === rankingHref ? "page" : undefined}
       >
-        Ranking
+        {t("ranking")}
       </Link>
 
       <Link
-        href="/my-predictions"
-        className={getNavClass("/my-predictions")}
-        aria-current={pathname === "/my-predictions" ? "page" : undefined}
+        href={myPredictionsHref}
+        className={getNavClass(myPredictionsHref)}
+        aria-current={pathname === myPredictionsHref ? "page" : undefined}
       >
-        Mis predicciones
+        {t("myPredictions")}
       </Link>
 
       {isAdmin ? (
         <Link
-          href="/admin"
-          className={getNavClass("/admin")}
-          aria-current={pathname === "/admin" ? "page" : undefined}
+          href={adminHref}
+          className={getNavClass(adminHref)}
+          aria-current={pathname === adminHref ? "page" : undefined}
         >
-          Admin
+          {t("admin")}
         </Link>
       ) : null}
     </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { buttonStyles } from "@/lib/ui";
 
@@ -22,6 +23,7 @@ export default function PredictionForm({
 }: PredictionFormProps) {
   const supabase = getSupabaseBrowserClient();
   const router = useRouter();
+  const t = useTranslations("predictionForm");
 
   const [homeScore, setHomeScore] = useState(
     initialHomeScore !== null ? String(initialHomeScore) : ""
@@ -50,12 +52,12 @@ export default function PredictionForm({
     setError(null);
 
     if (isLocked) {
-      setError("Las predicciones se cerraron al comenzar el partido.");
+      setError(t("errors.locked"));
       return;
     }
 
     if (homeScore === "" || awayScore === "") {
-      setError("Debes indicar ambos marcadores.");
+      setError(t("errors.missingScores"));
       return;
     }
 
@@ -70,9 +72,7 @@ export default function PredictionForm({
       parsedHome < 0 ||
       parsedAway < 0
     ) {
-      setError(
-        "Los marcadores deben ser números enteros válidos mayores o iguales a 0."
-      );
+      setError(t("errors.invalidScores"));
       return;
     }
 
@@ -94,14 +94,14 @@ export default function PredictionForm({
         );
 
       if (upsertError) {
-        setError(`No se pudo guardar la predicción: ${upsertError.message}`);
+        setError(
+          t("errors.saveFailed", { message: upsertError.message })
+        );
         return;
       }
 
       setMessage(
-        isEditing
-          ? "Predicción actualizada correctamente."
-          : "Predicción guardada correctamente."
+        isEditing ? t("success.updated") : t("success.saved")
       );
 
       router.refresh();
@@ -114,7 +114,7 @@ export default function PredictionForm({
     <div className="space-y-5">
       <div className="text-center">
         <p className="text-sm text-slate-600">
-          Introduce el marcador final estimado. Podrás cambiarlo hasta que empiece el partido.
+          {t("description")}
         </p>
       </div>
 
@@ -127,7 +127,7 @@ export default function PredictionForm({
           value={homeScore}
           onChange={(e) => setHomeScore(e.target.value)}
           disabled={isLocked || loading}
-          aria-label="Marcador equipo local"
+          aria-label={t("aria.homeScore")}
           className="h-14 w-16 rounded-2xl border border-slate-300 bg-white px-3 text-center text-2xl font-bold text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-16 sm:w-20"
           placeholder="0"
         />
@@ -142,7 +142,7 @@ export default function PredictionForm({
           value={awayScore}
           onChange={(e) => setAwayScore(e.target.value)}
           disabled={isLocked || loading}
-          aria-label="Marcador equipo visitante"
+          aria-label={t("aria.awayScore")}
           className="h-14 w-16 rounded-2xl border border-slate-300 bg-white px-3 text-center text-2xl font-bold text-slate-900 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:h-16 sm:w-20"
           placeholder="0"
         />
@@ -156,10 +156,10 @@ export default function PredictionForm({
           className={`${buttonStyles.primary} min-w-[220px] px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60`}
         >
           {loading
-            ? "Guardando..."
+            ? t("buttons.saving")
             : isEditing
-            ? "Actualizar predicción"
-            : "Guardar predicción"}
+              ? t("buttons.update")
+              : t("buttons.save")}
         </button>
       </div>
 

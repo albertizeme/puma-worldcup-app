@@ -1,7 +1,7 @@
-// components/match/QuickPredictionSection.tsx
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { saveQuickPredictionAction } from "@/app/(authenticated)/match/[id]/quick/actions";
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("quickPrediction");
 
   return (
     <button
@@ -23,7 +24,7 @@ function SubmitButton() {
       disabled={pending}
       className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Guardando..." : "Guardar predicción"}
+      {pending ? t("saving") : t("save")}
     </button>
   );
 }
@@ -56,6 +57,8 @@ export default function QuickPredictionSection({
   returnTo = "/",
   initialPrediction,
 }: Props) {
+  const t = useTranslations("quickPrediction");
+
   return (
     <form action={saveQuickPredictionAction} className="w-full">
       <input type="hidden" name="matchId" value={matchId} />
@@ -66,13 +69,13 @@ export default function QuickPredictionSection({
           <ScoreInput
             name="homeScorePred"
             defaultValue={initialPrediction?.home_score_pred ?? null}
-            ariaLabel="Goles equipo local"
+            ariaLabel={t("homeGoals")}
           />
           <div className="text-xl font-bold text-slate-400">-</div>
           <ScoreInput
             name="awayScorePred"
             defaultValue={initialPrediction?.away_score_pred ?? null}
-            ariaLabel="Goles equipo visitante"
+            ariaLabel={t("awayGoals")}
           />
         </div>
 

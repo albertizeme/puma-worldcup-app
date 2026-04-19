@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { LucideCircleArrowOutUpLeft } from "lucide-react";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -36,20 +37,29 @@ function parseCheckbox(value: FormDataEntryValue | null) {
   return value === "true";
 }
 
-async function requireAdmin() {
+function parseLocale(value: FormDataEntryValue | null) {
+  const locale = String(value ?? "").trim();
+  return locale === "en" ? "en" : "es";
+}
+
+function withLocale(locale: string, path: string) {
+  return `/${locale}${path}`;
+}
+
+async function requireAdmin(locale: string) {
   const supabase = await getSupabaseServerClient();
 
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
 
   if (claimsError || !claimsData?.claims) {
-    redirect("/login");
+    redirect(withLocale(locale, "/login"));
   }
 
   const userId = claimsData.claims.sub;
 
   if (!userId) {
-    redirect("/login");
+    redirect(withLocale(locale, "/login"));
   }
 
   const { data: me, error: meError } = await supabase
@@ -63,22 +73,23 @@ async function requireAdmin() {
   }
 
   if (!me || me.role !== "admin" || !me.is_active) {
-    redirect("/");
+    redirect(withLocale(locale, ""));
   }
 
   return userId;
 }
 
-function revalidateAdminSurfaces() {
-  revalidatePath("/admin");
-  revalidatePath("/admin/users");
-  revalidatePath("/admin/matches");
-  revalidatePath("/");
-  revalidatePath("/ranking");
-  revalidatePath("/my-predictions");
+function revalidateAdminSurfaces(locale: string) {
+  revalidatePath(withLocale(locale, "/admin"));
+  revalidatePath(withLocale(locale, "/admin/users"));
+  revalidatePath(withLocale(locale, "/admin/matches"));
+  revalidatePath(withLocale(locale, ""));
+  revalidatePath(withLocale(locale, "/ranking"));
+  revalidatePath(withLocale(locale, "/my-predictions"));
 }
 
 function buildMatchesRedirectUrl(params: {
+  locale: string;
   filterStatus?: string | null;
   success?: string;
   error?: string;
@@ -98,35 +109,37 @@ function buildMatchesRedirectUrl(params: {
   }
 
   const query = searchParams.toString();
+  const base = withLocale(params.locale, "/admin/matches");
   return query ? `/admin/matches?${query}` : "/admin/matches";
 }
 
-function redirectMatchError(code: string, filterStatus?: string | null): never {
-  redirect(buildMatchesRedirectUrl({ filterStatus, error: code }));
+function redirectMatchError(locale: string, code: string, filterStatus?: string | null): never {
+  redirect(buildMatchesRedirectUrl({ locale, filterStatus, error: code }));
 }
 
-function redirectMatchSuccess(code: string, filterStatus?: string | null): never {
-  redirect(buildMatchesRedirectUrl({ filterStatus, success: code }));
+function redirectMatchSuccess(locale: string, code: string, filterStatus?: string | null): never {
+  redirect(buildMatchesRedirectUrl({ locale, filterStatus, success: code }));
 }
 
-function redirectUserError(code: string): never {
-  redirect(`/admin/users?error=${code}`);
+function redirectUserError(locale: string, code: string): never {
+  redirect(withLocale(locale, `/admin/users?error=${code}`));
 }
 
-function redirectUserSuccess(code: string): never {
-  redirect(`/admin/users?success=${code}`);
+function redirectUserSuccess(locale: string, code: string): never {
+  redirect(withLocale(locale, `/admin/users?success=${code}`));
 }
 
-function redirectAdminError(code: string): never {
-  redirect(`/admin?error=${code}`);
+function redirectAdminError(locale: string, code: string): never {
+  redirect(withLocale(locale, `/admin?error=${code}`));
 }
 
-function redirectAdminSuccess(code: string): never {
-  redirect(`/admin?success=${code}`);
+function redirectAdminSuccess(locale: string, code: string): never {
+  redirect(withLocale(locale, `/admin?success=${code}`));
 }
 
 export async function createMatchAction(formData: FormData) {
-  await requireAdmin();
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
   const supabaseAdmin = getSupabaseAdminClient();
 
   const filterStatus = String(formData.get("filter_status") ?? "all");
@@ -146,11 +159,11 @@ export async function createMatchAction(formData: FormData) {
   const isPredictionOpen = parseCheckbox(formData.get("is_prediction_open"));
 
   if (!homeTeam || !awayTeam) {
-    redirectMatchError("match-create", filterStatus);
+    redirectMatchError(locale, "match-create", filterStatus);
   }
 
   if (homeTeam === awayTeam) {
-    redirectMatchError("match-create", filterStatus);
+    redirectMatchError(locale, "match-create", filterStatus);
   }
 
   const payload = {
@@ -175,12 +188,13 @@ export async function createMatchAction(formData: FormData) {
     redirectMatchError("match-create", filterStatus);
   }
 
-  revalidateAdminSurfaces();
-  redirectMatchSuccess("match-created", filterStatus);
+  revalidateAdminSurfaces(locale);
+  redirectMatchSuccess(locale, "match-created", filterStatus);
 }
 
 export async function updateMatchAction(formData: FormData) {
-  await requireAdmin();
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
   const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
@@ -204,19 +218,19 @@ export async function updateMatchAction(formData: FormData) {
   const awayScore = parseNullableScore(formData.get("away_score"));
 
   if (!id) {
-    redirectMatchError("match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus);
   }
 
   if (!homeTeam || !awayTeam) {
-    redirectMatchError("match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus);
   }
 
   if (homeTeam === awayTeam) {
-    redirectMatchError("match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus);
   }
 
   if ((homeScore !== null && homeScore < 0) || (awayScore !== null && awayScore < 0)) {
-    redirectMatchError("match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus);
   }
 
   const payload: {
@@ -259,48 +273,50 @@ export async function updateMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[updateMatchAction]", error);
-    redirectMatchError("match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus);
   }
 
-  revalidateAdminSurfaces();
-  redirectMatchSuccess("match-updated", filterStatus);
+  revalidateAdminSurfaces(locale);
+  redirectMatchSuccess(locale, "match-updated", filterStatus);
 }
 
 export async function deleteMatchAction(formData: FormData) {
-  await requireAdmin();
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
   const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
   const filterStatus = String(formData.get("filter_status") ?? "all");
 
   if (!id) {
-    redirectMatchError("match-delete", filterStatus);
+    redirectMatchError(locale, "match-delete", filterStatus);
   }
 
   const { error } = await supabaseAdmin.from("matches").delete().eq("id", id);
 
   if (error) {
     console.error("[deleteMatchAction]", error);
-    redirectMatchError("match-delete", filterStatus);
+    redirectMatchError(locale, "match-delete", filterStatus);
   }
 
-  revalidateAdminSurfaces();
-  redirectMatchSuccess("match-deleted", filterStatus);
+  revalidateAdminSurfaces(locale);
+  redirectMatchSuccess(locale, "match-deleted", filterStatus);
 }
 
 export async function toggleUserActiveAction(formData: FormData) {
-  await requireAdmin();
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
   const supabaseAdmin = getSupabaseAdminClient();
 
   const id = String(formData.get("id") ?? "");
   const nextValueRaw = String(formData.get("next_is_active") ?? "");
 
   if (!id) {
-    redirectUserError("user-toggle");
+    redirectUserError(locale, "user-toggle");
   }
 
   if (nextValueRaw !== "true" && nextValueRaw !== "false") {
-    redirectUserError("user-toggle");
+    redirectUserError(locale, "user-toggle");
   }
 
   const nextIsActive = nextValueRaw === "true";
@@ -309,13 +325,13 @@ export async function toggleUserActiveAction(formData: FormData) {
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
 
   if (claimsError || !claimsData?.claims?.sub) {
-    redirect("/login");
+    redirect(withLocale(locale, "/login"));
   }
 
   const currentAdminId = claimsData.claims.sub;
 
   if (id === currentAdminId) {
-    redirectUserError("user-toggle-self");
+    redirectUserError(locale, "user-toggle-self");
   }
 
   const { error } = await supabaseAdmin
@@ -328,7 +344,7 @@ export async function toggleUserActiveAction(formData: FormData) {
 
   if (error) {
     console.error("[toggleUserActiveAction]", error);
-    redirectUserError("user-toggle");
+    redirectUserError(locale, "user-toggle");
   }
 
   const { error: auditError } = await supabaseAdmin.from("admin_audit_logs").insert({
@@ -344,18 +360,19 @@ export async function toggleUserActiveAction(formData: FormData) {
     console.error("[toggleUserActiveAction][audit]", auditError);
   }
 
-  revalidateAdminSurfaces();
-  redirectUserSuccess(nextIsActive ? "user-activated" : "user-deactivated");
+  revalidateAdminSurfaces(locale);
+  redirectUserSuccess(locale, nextIsActive ? "user-activated" : "user-deactivated");
 }
 
 export async function generateRankingSnapshotAction(formData: FormData) {
-  await requireAdmin();
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
 
   const snapshotKey = String(formData.get("snapshot_key") ?? "").trim();
   const snapshotLabel = String(formData.get("snapshot_label") ?? "").trim();
 
   if (!snapshotKey) {
-    redirectAdminError("snapshot-missing-key");
+    redirectAdminError(locale, "snapshot-missing-key");
   }
 
   try {
@@ -368,15 +385,15 @@ export async function generateRankingSnapshotAction(formData: FormData) {
 
     if (error) {
       console.error("[generateRankingSnapshotAction]", error);
-      redirectAdminError("snapshot-generate");
+      redirectAdminError(locale, "snapshot-generate");
     }
   } catch (err) {
     console.error("[generateRankingSnapshotAction][unexpected]", err);
-    redirectAdminError("snapshot-generate");
+    redirectAdminError(locale, "snapshot-generate");
   }
 
-  revalidateAdminSurfaces();
-  redirectAdminSuccess("snapshot-generated");
+  revalidateAdminSurfaces(locale);
+  redirectAdminSuccess(locale, "snapshot-generated");
 }
 
 function parseBoolean(value: FormDataEntryValue | null) {
@@ -392,13 +409,15 @@ function isValidRole(value: string): value is "user" | "admin" {
 }
 
 export async function createUserAction(formData: FormData) {
+  const locale = parseLocale(formData.get("locale"));
+
   const supabase = await getSupabaseServerClient();
   const admin = getSupabaseAdminClient();
 
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
 
   if (claimsError || !claimsData?.claims?.sub) {
-    redirect("/admin/users?error=user-create-auth");
+    redirect(withLocale(locale, "/admin/users?error=user-create-auth"));
   }
 
   const email = parseText(formData.get("email")).toLowerCase();
@@ -408,11 +427,11 @@ export async function createUserAction(formData: FormData) {
   const isActive = parseBoolean(formData.get("is_active"));
 
   if (!email || !temporaryPassword || !isValidRole(roleRaw)) {
-    redirect("/admin/users?error=user-create-invalid");
+    redirect(withLocale(locale, "/admin/users?error=user-create-invalid"));
   }
 
   if (temporaryPassword.length < 8) {
-    redirect("/admin/users?error=user-create-password");
+    redirect(withLocale(locale, "/admin/users?error=user-create-password"));
   }
 
   const role: "user" | "admin" = roleRaw;
@@ -424,7 +443,7 @@ export async function createUserAction(formData: FormData) {
     .maybeSingle();
 
   if (existingProfile) {
-    redirect("/admin/users?error=user-create-exists");
+    redirect(withLocale(locale, "/admin/users?error=user-create-exists"));
   }
 
   const { data: createdUser, error: createError } =
@@ -438,7 +457,7 @@ export async function createUserAction(formData: FormData) {
     });
 
   if (createError || !createdUser.user) {
-    redirect("/admin/users?error=user-create");
+    redirect(withLocale(locale, "/admin/users?error=user-create"));
   }
 
   const userId = createdUser.user.id;
@@ -466,9 +485,9 @@ export async function createUserAction(formData: FormData) {
   if (profileError) {
     // rollback básico para no dejar auth creado sin perfil
     await admin.auth.admin.deleteUser(userId);
-    redirect("/admin/users?error=user-create-profile");
+    redirect(withLocale(locale, "/admin/users?error=user-create-profile"));
   }
 
   revalidatePath("/admin/users");
-  redirect("/admin/users?success=user-created");
+  redirect(withLocale(locale, "/admin/users?success=user-created"));
 }

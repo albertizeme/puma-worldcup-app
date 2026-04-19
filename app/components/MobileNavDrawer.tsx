@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 
 type MobileNavDrawerProps = {
   open: boolean;
@@ -33,6 +34,14 @@ export default function MobileNavDrawer({
   isAdmin = false,
 }: MobileNavDrawerProps) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("navigation");
+
+  const homeHref = `/${locale}`;
+  const rankingHref = `/${locale}/ranking`;
+  const myPredictionsHref = `/${locale}/my-predictions`;
+  const championHref = `/${locale}/champion`;
+  const adminHref = `/${locale}/admin`;
 
   useEffect(() => {
     onClose();
@@ -74,7 +83,7 @@ export default function MobileNavDrawer({
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}
-        aria-label="Menú principal"
+        aria-label={t("mainMenu")}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
           <div>
@@ -82,7 +91,7 @@ export default function MobileNavDrawer({
               World Cup Challenge
             </p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-900">
-              Menú
+              {t("menu")}
             </h2>
           </div>
 
@@ -90,7 +99,7 @@ export default function MobileNavDrawer({
             type="button"
             onClick={onClose}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Cerrar menú"
+            aria-label={t("closeMenu")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -111,9 +120,9 @@ export default function MobileNavDrawer({
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <div className="space-y-1">
             <Link
-              href="/"
+              href={homeHref}
               onClick={onClose}
-              className={getItemClass(pathname === "/app")}
+              className={getItemClass(pathname === homeHref)}
             >
               <NavIcon>
                 <svg
@@ -130,13 +139,13 @@ export default function MobileNavDrawer({
                   <path d="M9 22V12h6v10" />
                 </svg>
               </NavIcon>
-              <span>Próximos partidos</span>
+              <span>{t("upcomingMatches")}</span>
             </Link>
 
             <Link
-              href="/ranking"
+              href={rankingHref}
               onClick={onClose}
-              className={getItemClass(pathname === "/ranking")}
+              className={getItemClass(pathname === rankingHref)}
             >
               <NavIcon>
                 <svg
@@ -154,13 +163,13 @@ export default function MobileNavDrawer({
                   <path d="M6 20v-4" />
                 </svg>
               </NavIcon>
-              <span>Ranking</span>
+              <span>{t("ranking")}</span>
             </Link>
 
             <Link
-              href="/my-predictions"
+              href={myPredictionsHref}
               onClick={onClose}
-              className={getItemClass(pathname === "/my-predictions")}
+              className={getItemClass(pathname === myPredictionsHref)}
             >
               <NavIcon>
                 <svg
@@ -177,34 +186,35 @@ export default function MobileNavDrawer({
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                 </svg>
               </NavIcon>
-              <span>Mis predicciones</span>
+              <span>{t("myPredictions")}</span>
             </Link>
+
             <Link
-  href="/champion"
-  onClick={onClose}
-  className={getItemClass(pathname === "/champion")}
->
-  <NavIcon>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-5 w-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M8 21h8" />
-      <path d="M12 17v4" />
-      <path d="M7 4h10" />
-      <path d="M17 4v2a5 5 0 0 1-10 0V4" />
-      <path d="M5 4h14" />
-      <path d="M6 4v1a6 6 0 0 0 12 0V4" />
-    </svg>
-  </NavIcon>
-  <span>Campeón</span>
-</Link>
+              href={championHref}
+              onClick={onClose}
+              className={getItemClass(pathname === championHref)}
+            >
+              <NavIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 21h8" />
+                  <path d="M12 17v4" />
+                  <path d="M7 4h10" />
+                  <path d="M17 4v2a5 5 0 0 1-10 0V4" />
+                  <path d="M5 4h14" />
+                  <path d="M6 4v1a6 6 0 0 0 12 0V4" />
+                </svg>
+              </NavIcon>
+              <span>{t("champion")}</span>
+            </Link>
           </div>
 
           {isAdmin ? (
@@ -213,9 +223,9 @@ export default function MobileNavDrawer({
 
               <div className="space-y-1">
                 <Link
-                  href="/admin"
+                  href={adminHref}
                   onClick={onClose}
-                  className={getItemClass(pathname === "/admin")}
+                  className={getItemClass(pathname === adminHref)}
                 >
                   <NavIcon>
                     <svg
@@ -231,7 +241,7 @@ export default function MobileNavDrawer({
                       <path d="M12 3l8 4v6c0 5-3.5 8-8 8s-8-3-8-8V7l8-4z" />
                     </svg>
                   </NavIcon>
-                  <span>Admin</span>
+                  <span>{t("admin")}</span>
                 </Link>
               </div>
             </>

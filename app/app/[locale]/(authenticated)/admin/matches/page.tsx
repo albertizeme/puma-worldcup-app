@@ -5,6 +5,7 @@ import {
   updateMatchAction,
 } from "../actions";
 import DeleteMatchButton from "../DeleteMatchButton";
+import Link from "next/link";
 
 type MatchStatus = "upcoming" | "live" | "finished";
 
@@ -140,9 +141,12 @@ function getAlertFromQuery(success?: string, error?: string) {
 
 export default async function AdminMatchesPage({
   searchParams,
+  params,
 }: {
   searchParams: SearchParams;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const resolvedSearchParams = await searchParams;
   const selectedStatus = resolvedSearchParams.status ?? "all";
   const alert = getAlertFromQuery(
@@ -193,6 +197,7 @@ export default async function AdminMatchesPage({
 
         <form action={createMatchAction} className="mt-6">
           <input type="hidden" name="filter_status" value={selectedStatus} />
+          <input type="hidden" name="locale" value={locale} />
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div>
@@ -357,7 +362,7 @@ export default async function AdminMatchesPage({
             </button>
 
             <a
-              href="/admin/matches"
+              href={`/${locale}/admin/matches`}
               className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600"
             >
               Limpiar
@@ -441,6 +446,7 @@ export default async function AdminMatchesPage({
                       name="filter_status"
                       value={selectedStatus}
                     />
+                    <input type="hidden" name="locale" value={locale} />
                     <DeleteMatchButton
                       label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
                     />
@@ -454,6 +460,7 @@ export default async function AdminMatchesPage({
                     name="filter_status"
                     value={selectedStatus}
                   />
+                  <input type="hidden" name="locale" value={locale} />
 
                   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div>

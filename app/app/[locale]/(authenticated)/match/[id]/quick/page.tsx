@@ -17,7 +17,7 @@ type Props = {
 
 export default async function QuickMatchPage({ params }: Props) {
   const { locale, id } = await params;
-  const t = await getTranslations("match");
+  const t = await getTranslations("matchDetail");
 
   const { supabase: supabaseServer, user } = await requireAuthenticatedUser();
 
@@ -25,6 +25,7 @@ export default async function QuickMatchPage({ params }: Props) {
     supabaseServer,
     matchId: id,
     userId: user.id,
+    t,
   });
 
   if (!data) {

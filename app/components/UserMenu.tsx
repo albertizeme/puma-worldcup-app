@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { useLocale, useTranslations } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { buttonStyles } from "@/lib/ui";
 
@@ -34,6 +35,9 @@ export default function UserMenu() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const locale = useLocale();
+  const t = useTranslations("navigation");
 
   useEffect(() => {
     let isMounted = true;
@@ -99,7 +103,7 @@ export default function UserMenu() {
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = `/${locale}/login`;
   }
 
   if (loading) {
@@ -112,8 +116,8 @@ export default function UserMenu() {
 
   if (!user?.email) {
     return (
-      <a href="/login" className={buttonStyles.nav}>
-        Login
+      <a href={`/${locale}/login`} className={buttonStyles.nav}>
+        {t("login")}
       </a>
     );
   }
@@ -125,7 +129,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        aria-label="Abrir menú de usuario"
+        aria-label={t("openUserMenu")}
         aria-expanded={open}
         className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-900 shadow-sm transition hover:border-slate-300 hover:shadow-md"
       >
@@ -138,7 +142,7 @@ export default function UserMenu() {
         <div className="absolute right-0 top-full z-[120] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-              Sesión iniciada
+              {t("signedIn")}
             </p>
             <p className="mt-1 text-sm font-medium text-slate-800">
               {truncateEmail(user.email)}
@@ -151,7 +155,7 @@ export default function UserMenu() {
               onClick={handleLogout}
               className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
             >
-              Cerrar sesión
+              {t("logout")}
             </button>
 
             <button
@@ -159,7 +163,7 @@ export default function UserMenu() {
               disabled
               className="mt-1 flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-400"
             >
-              Idioma próximamente
+              {t("languageSoon")}
             </button>
           </div>
         </div>

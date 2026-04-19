@@ -1,4 +1,3 @@
-// lib/get-match-detail-data.ts
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Match } from "@/types/match";
 import {
@@ -11,14 +10,21 @@ import {
   TeamMeta,
 } from "@/lib/match-detail";
 
+type MatchDetailTranslator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string;
+
 export async function getMatchDetailData({
   supabaseServer,
   matchId,
   userId,
+  t,
 }: {
   supabaseServer: SupabaseClient;
   matchId: string;
   userId: string;
+  t: MatchDetailTranslator;
 }) {
   const { data: match, error: matchError } = await supabaseServer
     .from("matches")
@@ -52,8 +58,8 @@ export async function getMatchDetailData({
   const isPumaMatch = Boolean(match.is_puma_match) || hasPumaTeam;
   const matchStatus = normalizeMatchStatus(match);
   const outcome = getOutcome({ matchStatus, match, prediction });
-  const { totalPoints, breakdown } = getPointsAndBreakdown(outcome, isPumaMatch);
-  const outcomeContent = getOutcomeContent(outcome, totalPoints);
+  const { totalPoints, breakdown } = getPointsAndBreakdown(outcome, isPumaMatch, t);
+  const outcomeContent = getOutcomeContent(outcome, totalPoints, t);
 
   return {
     match,

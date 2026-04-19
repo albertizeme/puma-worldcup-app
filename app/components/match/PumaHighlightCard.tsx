@@ -1,4 +1,6 @@
-// components/match/PumaHighlightCard.tsx
+"use client";
+
+import { useTranslations } from "next-intl";
 import { getPumaImage, TeamMeta } from "@/lib/match-detail";
 
 type Props = {
@@ -14,6 +16,8 @@ export default function PumaHighlightCard({
   primaryPumaTeam,
   text,
 }: Props) {
+  const t = useTranslations("matchDetail");
+
   if (!pumaTeams.length) return null;
 
   return (
@@ -22,7 +26,7 @@ export default function PumaHighlightCard({
         <div className="p-5 sm:p-6">
           <div className="mb-3">
             <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700">
-              Showtime
+              {t("showtime")}
             </span>
           </div>
 
@@ -33,9 +37,7 @@ export default function PumaHighlightCard({
                 `PUMA x ${primaryPumaTeam?.name}`}
           </h2>
 
-          <p className="mt-2 text-sm text-slate-600">
-            {text}
-          </p>
+          <p className="mt-2 text-sm text-slate-600">{text}</p>
         </div>
 
         {isDualPuma ? (
@@ -47,7 +49,7 @@ export default function PumaHighlightCard({
                 <div key={team.id} className="relative min-h-[220px]">
                   <img
                     src={teamImage}
-                    alt={`Imagen PUMA de ${team.name}`}
+                    alt={t("pumaImageAlt", { team: team.name })}
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
@@ -78,7 +80,7 @@ export default function PumaHighlightCard({
             {getPumaImage(primaryPumaTeam) ? (
               <img
                 src={getPumaImage(primaryPumaTeam) ?? ""}
-                alt={`Imagen PUMA de ${primaryPumaTeam?.name}`}
+                alt={t("pumaImageAlt", { team: primaryPumaTeam?.name ?? "PUMA" })}
                 className="h-full w-full object-cover"
               />
             ) : (

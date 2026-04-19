@@ -1,15 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import ResetPasswordButton from "@/components/admin/ResetPasswordButton";
+import ResetPasswordButton from "../../ResetPasswordButton";
 
 type Props = {
   params: Promise<{
+    locale: string;
     id: string;
   }>;
 };
 
 export default async function AdminUserDetailPage({ params }: Props) {
-  const { id } = await params;
+  const { locale, id } = await params;
 
   const supabase = await getSupabaseServerClient();
 
@@ -18,7 +19,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
 
   if (!currentUser) {
-    redirect("/login");
+    redirect(`/${locale}/login`);
   }
 
   const { data: currentProfile } = await supabase
@@ -28,7 +29,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
     .single();
 
   if (!currentProfile || currentProfile.role !== "admin") {
-    redirect("/");
+    redirect(`/${locale}`);
   }
 
   const { data: profile, error } = await supabase
@@ -40,6 +41,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
   if (error || !profile) {
     notFound();
   }
+
+  const userLabel = profile.display_name || profile.email || "Usuario";
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
@@ -84,7 +87,10 @@ export default async function AdminUserDetailPage({ params }: Props) {
       </div>
 
       <div className="mt-6">
-        <ResetPasswordButton userId={profile.id} />
+        <ResetPasswordButton
+          userId={profile.id}
+          userLabel={userLabel}
+        />
       </div>
     </main>
   );

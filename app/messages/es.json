@@ -58,6 +58,20 @@
       "unexpected": "Error inesperado al actualizar la contraseña."
     }
   },
+  "navigation": {
+    "openMenu": "Abrir menú",
+    "menu": "Menú",
+    "upcomingMatches": "Próximos partidos",
+    "ranking": "Ranking",
+    "myPredictions": "Mis predicciones",
+    "admin": "Admin",
+    "login": "Login",
+    "openUserMenu": "Abrir menú de usuario",
+    "signedIn": "Sesión iniciada",
+    "loading": "Cargando...",
+    "logout": "Cerrar sesión",
+    "languageSoon": "Idioma próximamente"
+  },
   
   "home": {
     "datePending": "Fecha pendiente",
@@ -92,6 +106,152 @@
     "pendingGroupMatchesCount": "{count} partidos pendientes",
     "pending": "Pendiente",
     "predict": "Pronosticar"
+  },
+
+  "matchCard": {
+    "datePending": "Fecha pendiente",
+    "dateToBeConfirmed": "Fecha por confirmar",
+    "predict": "Pronosticar",
+    "viewDetail": "Ver detalle"
+  },
+  "predictionSection": {
+    "labels": {
+      "home": "Local",
+      "away": "Visitante"
+    },
+    "outcome": {
+      "noPoints": "Sin puntos",
+      "exact": "+{points} puntos · Exacta",
+      "tendency": "+{points} puntos · Tendencia"
+    },
+    "loggedOut": {
+      "eyebrow": "Tu predicción",
+      "title": "Inicia sesión para participar",
+      "description": "Accede con tu cuenta para guardar tu predicción antes de que empiece el partido."
+    },
+    "open": {
+      "eyebrow": "Tu predicción",
+      "editTitle": "Edita tu predicción",
+      "newTitle": "¿Cómo quedará el partido?",
+      "description": "Puedes modificar tu marcador hasta el inicio del partido."
+    },
+    "closed": {
+      "eyebrow": "Predicción cerrada",
+      "withPredictionTitle": "Ya no puedes modificar tu predicción",
+      "withoutPredictionTitle": "No hiciste tu predicción a tiempo",
+      "description": "Las predicciones se cerraron al comenzar el partido.",
+      "savedMessage": "Tu predicción ha quedado guardada y se evaluará cuando el partido finalice.",
+      "missedMessage": "Esta vez te has quedado fuera. Cuando se publique el resultado final, no sumarás puntos en este partido."
+    },
+    "finished": {
+      "eyebrow": "Partido finalizado",
+      "title": "Resultado y puntuación",
+      "description": "Aquí puedes comparar el marcador real con tu predicción.",
+      "realResult": "Resultado real",
+      "yourPrediction": "Tu predicción",
+      "pointsEarned": "{points} pts",
+      "pumaBonus": "Bonus PUMA +{points}",
+      "noPredictionTitle": "No registraste predicción para este partido",
+      "noPredictionDescription": "Como no llegaste a enviar marcador antes del inicio, aquí no sumas puntos."
+    }
+  },
+
+  "predictionForm": {
+    "description": "Introduce el marcador final estimado. Podrás cambiarlo hasta que empiece el partido.",
+    "aria": {
+      "homeScore": "Marcador equipo local",
+      "awayScore": "Marcador equipo visitante"
+    },
+    "buttons": {
+      "saving": "Guardando...",
+      "update": "Actualizar predicción",
+      "save": "Guardar predicción"
+    },
+    "success": {
+      "updated": "Predicción actualizada correctamente.",
+      "saved": "Predicción guardada correctamente."
+    },
+    "errors": {
+      "locked": "Las predicciones se cerraron al comenzar el partido.",
+      "missingScores": "Debes indicar ambos marcadores.",
+      "invalidScores": "Los marcadores deben ser números enteros válidos mayores o iguales a 0.",
+      "saveFailed": "No se pudo guardar la predicción: {message}"
+    }
+  },
+
+  "common": {
+    "closeMatchDetail": "Cerrar detalle del partido"
+  },
+
+  "matchDetail": {
+    "pumaMatch": "PUMA Match",
+    "home": "Local",
+    "away": "Visitante",
+    "homeFlagAlt": "Bandera de {team}",
+    "awayFlagAlt": "Bandera de {team}",
+    "showtime": "Showtime",
+    "pumaImageAlt": "Imagen PUMA de {team}",
+    "datePending": "Fecha pendiente",
+    "dateToBeConfirmed": "Fecha por confirmar",
+    "status": {
+      "finished": "Finalizado",
+      "live": "En juego",
+      "scheduled": "Próximamente"
+    },
+
+    "breakdown": {
+      "exactScore": "Marcador exacto",
+      "correctTrend": "Tendencia acertada",
+      "pumaBonus": "Bonus PUMA Match",
+      "noPoints": "Sin puntuación",
+      "noPrediction": "Sin predicción enviada",
+      "title": "Cómo se calculó",
+      "total": "Total",
+      "totalPoints": "{points} pts" 
+    },
+    "outcome": {
+      "exact": {
+        "badge": "Predicción exacta",
+        "title": "✅ Predicción exacta",
+        "subtitle": "Has ganado {points} puntos",
+        "description": "Acertaste el marcador final de este partido."
+      },
+      "trend": {
+        "badge": "Tendencia acertada",
+        "title": "🟡 Has acertado el ganador",
+        "subtitle": "Has ganado {points} punto{points, plural, one {} other {s}}",
+        "description": "No acertaste el marcador exacto, pero sí el resultado del partido."
+      },
+      "miss": {
+        "badge": "Sin acierto",
+        "title": "❌ Predicción no acertada",
+        "subtitle": "Has ganado 0 puntos",
+        "description": "Tu predicción no coincide con el resultado final."
+      },
+      "noPrediction": {
+        "badge": "Sin predicción",
+        "title": "⚪ No enviaste predicción",
+        "subtitle": "No has sumado puntos en este partido",
+        "description": "El partido ya finalizó y no había una predicción registrada."
+      },
+      "pending": {
+        "badge": "Pendiente",
+        "title": "🕒 Partido pendiente",
+        "subtitle": "La puntuación se calculará al finalizar",
+        "description": "Si ya enviaste tu predicción, quedará bloqueada al empezar el partido."
+      }
+    },
+    "puma": {
+      "dualDefault": "Wherever you play, play For the Love of the Shirt ❤👕",
+      "singleDefault": "Descubre el contenido destacado de PUMA para {team}."
+    }
+  },
+
+  "quickPrediction": {
+    "saving": "Guardando...",
+    "save": "Guardar predicción",
+    "homeGoals": "Goles equipo local",
+    "awayGoals": "Goles equipo visitante"
   },
 
   "champion": {

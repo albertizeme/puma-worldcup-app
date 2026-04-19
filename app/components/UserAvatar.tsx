@@ -36,7 +36,7 @@ export default function UserAvatar({
       </div>
 
       {showEmail && (
-        <div className="hidden sm:block text-sm font-medium text-slate-700">
+        <div className="hidden text-sm font-medium text-slate-700 sm:block">
           {truncateEmail(email)}
         </div>
       )}

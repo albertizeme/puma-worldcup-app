@@ -57,7 +57,22 @@
       "unexpected": "Unexpected error while updating the password."
     }
   },
-
+  
+  "navigation": {
+    "openMenu": "Open menu",
+    "menu": "Menu",
+    "upcomingMatches": "Upcoming matches",
+    "ranking": "Ranking",
+    "myPredictions": "My predictions",
+    "admin": "Admin",
+    "login": "Login",
+    "openUserMenu": "Open user menu",
+    "signedIn": "Signed in",
+    "loading": "Loading...",
+    "logout": "Sign out",
+    "languageSoon": "Language coming soon"
+  },
+  
   "home": {
     "datePending": "Date pending",
     "closed": "Closed",
@@ -91,6 +106,152 @@
     "pendingGroupMatchesCount": "{count} pending matches",
     "pending": "Pending",
     "predict": "Predict"
+  },
+
+  "matchCard": {
+    "datePending": "Date pending",
+    "dateToBeConfirmed": "Date to be confirmed",
+    "predict": "Predict",
+    "viewDetail": "View detail"
+  },
+
+  "predictionSection": {
+    "labels": {
+      "home": "Home",
+      "away": "Away"
+    },
+    "outcome": {
+      "noPoints": "No points",
+      "exact": "+{points} points · Exact",
+      "tendency": "+{points} points · Tendency"
+    },
+    "loggedOut": {
+      "eyebrow": "Your prediction",
+      "title": "Sign in to participate",
+      "description": "Sign in with your account to save your prediction before the match starts."
+    },
+    "open": {
+      "eyebrow": "Your prediction",
+      "editTitle": "Edit your prediction",
+      "newTitle": "How will the match end?",
+      "description": "You can change your scoreline until the match starts."
+    },
+    "closed": {
+      "eyebrow": "Prediction closed",
+      "withPredictionTitle": "You can no longer edit your prediction",
+      "withoutPredictionTitle": "You did not submit your prediction in time",
+      "description": "Predictions closed when the match started.",
+      "savedMessage": "Your prediction has been saved and will be evaluated when the match finishes.",
+      "missedMessage": "You missed this one. When the final result is published, you will not score points for this match."
+    },
+    "finished": {
+      "eyebrow": "Match finished",
+      "title": "Result and points",
+      "description": "Here you can compare the real scoreline with your prediction.",
+      "realResult": "Actual result",
+      "yourPrediction": "Your prediction",
+      "pointsEarned": "{points} pts",
+      "pumaBonus": "PUMA bonus +{points}",
+      "noPredictionTitle": "You did not register a prediction for this match",
+      "noPredictionDescription": "Since you did not submit a scoreline before kick-off, you do not earn points here."
+    }
+  },
+
+  "predictionForm": {
+    "description": "Enter your estimated final score. You can change it until the match starts.",
+    "aria": {
+      "homeScore": "Home team score",
+      "awayScore": "Away team score"
+    },
+    "buttons": {
+      "saving": "Saving...",
+      "update": "Update prediction",
+      "save": "Save prediction"
+    },
+    "success": {
+      "updated": "Prediction updated successfully.",
+      "saved": "Prediction saved successfully."
+    },
+    "errors": {
+      "locked": "Predictions closed when the match started.",
+      "missingScores": "You must enter both scores.",
+      "invalidScores": "Scores must be valid integers greater than or equal to 0.",
+      "saveFailed": "The prediction could not be saved: {message}"
+    }
+  },
+
+  "common": {
+    "closeMatchDetail": "Close match detail"
+  },
+
+  "matchDetail": {
+    "pumaMatch": "PUMA Match",
+    "home": "Home",
+    "away": "Away",
+    "homeFlagAlt": "{team} flag",
+    "awayFlagAlt": "{team} flag",
+    "showtime": "Showtime",
+    "pumaImageAlt": "PUMA image for {team}",
+    "datePending": "Date pending",
+    "dateToBeConfirmed": "Date to be confirmed",
+    "status": {
+      "finished": "Finished",
+      "live": "Live",
+      "scheduled": "Coming up"
+    },
+    "breakdown": {
+      "exactScore": "Exact score",
+      "correctTrend": "Correct tendency",
+      "pumaBonus": "PUMA Match bonus",
+      "noPoints": "No points",
+      "noPrediction": "No prediction submitted",
+      "title": "How it was calculated",
+      "total": "Total",
+      "totalPoints": "{points} pts"
+    },
+    "outcome": {
+      "exact": {
+        "badge": "Exact prediction",
+        "title": "✅ Exact prediction",
+        "subtitle": "You earned {points} points",
+        "description": "You guessed the final score of this match."
+      },
+      "trend": {
+        "badge": "Correct tendency",
+        "title": "🟡 You got the winner right",
+        "subtitle": "You earned {points} point{points, plural, one {} other {s}}",
+        "description": "You did not get the exact score, but you got the match result right."
+      },
+      "miss": {
+        "badge": "No hit",
+        "title": "❌ Prediction missed",
+        "subtitle": "You earned 0 points",
+        "description": "Your prediction does not match the final result."
+      },
+      "noPrediction": {
+        "badge": "No prediction",
+        "title": "⚪ You did not submit a prediction",
+        "subtitle": "You did not score points in this match",
+        "description": "The match has already finished and there was no prediction registered."
+      },
+      "pending": {
+        "badge": "Pending",
+        "title": "🕒 Match pending",
+        "subtitle": "The score will be calculated when it finishes",
+        "description": "If you already submitted your prediction, it will be locked when the match starts."
+      }
+    },
+    "puma": {
+      "dualDefault": "Wherever you play, play For the Love of the Shirt ❤👕",
+      "singleDefault": "Discover PUMA featured content for {team}."
+    }
+  },
+
+  "quickPrediction": {
+    "saving": "Saving...",
+    "save": "Save prediction",
+    "homeGoals": "Home team goals",
+    "awayGoals": "Away team goals"
   },
 
   "champion": {

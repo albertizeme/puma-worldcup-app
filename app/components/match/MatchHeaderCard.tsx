@@ -1,4 +1,6 @@
-// components/match/MatchHeaderCard.tsx
+"use client";
+
+import { useLocale, useTranslations } from "next-intl";
 import CountryFlag from "@/components/CountryFlag";
 import { formatMatchDate } from "@/lib/match-detail";
 
@@ -29,6 +31,9 @@ export default function MatchHeaderCard({
   city,
   scoreSlot,
 }: Props) {
+  const t = useTranslations("matchDetail");
+  const locale = useLocale();
+
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
@@ -39,12 +44,12 @@ export default function MatchHeaderCard({
 
           {isPumaMatch ? (
             <span className="rounded-full border border-orange-200 bg-gradient-to-r from-orange-500 to-red-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
-              PUMA Match
+              {t("pumaMatch")}
             </span>
           ) : null}
 
           {stage ? <span>· {stage}</span> : null}
-          <span>· {formatMatchDate(matchDatetime)}</span>
+          <span>· {formatMatchDate(matchDatetime, locale)}</span>
         </div>
       </div>
 
@@ -54,31 +59,29 @@ export default function MatchHeaderCard({
             <CountryFlag
               code={homeFlag}
               teamName={homeTeam}
-              alt={`Bandera de ${homeTeam}`}
+              alt={t("homeFlagAlt", { team: homeTeam })}
             />
             <div className="min-w-0">
               <div className="text-lg font-bold text-slate-900 sm:text-2xl">
                 {homeTeam}
               </div>
-              <div className="text-sm text-slate-500">Local</div>
+              <div className="text-sm text-slate-500">{t("home")}</div>
             </div>
           </div>
 
-          <div className="flex items-center justify-center">
-            {scoreSlot}
-          </div>
+          <div className="flex items-center justify-center">{scoreSlot}</div>
 
           <div className="flex items-center justify-start gap-4 md:justify-end">
             <div className="min-w-0 text-left md:text-right">
               <div className="text-lg font-bold text-slate-900 sm:text-2xl">
                 {awayTeam}
               </div>
-              <div className="text-sm text-slate-500">Visitante</div>
+              <div className="text-sm text-slate-500">{t("away")}</div>
             </div>
             <CountryFlag
               code={awayFlag}
               teamName={awayTeam}
-              alt={`Bandera de ${awayTeam}`}
+              alt={t("awayFlagAlt", { team: awayTeam })}
             />
           </div>
         </div>

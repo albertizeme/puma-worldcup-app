@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { useLocale, useTranslations } from "next-intl";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { buttonStyles } from "@/lib/ui";
 
@@ -12,6 +13,9 @@ type SimpleUser = {
 export default function AuthButton() {
   const [user, setUser] = useState<SimpleUser>(null);
   const [loading, setLoading] = useState(true);
+
+  const locale = useLocale();
+  const t = useTranslations("navigation");
 
   useEffect(() => {
     let isMounted = true;
@@ -54,28 +58,28 @@ export default function AuthButton() {
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = `/${locale}/login`;
   }
 
   if (loading) {
     return (
       <span className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-400">
-        Cargando...
+        {t("loading")}
       </span>
     );
   }
 
   if (!user) {
     return (
-      <a href="/login" className={buttonStyles.primary}>
-        Login
+      <a href={`/${locale}/login`} className={buttonStyles.primary}>
+        {t("login")}
       </a>
     );
   }
 
   return (
     <button type="button" onClick={handleLogout} className={buttonStyles.secondary}>
-      Salir
+      {t("logout")}
     </button>
   );
 }

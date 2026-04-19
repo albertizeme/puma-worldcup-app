@@ -1,9 +1,11 @@
 import { toggleUserActiveAction } from "./actions";
 
+
 type Props = {
   userId: string;
   isActive: boolean;
   userLabel: string;
+  locale: string;
   disabled?: boolean;
 };
 
@@ -11,6 +13,7 @@ export default function ToggleUserActiveButton({
   userId,
   isActive,
   userLabel,
+  locale,
   disabled = false,
 }: Props) {
   return (

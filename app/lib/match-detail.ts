@@ -1,4 +1,3 @@
-// lib/match-detail.ts
 import { Match } from "@/types/match";
 
 export type PredictionOutcome =
@@ -44,32 +43,45 @@ export type PredictionSectionRow = {
   exact_hit?: boolean | null;
 };
 
-export function formatMatchDate(value: string | null | undefined) {
-  if (!value) return "Fecha pendiente";
+type MatchDetailTranslator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string;
+
+export function formatMatchDate(
+  value: string | null | undefined,
+  locale: string,
+  t?: MatchDetailTranslator
+) {
+  if (!value) return t ? t("datePending") : "Fecha pendiente";
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "Fecha por confirmar";
+  if (isNaN(date.getTime())) {
+    return t ? t("dateToBeConfirmed") : "Fecha por confirmar";
+  }
 
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "Europe/Madrid",
-    weekday: "long",
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
 }
 
-export function formatShortDate(value: string | null | undefined) {
+export function formatShortDate(
+  value: string | null | undefined,
+  locale: string
+) {
   if (!value) return "—";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) return "—";
 
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "Europe/Madrid",
     day: "numeric",
     month: "short",
@@ -154,6 +166,7 @@ export function getOutcome(params: {
 export function getPointsAndBreakdown(
   outcome: PredictionOutcome,
   isPumaMatch: boolean,
+  t?: MatchDetailTranslator
 ): {
   totalPoints: number;
   breakdown: BreakdownItem[];
@@ -163,9 +176,18 @@ export function getPointsAndBreakdown(
       return {
         totalPoints: isPumaMatch ? 4 : 3,
         breakdown: [
-          { label: "Marcador exacto", points: 3 },
+          {
+            label: t ? t("breakdown.exactScore") : "Marcador exacto",
+            points: 3
+          },
           ...(isPumaMatch
-            ? [{ label: "Bonus PUMA Match", points: 1, highlight: true }]
+            ? [
+                {
+                  label: t ? t("breakdown.pumaBonus") : "Bonus PUMA Match",
+                  points: 1,
+                  highlight: true
+                }
+              ]
             : []),
         ],
       };
@@ -173,21 +195,40 @@ export function getPointsAndBreakdown(
       return {
         totalPoints: isPumaMatch ? 2 : 1,
         breakdown: [
-          { label: "Tendencia acertada", points: 1 },
+          {
+            label: t ? t("breakdown.correctTrend") : "Tendencia acertada",
+            points: 1
+          },
           ...(isPumaMatch
-            ? [{ label: "Bonus PUMA Match", points: 1, highlight: true }]
+            ? [
+                {
+                  label: t ? t("breakdown.pumaBonus") : "Bonus PUMA Match",
+                  points: 1,
+                  highlight: true
+                }
+              ]
             : []),
         ],
       };
     case "miss":
       return {
         totalPoints: 0,
-        breakdown: [{ label: "Sin puntuación", points: 0 }],
+        breakdown: [
+          {
+            label: t ? t("breakdown.noPoints") : "Sin puntuación",
+            points: 0
+          }
+        ],
       };
     case "no_prediction":
       return {
         totalPoints: 0,
-        breakdown: [{ label: "Sin predicción enviada", points: 0 }],
+        breakdown: [
+          {
+            label: t ? t("breakdown.noPrediction") : "Sin predicción enviada",
+            points: 0
+          }
+        ],
       };
     case "pending":
     default:
@@ -201,14 +242,15 @@ export function getPointsAndBreakdown(
 export function getOutcomeContent(
   outcome: PredictionOutcome,
   points: number,
+  t: MatchDetailTranslator
 ) {
   switch (outcome) {
     case "exact":
       return {
-        badge: "Predicción exacta",
-        title: "✅ Predicción exacta",
-        subtitle: `Has ganado ${points} puntos`,
-        description: "Acertaste el marcador final de este partido.",
+        badge: t("outcome.exact.badge"),
+        title: t("outcome.exact.title"),
+        subtitle: t("outcome.exact.subtitle", { points }),
+        description: t("outcome.exact.description"),
         containerClass:
           "border-emerald-200 bg-emerald-50 text-emerald-900",
         badgeClass:
@@ -216,11 +258,10 @@ export function getOutcomeContent(
       };
     case "trend":
       return {
-        badge: "Tendencia acertada",
-        title: "🟡 Has acertado el ganador",
-        subtitle: `Has ganado ${points} punto${points === 1 ? "" : "s"}`,
-        description:
-          "No acertaste el marcador exacto, pero sí el resultado del partido.",
+        badge: t("outcome.trend.badge"),
+        title: t("outcome.trend.title"),
+        subtitle: t("outcome.trend.subtitle", { points }),
+        description: t("outcome.trend.description"),
         containerClass:
           "border-amber-200 bg-amber-50 text-amber-900",
         badgeClass:
@@ -228,21 +269,20 @@ export function getOutcomeContent(
       };
     case "miss":
       return {
-        badge: "Sin acierto",
-        title: "❌ Predicción no acertada",
-        subtitle: "Has ganado 0 puntos",
-        description: "Tu predicción no coincide con el resultado final.",
+        badge: t("outcome.miss.badge"),
+        title: t("outcome.miss.title"),
+        subtitle: t("outcome.miss.subtitle"),
+        description: t("outcome.miss.description"),
         containerClass: "border-rose-200 bg-rose-50 text-rose-900",
         badgeClass:
           "bg-rose-100 text-rose-800 border border-rose-200",
       };
     case "no_prediction":
       return {
-        badge: "Sin predicción",
-        title: "⚪ No enviaste predicción",
-        subtitle: "No has sumado puntos en este partido",
-        description:
-          "El partido ya finalizó y no había una predicción registrada.",
+        badge: t("outcome.noPrediction.badge"),
+        title: t("outcome.noPrediction.title"),
+        subtitle: t("outcome.noPrediction.subtitle"),
+        description: t("outcome.noPrediction.description"),
         containerClass: "border-slate-200 bg-slate-50 text-slate-900",
         badgeClass:
           "bg-slate-100 text-slate-700 border border-slate-200",
@@ -250,11 +290,10 @@ export function getOutcomeContent(
     case "pending":
     default:
       return {
-        badge: "Pendiente",
-        title: "🕒 Partido pendiente",
-        subtitle: "La puntuación se calculará al finalizar",
-        description:
-          "Si ya enviaste tu predicción, quedará bloqueada al empezar el partido.",
+        badge: t("outcome.pending.badge"),
+        title: t("outcome.pending.title"),
+        subtitle: t("outcome.pending.subtitle"),
+        description: t("outcome.pending.description"),
         containerClass: "border-sky-200 bg-sky-50 text-sky-900",
         badgeClass:
           "bg-sky-100 text-sky-800 border border-sky-200",
@@ -262,15 +301,18 @@ export function getOutcomeContent(
   }
 }
 
-export function getStatusLabel(status: MatchStatus) {
+export function getStatusLabel(
+  status: MatchStatus,
+  t?: MatchDetailTranslator
+) {
   switch (status) {
     case "finished":
-      return "Finalizado";
+      return t ? t("status.finished") : "Finalizado";
     case "live":
-      return "En juego";
+      return t ? t("status.live") : "En juego";
     case "scheduled":
     default:
-      return "Próximamente";
+      return t ? t("status.scheduled") : "Próximamente";
   }
 }
 
@@ -313,24 +355,12 @@ export function getPumaCardText(
   pumaTeams: TeamMeta[],
   primaryPumaTeam: TeamMeta | null,
   isDualPuma: boolean,
+  t?: MatchDetailTranslator
 ) {
   if (isDualPuma && pumaTeams.length === 2) {
-    const firstText = pumaTeams[0].sponsor_card_text?.trim();
-    const secondText = pumaTeams[1].sponsor_card_text?.trim();
-/*
-    if (firstText && secondText) {
-      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${firstText} ${secondText}`;
-    }
-
-    if (firstText) {
-      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${firstText}`;
-    }
-
-    if (secondText) {
-      return `${pumaTeams[0].name} y ${pumaTeams[1].name} protagonizan este duelo entre selecciones PUMA. ${secondText}`;
-    }
-*/
-    return `Wherever you play, play For the Love of the Shirt ❤👕`;
+    return t
+      ? t("puma.dualDefault")
+      : "Wherever you play, play For the Love of the Shirt ❤👕";
   }
 
   if (primaryPumaTeam?.sponsor_card_text?.trim()) {
@@ -338,7 +368,9 @@ export function getPumaCardText(
   }
 
   if (primaryPumaTeam) {
-    return `Descubre el contenido destacado de PUMA para ${primaryPumaTeam.name}.`;
+    return t
+      ? t("puma.singleDefault", { team: primaryPumaTeam.name })
+      : `Descubre el contenido destacado de PUMA para ${primaryPumaTeam.name}.`;
   }
 
   return null;

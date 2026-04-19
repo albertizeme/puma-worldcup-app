@@ -115,9 +115,12 @@ function getAlertFromQuery(success?: string, error?: string) {
 
 export default async function AdminUsersPage({
   searchParams,
+  params,
 }: {
   searchParams: SearchParams;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const resolvedSearchParams = await searchParams;
 
   const selectedUserRole = (resolvedSearchParams.userRole ?? "all") as UserRole;
@@ -241,7 +244,7 @@ export default async function AdminUsersPage({
               Filtrar
             </button>
             <Link
-              href="/admin/users"
+              href={`/${locale}/admin/users`}
               className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600"
             >
               Limpiar
@@ -262,7 +265,7 @@ export default async function AdminUsersPage({
         </div>
       )}
       <div className="mt-6">
-        <CreateUserForm />
+        <CreateUserForm locale={locale}/>
       </div>
       <div className="mt-6 overflow-x-auto">
         <table className="min-w-full border-separate border-spacing-y-2">
@@ -350,6 +353,7 @@ export default async function AdminUsersPage({
                             userId={row.id}
                             isActive={row.is_active}
                             userLabel={userLabel}
+                            locale={locale}
                           />
                         </div>
                       )}

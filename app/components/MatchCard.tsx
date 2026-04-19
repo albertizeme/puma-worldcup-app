@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import CountryFlag from "@/components/CountryFlag";
 import { Match } from "@/types/match";
 
@@ -12,14 +13,18 @@ type MatchCardProps = {
   ctaLabel?: string;
 };
 
-function formatMatchDate(value: string | null | undefined) {
-  if (!value) return "Fecha pendiente";
+function formatMatchDate(
+  value: string | null | undefined,
+  locale: string,
+  t: (key: string) => string
+) {
+  if (!value) return t("datePending");
 
   const date = new Date(value);
 
-  if (isNaN(date.getTime())) return "Fecha por confirmar";
+  if (isNaN(date.getTime())) return t("dateToBeConfirmed");
 
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "Europe/Madrid",
     day: "numeric",
     month: "short",
@@ -35,14 +40,16 @@ export default function MatchCard({
   ctaLabel,
 }: MatchCardProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("matchCard");
 
   const href =
     navigationMode === "quick"
-      ? `/match/${match.id}/quick`
-      : `/match/${match.id}`;
+      ? `/${locale}/match/${match.id}/quick`
+      : `/${locale}/match/${match.id}`;
 
   const buttonLabel =
-    ctaLabel ?? (navigationMode === "quick" ? "Pronosticar" : "Ver detalle");
+    ctaLabel ?? (navigationMode === "quick" ? t("predict") : t("viewDetail"));
 
   const goToDetail = () => {
     router.push(href);
@@ -106,7 +113,7 @@ export default function MatchCard({
           </div>
 
           <p className="mt-4 pl-12 text-sm text-slate-500">
-            {formatMatchDate(match.match_datetime)}
+            {formatMatchDate(match.match_datetime, locale, t)}
           </p>
         </div>
 

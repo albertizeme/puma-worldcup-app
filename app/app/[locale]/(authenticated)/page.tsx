@@ -38,6 +38,19 @@ type ChampionPredictionRow = {
 
 type GroupState = "active" | "upcoming" | "finished";
 
+type RankingRow = {
+  user_id: string;
+  display_name: string | null;
+  total_points: number | null;
+  exact_hits: number | null;
+  tendency_hits: number | null;
+  champion_bonus_points: number | null;
+};
+
+type RankedRow = RankingRow & {
+  position: number;
+};
+
 const DEADLINE_BUFFER_HOURS = 1;
 const SOON_THRESHOLD_HOURS = 6;
 
@@ -77,8 +90,13 @@ function formatDateTime(value: string | null | undefined, locale: string) {
   }).format(date);
 }
 
-function formatChampionDeadline(value: string | null | undefined, locale: string) {
-  if (!value) return locale === "es" ? "Fecha por confirmar" : "Date to be confirmed";
+function formatChampionDeadline(
+  value: string | null | undefined,
+  locale: string,
+) {
+  if (!value) {
+    return locale === "es" ? "Fecha por confirmar" : "Date to be confirmed";
+  }
 
   const date = new Date(value);
 
@@ -119,7 +137,7 @@ function getHoursUntilDeadline(value: string | null | undefined) {
 
 function getMatchStatus(
   value: string | null | undefined,
-  t: Awaited<ReturnType<typeof getTranslations>>
+  t: Awaited<ReturnType<typeof getTranslations>>,
 ) {
   const hoursLeft = getHoursUntilDeadline(value);
 
@@ -156,7 +174,7 @@ function getMatchStatus(
 
 function getTimeLeftLabel(
   value: string | null | undefined,
-  t: Awaited<ReturnType<typeof getTranslations>>
+  t: Awaited<ReturnType<typeof getTranslations>>,
 ) {
   const hoursLeft = getHoursUntilDeadline(value);
 
@@ -212,7 +230,7 @@ function formatStageLabel(stage: string | null | undefined, locale: string) {
 function getMatchdayLabel(
   match: MatchWithMeta,
   locale: string,
-  t: Awaited<ReturnType<typeof getTranslations>>
+  t: Awaited<ReturnType<typeof getTranslations>>,
 ) {
   if (match.stage) {
     return formatStageLabel(match.stage, locale);
@@ -254,6 +272,58 @@ function getDateKey(value: string | null | undefined) {
 
 function normalizeTeamName(value: string | null | undefined) {
   return (value ?? "").trim().toLowerCase();
+}
+
+function getDisplayName(
+  row: { display_name: string | null },
+  t: Awaited<ReturnType<typeof getTranslations>>,
+) {
+  return row.display_name?.trim() || t("fallbackUserName");
+}
+
+function formatPointsLabel(
+  points: number,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  compact = false,
+) {
+  if (compact) {
+    return t("pointsCompact", { count: points });
+  }
+
+  return t("pointsLabel", { count: points });
+}
+
+function getBattleRows(rows: RankedRow[], userId: string) {
+  const currentIndex = rows.findIndex((row) => row.user_id === userId);
+
+  if (currentIndex === -1) {
+    return {
+      currentIndex: -1,
+      rowAbove: null,
+      currentRow: null,
+      rowBelow: null,
+    };
+  }
+
+  return {
+    currentIndex,
+    rowAbove: currentIndex > 0 ? rows[currentIndex - 1] : null,
+    currentRow: rows[currentIndex] ?? null,
+    rowBelow: currentIndex < rows.length - 1 ? rows[currentIndex + 1] : null,
+  };
+}
+
+function getGapText(
+  fromPoints: number | null,
+  toPoints: number | null,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+) {
+  const diff = Math.abs((fromPoints ?? 0) - (toPoints ?? 0));
+
+  if (diff === 0) return t("tied");
+  if (diff === 1) return t("onePoint");
+
+  return t("pointsLabel", { count: diff });
 }
 
 function buildPumaTeamNameSet(teams: TeamMeta[]) {
@@ -362,6 +432,12 @@ export default async function HomePage({
       ) ?? null
     : null;
 
+  const { data: rankingData } = await supabaseServer
+    .from("prediction_scores")
+    .select(
+      "user_id, display_name, total_points, exact_hits, tendency_hits, champion_bonus_points",
+    );
+
   const predictionsByMatch = new Map(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
       prediction.match_id,
@@ -453,6 +529,76 @@ export default async function HomePage({
     (total, group) => total + group.matches.length,
     0,
   );
+
+  const ranking: RankingRow[] = [...(rankingData ?? [])]
+    .map((row) => ({
+      user_id: row.user_id,
+      display_name: row.display_name,
+      total_points: row.total_points ?? 0,
+      exact_hits: row.exact_hits ?? 0,
+      tendency_hits: row.tendency_hits ?? 0,
+      champion_bonus_points: row.champion_bonus_points ?? 0,
+    }))
+    .sort((a, b) => {
+      const pointsDiff = (b.total_points ?? 0) - (a.total_points ?? 0);
+      if (pointsDiff !== 0) return pointsDiff;
+
+      const exactDiff = (b.exact_hits ?? 0) - (a.exact_hits ?? 0);
+      if (exactDiff !== 0) return exactDiff;
+
+      const tendencyDiff = (b.tendency_hits ?? 0) - (a.tendency_hits ?? 0);
+      if (tendencyDiff !== 0) return tendencyDiff;
+
+      return getDisplayName(a, t).localeCompare(getDisplayName(b, t), locale);
+    });
+
+  const rankedRows: RankedRow[] = ranking.map((row, index, rows) => {
+    if (index === 0) {
+      return {
+        ...row,
+        position: 1,
+      };
+    }
+
+    const previousRow = rows[index - 1];
+    const samePoints =
+      (row.total_points ?? 0) === (previousRow.total_points ?? 0);
+
+    return {
+      ...row,
+      position: samePoints ? index : index + 1,
+    };
+  });
+
+  const currentUserRow =
+    rankedRows.find((row) => row.user_id === user.id) ?? null;
+
+  const battleRows = currentUserRow
+    ? getBattleRows(rankedRows, user.id)
+    : {
+        currentIndex: -1,
+        rowAbove: null,
+        currentRow: null,
+        rowBelow: null,
+      };
+
+  const { rowAbove, rowBelow } = battleRows;
+
+  const gapToAbove =
+    currentUserRow && rowAbove
+      ? Math.max(
+          (rowAbove.total_points ?? 0) - (currentUserRow.total_points ?? 0),
+          0,
+        )
+      : null;
+
+  const gapToBelow =
+    currentUserRow && rowBelow
+      ? Math.max(
+          (currentUserRow.total_points ?? 0) - (rowBelow.total_points ?? 0),
+          0,
+        )
+      : null;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -576,7 +722,8 @@ export default async function HomePage({
           </p>
 
           <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
-            {visibleGroups[normalizedActiveGroupIndex]?.label ?? t("upcomingMatches")}
+            {visibleGroups[normalizedActiveGroupIndex]?.label ??
+              t("upcomingMatches")}
           </h2>
 
           <p className="mt-2 text-sm text-slate-600">
@@ -587,6 +734,160 @@ export default async function HomePage({
           </p>
         </div>
       </section>
+
+      {currentUserRow && (rowAbove || rowBelow) ? (
+        <section className="mb-6 overflow-hidden rounded-[1.5rem] border border-violet-200 bg-white shadow-sm">
+          <div className="border-b border-violet-100 bg-gradient-to-r from-violet-50 via-fuchsia-50 to-white px-5 py-4 md:px-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-violet-600">
+                  {t("battleBadge")}
+                </p>
+
+                <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                  {rowAbove
+                    ? gapToAbove === 0
+                      ? t("battleHeadlineTied", {
+                          position: rowAbove.position,
+                        })
+                      : t("battleHeadlineBehind", {
+                          points: formatPointsLabel(gapToAbove ?? 0, t),
+                          position: rowAbove.position,
+                        })
+                    : t("battleHeadlineLeader")}
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-600">
+                  {rowAbove
+                    ? t("battleDescriptionAbove")
+                    : rowBelow
+                      ? t("battleDescriptionLeaderWithPressure")
+                      : t("battleDescriptionNoNearby")}
+                </p>
+              </div>
+
+              <Link
+                href={`/${locale}/ranking`}
+                className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-violet-200 bg-white px-4 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+              >
+                {t("viewRanking")}
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-3 p-4 md:p-5">
+            {rowAbove ? (
+              <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    {t("justAbove")}
+                  </p>
+                  <p className="truncate text-base font-bold text-slate-900">
+                    #{rowAbove.position} · {getDisplayName(rowAbove, t)}
+                  </p>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="text-2xl font-black text-slate-900">
+                    {rowAbove.total_points ?? 0}
+                  </p>
+                  <p className="text-[11px] font-medium text-slate-500">
+                    {t("gapPrefix") ? `${t("gapPrefix")} ` : ""}
+                    {getGapText(
+                      rowAbove.total_points,
+                      currentUserRow.total_points,
+                      t,
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <p className="text-sm font-bold text-emerald-700">
+                  {t("battleTopCard")}
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between rounded-[1.25rem] border border-violet-200 bg-violet-50 px-4 py-3 shadow-sm">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-violet-600">
+                  {t("you")}
+                </p>
+                <p className="truncate text-base font-bold text-slate-900">
+                  #{currentUserRow.position} · {getDisplayName(currentUserRow, t)}
+                </p>
+              </div>
+
+              <div className="shrink-0 text-right">
+                <p className="text-2xl font-black text-slate-900">
+                  {currentUserRow.total_points ?? 0}
+                </p>
+                <p className="text-[11px] font-medium text-slate-500">
+                  {t("yourPoints")}
+                </p>
+              </div>
+            </div>
+
+            {rowBelow ? (
+              <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    {t("justBelow")}
+                  </p>
+                  <p className="truncate text-base font-bold text-slate-900">
+                    #{rowBelow.position} · {getDisplayName(rowBelow, t)}
+                  </p>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="text-2xl font-black text-slate-900">
+                    {rowBelow.total_points ?? 0}
+                  </p>
+                  <p className="text-[11px] font-medium text-slate-500">
+                    {t("aheadByPrefix") ? `${t("aheadByPrefix")} ` : ""}
+                    {getGapText(
+                      currentUserRow.total_points,
+                      rowBelow.total_points,
+                      t,
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-sm font-bold text-slate-900">
+                  {t("battleBottomCard")}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {rowAbove ? (
+            <div className="px-4 pb-4 md:px-5 md:pb-5">
+              <div className="rounded-2xl bg-violet-600 px-4 py-3 text-white">
+                <p className="text-sm font-semibold">
+                  {gapToAbove !== null && gapToAbove > 0
+                    ? t("battleNeedPoints", {
+                        points: formatPointsLabel(gapToAbove, t),
+                      })
+                    : t("battleTieBreaker")}
+                </p>
+
+                {gapToBelow !== null ? (
+                  <p className="mt-1 text-xs text-white/80">
+                    {gapToBelow === 0
+                      ? t("battleAlsoTiedBelow")
+                      : t("battleCushionBelow", {
+                          points: formatPointsLabel(gapToBelow, t),
+                        })}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className="mb-6">
         <div className="flex items-end justify-between">
@@ -649,7 +950,10 @@ export default async function HomePage({
               <div className="grid gap-4 p-4 md:p-6">
                 {prioritizedMatches.map((match) => {
                   const status = getMatchStatus(match.match_datetime, t);
-                  const timeLeftLabel = getTimeLeftLabel(match.match_datetime, t);
+                  const timeLeftLabel = getTimeLeftLabel(
+                    match.match_datetime,
+                    t,
+                  );
 
                   return (
                     <div

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
-import { useLocale, useTranslations } from "next-intl";
-import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { buttonStyles } from "@/lib/ui";
+import {useEffect, useRef, useState} from "react";
+import type {Session, AuthChangeEvent} from "@supabase/supabase-js";
+import {useTranslations} from "next-intl";
+import {Link, useRouter} from "@/i18n/navigation";
+import {getSupabaseBrowserClient} from "@/lib/supabase-browser";
+import {buttonStyles} from "@/lib/ui";
 
 type SimpleUser = {
   email?: string;
@@ -36,7 +37,7 @@ export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations("navigation");
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function UserMenu() {
     const supabase = getSupabaseBrowserClient();
 
     async function loadSession() {
-      const { data, error } = await supabase.auth.getSession();
+      const {data, error} = await supabase.auth.getSession();
 
       if (!isMounted) return;
 
@@ -55,18 +56,18 @@ export default function UserMenu() {
         return;
       }
 
-      setUser(data.session?.user ? { email: data.session.user.email } : null);
+      setUser(data.session?.user ? {email: data.session.user.email} : null);
       setLoading(false);
     }
 
     loadSession();
 
     const {
-      data: { subscription },
+      data: {subscription},
     } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => {
         if (!isMounted) return;
-        setUser(session?.user ? { email: session.user.email } : null);
+        setUser(session?.user ? {email: session.user.email} : null);
         setLoading(false);
       }
     );
@@ -103,7 +104,8 @@ export default function UserMenu() {
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
-    window.location.href = `/${locale}/login`;
+    router.replace("/login");
+    router.refresh();
   }
 
   if (loading) {
@@ -116,9 +118,9 @@ export default function UserMenu() {
 
   if (!user?.email) {
     return (
-      <a href={`/${locale}/login`} className={buttonStyles.nav}>
+      <Link href="/login" className={buttonStyles.nav}>
         {t("login")}
-      </a>
+      </Link>
     );
   }
 

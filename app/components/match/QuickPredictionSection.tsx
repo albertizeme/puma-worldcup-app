@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { saveQuickPredictionAction } from "@/app/authenticated_old/match/[id]/quick/actions";
+import { saveQuickPredictionAction } from "@/authenticated_old/match/[id]/quick/actions";
 
 type Props = {
   matchId: string;

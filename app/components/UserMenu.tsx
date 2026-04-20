@@ -1,15 +1,22 @@
 "use client";
 
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState, useTransition} from "react";
 import type {Session, AuthChangeEvent} from "@supabase/supabase-js";
-import {useTranslations} from "next-intl";
-import {Link, useRouter} from "@/i18n/navigation";
+import {useLocale, useTranslations} from "next-intl";
+import {Link, usePathname, useRouter} from "@/i18n/navigation";
 import {getSupabaseBrowserClient} from "@/lib/supabase-browser";
 import {buttonStyles} from "@/lib/ui";
 
 type SimpleUser = {
   email?: string;
 } | null;
+
+const locales = [
+  {code: "en", label: "English"},
+  {code: "es", label: "Español"},
+  {code: "it", label: "Italiano"},
+  {code: "pt", label: "Português"},
+] as const;
 
 function getInitials(email: string) {
   const localPart = email.split("@")[0] || "";
@@ -38,6 +45,10 @@ export default function UserMenu() {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const [isPending, startTransition] = useTransition();
+
   const t = useTranslations("navigation");
 
   useEffect(() => {
@@ -108,6 +119,15 @@ export default function UserMenu() {
     router.refresh();
   }
 
+  function handleLocaleChange(nextLocale: string) {
+    if (nextLocale === locale) return;
+
+    startTransition(() => {
+      router.replace(pathname, {locale: nextLocale});
+      setOpen(false);
+    });
+  }
+
   if (loading) {
     return (
       <div className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-400 shadow-sm">
@@ -141,7 +161,7 @@ export default function UserMenu() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-[120] mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 top-full z-[120] mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
               {t("signedIn")}
@@ -151,6 +171,39 @@ export default function UserMenu() {
             </p>
           </div>
 
+          <div className="border-b border-slate-100 px-4 py-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              {t("language")}
+            </p>
+
+            <div className="space-y-1">
+              {locales.map((item) => {
+                const isActive = item.code === locale;
+
+                return (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => handleLocaleChange(item.code)}
+                    disabled={isPending}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition
+                      ${
+                        isActive
+                          ? "bg-slate-100 text-slate-900"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }
+                      disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    <span>{item.label}</span>
+                    <span className="ml-3 w-4 text-right">
+                      {isActive ? "✓" : ""}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="p-2">
             <button
               type="button"
@@ -158,14 +211,6 @@ export default function UserMenu() {
               className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
             >
               {t("logout")}
-            </button>
-
-            <button
-              type="button"
-              disabled
-              className="mt-1 flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-slate-400"
-            >
-              {t("languageSoon")}
             </button>
           </div>
         </div>

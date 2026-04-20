@@ -65,12 +65,12 @@
     "ranking": "Ranking",
     "myPredictions": "My predictions",
     "admin": "Admin",
-    "login": "Login",
+    "login": "Log in",
     "openUserMenu": "Open user menu",
     "signedIn": "Signed in",
     "loading": "Loading...",
     "logout": "Sign out",
-    "languageSoon": "Language coming soon"
+    "languageSoon": "Language"
   },
   
   "home": {

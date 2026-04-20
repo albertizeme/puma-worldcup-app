@@ -64,15 +64,16 @@
     "upcomingMatches": "Próximos partidos",
     "ranking": "Ranking",
     "myPredictions": "Mis predicciones",
+    "champion": "Campeón",
     "admin": "Admin",
-    "login": "Login",
+    "login": "Iniciar sesión",
     "openUserMenu": "Abrir menú de usuario",
     "signedIn": "Sesión iniciada",
     "loading": "Cargando...",
     "logout": "Cerrar sesión",
-    "languageSoon": "Idioma próximamente"
+    "languageSoon": "Idioma"
   },
-  
+ 
   "home": {
     "datePending": "Fecha pendiente",
     "closed": "Cerrado",

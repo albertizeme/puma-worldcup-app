@@ -3,7 +3,7 @@
     "title": "Accedi alla piattaforma",
     "subtitle": "Accedi all’esperienza interna per i dipendenti, partecipa e segui la competizione.",
     "emailLabel": "Email",
-    "emailPlaceholder": "tuonome@puma.com",
+    "emailPlaceholder": "tuaemail@puma.com",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Inserisci la tua password",
     "submit": "Accedi",
@@ -12,9 +12,8 @@
     "helpText": "Se hai dimenticato la password, contatta l’IT per riceverne una temporanea.",
     "loading": "Caricamento..."
   },
-
   "changePassword": {
-    "checkingSession": "Verifica della sessione...",
+    "checkingSession": "Validazione sessione...",
     "security": "Sicurezza",
     "title": "Cambia password",
     "subtitle": "Devi cambiare la password temporanea prima di continuare.",
@@ -24,59 +23,58 @@
     "confirmPasswordPlaceholder": "Ripeti la nuova password",
     "submit": "Salva nuova password",
     "submitLoading": "Salvataggio in corso...",
-    "success": "Password aggiornata con successo.",
+    "success": "Password aggiornata correttamente.",
     "errors": {
       "passwordTooShort": "La nuova password deve contenere almeno 8 caratteri.",
       "passwordMismatch": "Le password non coincidono.",
-      "sessionValidationFailed": "Impossibile validare la sessione.",
+      "sessionValidationFailed": "Non è stato possibile validare la sessione.",
       "unexpected": "Si è verificato un errore imprevisto."
     }
   },
-
   "updatePassword": {
     "loading": "Caricamento...",
     "security": "Sicurezza",
     "title": "Aggiorna la tua password",
-    "subtitle": "Il tuo account deve aggiornare la password prima di continuare.",
+    "subtitle": "Il tuo account richiede di cambiare la password prima di continuare.",
     "userLabel": "Utente: ",
     "back": "Indietro",
-    "mustChangeNotice": "Devi impostare una nuova password per continuare a utilizzare l’app.",
+    "mustChangeNotice": "Devi impostare una nuova password per continuare a usare l’app.",
     "newPasswordLabel": "Nuova password",
     "newPasswordPlaceholder": "Inserisci la nuova password",
     "confirmPasswordLabel": "Conferma password",
     "confirmPasswordPlaceholder": "Ripeti la nuova password",
     "submit": "Salva nuova password",
     "submitLoading": "Aggiornamento in corso...",
-    "success": "Password aggiornata con successo.",
+    "success": "Password aggiornata correttamente.",
     "errors": {
       "missingFields": "Devi compilare entrambi i campi.",
       "passwordMismatch": "Le password non coincidono.",
       "passwordTooShort": "La nuova password deve contenere almeno 8 caratteri.",
-      "updatePasswordFailed": "Impossibile aggiornare la password.",
-      "updateProfileFailed": "Impossibile aggiornare il profilo.",
+      "updatePasswordFailed": "Non è stato possibile aggiornare la password.",
+      "updateProfileFailed": "Non è stato possibile aggiornare il profilo.",
       "unexpected": "Errore imprevisto durante l’aggiornamento della password."
     }
   },
-
   "navigation": {
     "openMenu": "Apri menu",
     "menu": "Menu",
     "upcomingMatches": "Prossime partite",
     "ranking": "Classifica",
-    "myPredictions": "Le mie previsioni",
+    "myPredictions": "I miei pronostici",
+    "champion": "Campione",
     "admin": "Admin",
     "login": "Accedi",
     "openUserMenu": "Apri menu utente",
     "signedIn": "Accesso effettuato",
     "loading": "Caricamento...",
-    "logout": "Esci",
-    "languageSoon": "Lingua"
+    "logout": "Disconnetti",
+    "languag": "Lingua",
+    "languageSoon": "Lingua prossimamente"
   },
-
   "home": {
-    "datePending": "Data da definire",
+    "datePending": "Data in sospeso",
     "closed": "Chiuso",
-    "closingSoon": "Chiusura imminente",
+    "closingSoon": "Chiude a breve",
     "editable": "Modificabile",
     "closesInMinutes": "Chiude tra {count} min",
     "closesInHours": "Chiude tra {count} h",
@@ -85,51 +83,361 @@
     "matchdayLabel": "Giornata {value}",
     "groupLabel": "Gruppo {value}",
     "loadError": "Errore nel caricamento dei dati:",
-    "heroSubtitle": "Completa le tue previsioni prima della scadenza e segui le partite più importanti di PUMA.",
-    "specialPrediction": "Previsione speciale",
-    "predictChampionTitle": "Prevedi il campione del mondo",
-    "predictChampionText": "Indovina e guadagna <strong>20 punti extra</strong> nella classifica.",
+    "heroSubtitle": "Completa i tuoi pronostici prima della chiusura e segui i PUMA matches più importanti.",
+    "specialPrediction": "Pronostico speciale",
+    "predictChampionTitle": "Pronostica il campione del Mondiale",
+    "predictChampionText": "Indovina e ottieni <strong>20 punti extra</strong> per la classifica.",
     "availableUntil": "Disponibile fino al {date}",
     "chooseChampion": "Scegli il campione",
-    "yourChampion": "Il tuo campione selezionato: {team}",
-    "championStillEditable": "Puoi ancora modificare la tua scelta prima della scadenza.",
-    "championClosedFinal": "La scadenza è chiusa e questa è la tua previsione finale.",
-    "predictionClosed": "Previsione chiusa",
+    "yourChampion": "Il tuo campione scelto: {team}",
+    "championStillEditable": "Puoi ancora modificare la tua selezione prima della chiusura.",
+    "championClosedFinal": "Il termine è chiuso e questo è il tuo pronostico finale.",
+    "predictionClosed": "Pronostico chiuso",
     "changeChampion": "Cambia campione",
-    "championClosedTitle": "Previsione del campione chiusa",
-    "championClosedText": "La scadenza per prevedere il campione è terminata.",
+    "championClosedTitle": "Pronostico campione chiuso",
+    "championClosedText": "Il termine per pronosticare il campione è già terminato.",
     "activeMatchday": "Giornata attiva",
     "upcomingMatches": "Prossime partite",
-    "pendingSummary": "Hai ancora {pending} previsioni da completare e {closingToday} partite che chiudono oggi.",
+    "pendingSummary": "Ti mancano {pending} pronostici da completare e {closingToday} partite chiudono oggi.",
     "pendingMatchesCount": "{count} partite in sospeso",
-    "active": "Attivo",
+    "active": "Attiva",
     "pendingGroupMatchesCount": "{count} partite in sospeso",
     "pending": "In sospeso",
-    "predict": "Prevedi",
+    "predict": "Pronostica",
     "fallbackUserName": "Utente",
     "pointsLabel": "{count, plural, one {# punto} other {# punti}}",
-    "pointsCompact": "{count, plural, one {# pt} other {# pt}}",
+    "pointsCompact": "{count, plural, one {# pt} other {# pts}}",
     "tied": "Pari",
     "onePoint": "1 punto",
     "battleBadge": "La tua sfida 🔥",
-    "battleHeadlineTied": "Pari con #{position}",
-    "battleHeadlineBehind": "Sei a {points} da #{position}",
-    "battleHeadlineLeader": "Sei in testa. Continua così.",
-    "battleDescriptionAbove": "Il tuo rivale più vicino sopra e chi ti segue da vicino.",
-    "battleDescriptionLeaderWithPressure": "Sei in testa, ma c’è pressione dietro.",
+    "battleHeadlineTied": "Pari con il n. {position}",
+    "battleHeadlineBehind": "Sei a {points} dal n. {position}",
+    "battleHeadlineLeader": "Sei in testa. Non mollare.",
+    "battleDescriptionAbove": "Il tuo rivale più vicino sopra di te e chi ti incalza sotto.",
+    "battleDescriptionLeaderWithPressure": "Sei davanti a tutti, ma hai ancora pressione da dietro.",
     "battleDescriptionNoNearby": "Al momento non hai riferimenti vicini in classifica.",
     "viewRanking": "Vedi classifica",
     "justAbove": "Subito sopra",
-    "gapPrefix": "",
+    "gapPrefix": "A",
     "battleTopCard": "Sei primo. Tutti ti inseguono.",
     "you": "Tu",
     "yourPoints": "I tuoi punti",
     "justBelow": "Subito sotto",
-    "aheadByPrefix": "Sei avanti di",
-    "battleBottomCard": "Sei attualmente in fondo alla classifica.",
-    "battleNeedPoints": "Ti servono {points} per superare il prossimo giocatore.",
-    "battleTieBreaker": "Sei pari con il giocatore sopra. Decide il tie-break.",
-    "battleAlsoTiedBelow": "Attenzione: sei pari anche con chi ti segue.",
-    "battleCushionBelow": "Hai un vantaggio di {points} sul giocatore sotto."
+    "aheadByPrefix": "Hai",
+    "battleBottomCard": "Chiudi la classifica per ora.",
+    "battleNeedPoints": "Ti mancano {points} per superare il prossimo.",
+    "battleTieBreaker": "Sei in pari con quello sopra. Decide lo spareggio.",
+    "battleAlsoTiedBelow": "E attenzione: sei anche in pari con chi arriva subito dietro.",
+    "battleCushionBelow": "Sotto di te hai un margine di {points}."
+  },
+  "matchCard": {
+    "datePending": "Data in sospeso",
+    "dateToBeConfirmed": "Data da confermare",
+    "predict": "Pronostica",
+    "viewDetail": "Vedi dettaglio"
+  },
+  "predictionSection": {
+    "labels": {
+      "home": "Casa",
+      "away": "Trasferta"
+    },
+    "outcome": {
+      "noPoints": "Nessun punto",
+      "exact": "+{points} punti · Esatto",
+      "tendency": "+{points} punti · Tendenza"
+    },
+    "loggedOut": {
+      "eyebrow": "Il tuo pronostico",
+      "title": "Accedi per partecipare",
+      "description": "Accedi con il tuo account per salvare il pronostico prima che inizi la partita."
+    },
+    "open": {
+      "eyebrow": "Il tuo pronostico",
+      "editTitle": "Modifica il tuo pronostico",
+      "newTitle": "Come finirà la partita?",
+      "description": "Puoi modificare il punteggio fino all’inizio della partita."
+    },
+    "closed": {
+      "eyebrow": "Pronostico chiuso",
+      "withPredictionTitle": "Non puoi più modificare il tuo pronostico",
+      "withoutPredictionTitle": "Non hai fatto il tuo pronostico in tempo",
+      "description": "I pronostici si sono chiusi all’inizio della partita.",
+      "savedMessage": "Il tuo pronostico è stato salvato e verrà valutato al termine della partita.",
+      "missedMessage": "Questa volta sei rimasto fuori. Quando verrà pubblicato il risultato finale, non otterrai punti per questa partita."
+    },
+    "finished": {
+      "eyebrow": "Partita terminata",
+      "title": "Risultato e punteggio",
+      "description": "Qui puoi confrontare il risultato reale con il tuo pronostico.",
+      "realResult": "Risultato reale",
+      "yourPrediction": "Il tuo pronostico",
+      "pointsEarned": "{points} pts",
+      "pumaBonus": "Bonus PUMA +{points}",
+      "noPredictionTitle": "Non hai registrato un pronostico per questa partita",
+      "noPredictionDescription": "Poiché non hai inviato il punteggio prima dell’inizio, qui non ottieni punti."
+    }
+  },
+  "predictionForm": {
+    "description": "Inserisci il punteggio finale stimato. Potrai modificarlo fino all’inizio della partita.",
+    "aria": {
+      "homeScore": "Punteggio squadra di casa",
+      "awayScore": "Punteggio squadra ospite"
+    },
+    "buttons": {
+      "saving": "Salvataggio in corso...",
+      "update": "Aggiorna pronostico",
+      "save": "Salva pronostico"
+    },
+    "success": {
+      "updated": "Pronostico aggiornato correttamente.",
+      "saved": "Pronostico salvato correttamente."
+    },
+    "errors": {
+      "locked": "I pronostici si sono chiusi all’inizio della partita.",
+      "missingScores": "Devi indicare entrambi i punteggi.",
+      "invalidScores": "I punteggi devono essere numeri interi validi maggiori o uguali a 0.",
+      "saveFailed": "Non è stato possibile salvare il pronostico: {message}"
+    }
+  },
+  "common": {
+    "closeMatchDetail": "Chiudi dettaglio partita"
+  },
+  "matchDetail": {
+    "pumaMatch": "PUMA Match",
+    "home": "Casa",
+    "away": "Trasferta",
+    "homeFlagAlt": "Bandiera di {team}",
+    "awayFlagAlt": "Bandiera di {team}",
+    "showtime": "Showtime",
+    "pumaImageAlt": "Immagine PUMA di {team}",
+    "datePending": "Data in sospeso",
+    "dateToBeConfirmed": "Data da confermare",
+    "status": {
+      "finished": "Terminata",
+      "live": "In corso",
+      "scheduled": "Prossimamente"
+    },
+    "breakdown": {
+      "exactScore": "Punteggio esatto",
+      "correctTrend": "Tendenza corretta",
+      "pumaBonus": "Bonus PUMA Match",
+      "noPoints": "Nessun punteggio",
+      "noPrediction": "Nessun pronostico inviato",
+      "title": "Come è stato calcolato",
+      "total": "Totale",
+      "totalPoints": "{points} pts"
+    },
+    "outcome": {
+      "exact": {
+        "badge": "Pronostico esatto",
+        "title": "✅ Pronostico esatto",
+        "subtitle": "Hai guadagnato {points} punti",
+        "description": "Hai indovinato il punteggio finale di questa partita."
+      },
+      "trend": {
+        "badge": "Tendenza corretta",
+        "title": "🟡 Hai indovinato il vincitore",
+        "subtitle": "Hai guadagnato {points} punto{points, plural, one {} other {i}}",
+        "description": "Non hai indovinato il punteggio esatto, ma hai previsto correttamente l’esito della partita."
+      },
+      "miss": {
+        "badge": "Nessun acierto",
+        "title": "❌ Pronostico sbagliato",
+        "subtitle": "Hai guadagnato 0 punti",
+        "description": "Il tuo pronostico non coincide con il risultato finale."
+      },
+      "noPrediction": {
+        "badge": "Senza pronostico",
+        "title": "⚪ Non hai inviato un pronostico",
+        "subtitle": "Non hai ottenuto punti in questa partita",
+        "description": "La partita è terminata e non risultava alcun pronostico registrato."
+      },
+      "pending": {
+        "badge": "In sospeso",
+        "title": "🕒 Partita in sospeso",
+        "subtitle": "Il punteggio sarà calcolato al termine",
+        "description": "Se hai già inviato il tuo pronostico, verrà bloccato all’inizio della partita."
+      }
+    },
+    "puma": {
+      "dualDefault": "Wherever you play, play For the Love of the Shirt ❤👕",
+      "singleDefault": "Scopri i contenuti PUMA in evidenza per {team}."
+    }
+  },
+  "quickPrediction": {
+    "saving": "Salvataggio in corso...",
+    "save": "Salva pronostico",
+    "homeGoals": "Gol squadra di casa",
+    "awayGoals": "Gol squadra ospite"
+  },
+  "champion": {
+    "eyebrow": "Pronostico speciale",
+    "title": "Pronostico campione",
+    "description": "Scegli la nazionale che pensi vincerà il Mondiale. Questo pronostico può essere fatto solo entro la data limite.",
+    "deadlineLabel": "Chiusura",
+    "deadlineTbd": "Data da confermare",
+    "closed": "Il termine è chiuso.",
+    "currentChampion": "Il tuo campione attuale: {team}",
+    "selectTitle": "Seleziona il tuo campione",
+    "currentSelectionLabel": "Selezione attuale:",
+    "saveButton": "Salva campione",
+    "updateButton": "Aggiorna campione",
+    "saving": "Salvataggio in corso...",
+    "flagAlt": "Bandiera di {team}"
+  },
+  "myPredictions": {
+    "title": "I miei pronostici",
+    "eyebrow": "Monitoraggio personale",
+    "subtitle": "Controlla cosa ti manca, cosa è ancora in sospeso e come stanno andando i tuoi punti.",
+    "loadError": "Errore nel caricamento dei tuoi pronostici:",
+    "sections": {
+      "pending": "Da completare",
+      "closed": "In attesa del risultato",
+      "resolved": "Risolti"
+    },
+    "chips": {
+      "pending": "Modificabile",
+      "closed": "Chiusa",
+      "resolved": "Risolta"
+    },
+    "resolution": {
+      "pending": "In attesa del risultato",
+      "exact": "Punteggio esatto",
+      "exactWithPuma": "Punteggio esatto + bonus PUMA",
+      "tendency": "Tendenza corretta",
+      "tendencyWithPuma": "Tendenza corretta + bonus PUMA",
+      "miss": "Nessun acierto"
+    },
+    "stats": {
+      "total": "Totale",
+      "totalHint": "Pronostici registrati",
+      "editable": "Modificabili",
+      "editableHint": "Puoi ancora cambiarli",
+      "inPlay": "In gioco",
+      "inPlayHint": "In attesa del risultato",
+      "points": "Punti",
+      "resolvedHint": "{count} partite risolte"
+    },
+    "sectionMatchCount": "{count} partite",
+    "card": {
+      "yourPrediction": "Il tuo pronostico",
+      "realResult": "Risultato reale",
+      "status": "Stato",
+      "viewDetail": "Vedi dettaglio"
+    },
+    "empty": {
+      "title": "Non hai ancora fatto pronostici",
+      "subtitle": "Vai alla lista delle partite e inizia a giocare.",
+      "cta": "Vai alle partite"
+    },
+    "detail": {
+      "title": "Dettaglio pronostico",
+      "back": "Indietro",
+      "match": "Partita",
+      "matchResult": "Risultato della partita",
+      "pendingToPlay": "Da giocare",
+      "yourPrediction": "Il tuo pronostico",
+      "points": "Punti",
+      "outcomes": {
+        "pending": "In sospeso",
+        "exact": "Punteggio esatto",
+        "tendency": "Hai indovinato il segno",
+        "miss": "Pronostico sbagliato"
+      }
+    }
+  },
+  "ranking": {
+    "title": "Classifica",
+    "intro": "La tua posizione attuale e la classifica completa del torneo.",
+    "pumaMatchBonus": "I PUMA Match assegnano 1 punto extra per ogni pronostico corretto.",
+    "comparisonWith": "Confronto rispetto a {reference}",
+    "loadErrorMessage": "Non è stato possibile caricare la classifica. Controlla la vista {viewName}.",
+    "loading": "Caricamento classifica...",
+    "yourSituation": "La tua situazione",
+    "youAre": "Sei",
+    "outOf": "di {total}",
+    "yourPoints": "I tuoi punti",
+    "insidePrizePositions": "In questo momento sei in zona premi.",
+    "aheadOfParticipants": "Sei davanti al {percent}% dei partecipanti.",
+    "podium": "Podio",
+    "inside": "Dentro",
+    "podiumHintInside": "Difendi il tuo posto sul podio",
+    "podiumHintOutside": "Quanto ti manca per entrare sul podio",
+    "leader": "Leader",
+    "leaderIsYou": "Sei tu",
+    "distanceToLeader": "Distanza dalla leadership",
+    "exactHits": "Esatti",
+    "exactHitsLower": "esatti",
+    "exactHitsHint": "Punteggi centrati",
+    "tendencyHits": "Tendenze",
+    "tendencyHitsLower": "tendenze",
+    "tendencyHitsHint": "Vincitore o pareggio indovinato",
+    "pumaChallenge": "PUMA Challenge",
+    "pumaChallengeText": "I migliori in classifica potranno vincere premi finali.",
+    "notRankedTitle": "Non compari ancora in classifica",
+    "notRankedText": "Non appena registrerai i tuoi primi pronostici validi, vedrai qui la tua posizione e le tue statistiche.",
+    "yourSurroundings": "Attorno a te",
+    "yourSurroundingsText": "La tua posizione con i posti più vicini sopra e sotto.",
+    "yourBattleNow": "La tua battaglia ora",
+    "whatSeparatesYou": "Ciò che ti separa dalla posizione successiva",
+    "battleReference": "Il tuo riferimento immediato sopra e sotto in classifica.",
+    "justAbove": "Subito sopra",
+    "justBelow": "Subito sotto",
+    "you": "Tu",
+    "yourPointsShort": "I tuoi punti",
+    "youAreFirst": "Sei primo. Tutti ti inseguono.",
+    "youCloseRanking": "Chiudi la classifica per ora.",
+    "youAreTiedAbove": "Sei in pari con quello sopra. Conta lo spareggio.",
+    "pointsToNextPlace": "Sei a {points} dalla posizione successiva.",
+    "fullRankingTitle": "Vedi classifica completa",
+    "fullRankingText": "Ordinata per punti, esatti e tendenze.",
+    "emptyRanking": "Non ci sono ancora dati sufficienti per mostrare la classifica.",
+    "pointsLabel": "punti",
+    "pt": "{count} pt",
+    "pts": "{count} pts",
+    "pointCount_one": "{count} punto",
+    "pointCount_other": "{count} punti",
+    "userFallback": "Utente",
+    "top3": "Top 3",
+    "champion": "Campione",
+    "lastCutoff": "l’ultimo taglio",
+    "hintLeader": "Leader",
+    "hintLeadingBy_one": "Guida con {count} pt",
+    "hintLeadingBy_other": "Guida con {count} pts",
+    "hintTiedAbove": "Pari con quello sopra",
+    "hintToPodium": "A {points} dal podio",
+    "hintToLeader": "A {points} dal leader",
+    "hintToCatchUp": "A {points} per raggiungerlo",
+    "movementNew": "Nuovo in classifica",
+    "movementNoPreviousComparison": "Nessun confronto precedente rispetto a {reference}",
+    "movementStay": "→ Resta uguale",
+    "movementUp_one": "↑ Sale di {count} posizione",
+    "movementUp_other": "↑ Sale di {count} posizioni",
+    "movementDown_one": "↓ Scende di {count} posizione",
+    "movementDown_other": "↓ Scende di {count} posizioni",
+    "movementSamePoints": "Stessi punti rispetto a {reference}",
+    "movementMorePoints_one": "{count} punto in più rispetto a {reference}",
+    "movementMorePoints_other": "{count} punti in più rispetto a {reference}",
+    "movementFewerPoints_one": "{count} punto in meno rispetto a {reference}",
+    "movementFewerPoints_other": "{count} punti in meno rispetto a {reference}",
+    "summaryEnteredRanking": "Sei entrato in classifica da {reference}.",
+    "summaryPositionUnchanged": "Mantieni la tua posizione da {reference}.",
+    "summaryMovedUp_one": "Sei salito di {count} posizione da {reference}.",
+    "summaryMovedUp_other": "Sei salito di {count} posizioni da {reference}.",
+    "summaryMovedDown_one": "Sei sceso di {count} posizione da {reference}.",
+    "summaryMovedDown_other": "Sei sceso di {count} posizioni da {reference}.",
+    "summaryPointsNoChange": "Nessuna variazione di punti rispetto a {reference}.",
+    "summaryPointsMore_one": "Hai {count} punto in più rispetto a {reference}.",
+    "summaryPointsMore_other": "Hai {count} punti in più rispetto a {reference}.",
+    "summaryPointsLess_one": "Hai {count} punto in meno rispetto a {reference}.",
+    "summaryPointsLess_other": "Hai {count} punti in meno rispetto a {reference}.",
+    "gapTied": "Pari",
+    "gap_one": "{count} punto",
+    "gap_other": "{count} punti",
+    "gapAbove": "A {gap}",
+    "gapBelow": "Hai {gap}",
+    "momentumHotStreak": "🔥 In grande forma",
+    "momentumPressure": "⚡ Massima pressione",
+    "momentumHolding": "🛡️ Resiste"
   }
 }

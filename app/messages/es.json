@@ -71,7 +71,8 @@
     "signedIn": "Sesión iniciada",
     "loading": "Cargando...",
     "logout": "Cerrar sesión",
-    "languageSoon": "Idioma"
+    "languag": "Idioma",
+    "languageSoon": "Idioma próximamente"
   },
  
   "home": {

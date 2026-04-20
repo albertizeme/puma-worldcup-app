@@ -70,7 +70,8 @@
     "signedIn": "Signed in",
     "loading": "Loading...",
     "logout": "Sign out",
-    "languageSoon": "Language"
+    "language": "Language",
+    "languageSoon": "Language coming soon"
   },
   
   "home": {

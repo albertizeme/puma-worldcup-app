@@ -1,0 +1,155 @@
+{
+  "login": {
+    "title": "Aceder à plataforma",
+    "subtitle": "Acede à experiência interna para colaboradores, participa e acompanha a competição.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "teunome@puma.com",
+    "passwordLabel": "Palavra-passe",
+    "passwordPlaceholder": "Introduz a tua palavra-passe",
+    "submit": "Iniciar sessão",
+    "submitLoading": "A iniciar sessão...",
+    "invalidCredentials": "Credenciais inválidas.",
+    "helpText": "Se esqueceste a tua palavra-passe, contacta o IT para te atribuirmos uma temporária.",
+    "loading": "A carregar..."
+  },
+
+  "changePassword": {
+    "checkingSession": "A validar sessão...",
+    "security": "Segurança",
+    "title": "Alterar palavra-passe",
+    "subtitle": "Tens de alterar a tua palavra-passe temporária antes de continuar.",
+    "newPasswordLabel": "Nova palavra-passe",
+    "newPasswordPlaceholder": "Introduz a nova palavra-passe",
+    "confirmPasswordLabel": "Confirmar nova palavra-passe",
+    "confirmPasswordPlaceholder": "Repete a nova palavra-passe",
+    "submit": "Guardar nova palavra-passe",
+    "submitLoading": "A guardar...",
+    "success": "Palavra-passe atualizada com sucesso.",
+    "errors": {
+      "passwordTooShort": "A nova palavra-passe deve ter pelo menos 8 caracteres.",
+      "passwordMismatch": "As palavras-passe não coincidem.",
+      "sessionValidationFailed": "Não foi possível validar a sessão.",
+      "unexpected": "Ocorreu um erro inesperado."
+    }
+  },
+
+  "updatePassword": {
+    "loading": "A carregar...",
+    "security": "Segurança",
+    "title": "Atualizar palavra-passe",
+    "subtitle": "A tua conta deve alterar a palavra-passe antes de continuar.",
+    "userLabel": "Utilizador: ",
+    "back": "Voltar",
+    "mustChangeNotice": "Tens de definir uma nova palavra-passe para continuar a usar a app.",
+    "newPasswordLabel": "Nova palavra-passe",
+    "newPasswordPlaceholder": "Introduz a nova palavra-passe",
+    "confirmPasswordLabel": "Confirmar palavra-passe",
+    "confirmPasswordPlaceholder": "Repete a nova palavra-passe",
+    "submit": "Guardar nova palavra-passe",
+    "submitLoading": "A atualizar...",
+    "success": "Palavra-passe atualizada com sucesso.",
+    "errors": {
+      "missingFields": "Tens de preencher ambos os campos.",
+      "passwordMismatch": "As palavras-passe não coincidem.",
+      "passwordTooShort": "A nova palavra-passe deve ter pelo menos 8 caracteres.",
+      "updatePasswordFailed": "Não foi possível atualizar a palavra-passe.",
+      "updateProfileFailed": "Não foi possível atualizar o perfil.",
+      "unexpected": "Erro inesperado ao atualizar a palavra-passe."
+    }
+  },
+
+  "navigation": {
+    "openMenu": "Abrir menu",
+    "menu": "Menu",
+    "upcomingMatches": "Próximos jogos",
+    "ranking": "Classificação",
+    "myPredictions": "As minhas previsões",
+    "admin": "Admin",
+    "login": "Iniciar sessão",
+    "openUserMenu": "Abrir menu de utilizador",
+    "signedIn": "Sessão iniciada",
+    "loading": "A carregar...",
+    "logout": "Terminar sessão",
+    "language": "Idioma",
+    "languageSoon": "Idioma"
+  },
+
+  "home": {
+    "datePending": "Data pendente",
+    "closed": "Fechado",
+    "closingSoon": "A fechar em breve",
+    "editable": "Editável",
+    "closesInMinutes": "Fecha em {count} min",
+    "closesInHours": "Fecha em {count} h",
+    "closesInDays": "Fecha em {count} d",
+    "closesInDaysHours": "Fecha em {days} d {hours} h",
+    "matchdayLabel": "Jornada {value}",
+    "groupLabel": "Grupo {value}",
+    "loadError": "Erro ao carregar dados:",
+    "heroSubtitle": "Completa as tuas previsões antes do prazo e acompanha os jogos mais importantes da PUMA.",
+    "specialPrediction": "Previsão especial",
+    "predictChampionTitle": "Prevê o campeão do Mundial",
+    "predictChampionText": "Acerta e ganha <strong>20 pontos extra</strong> na classificação.",
+    "availableUntil": "Disponível até {date}",
+    "chooseChampion": "Escolher campeão",
+    "yourChampion": "O teu campeão selecionado: {team}",
+    "championStillEditable": "Ainda podes alterar a tua escolha antes do prazo.",
+    "championClosedFinal": "O prazo terminou e esta é a tua previsão final.",
+    "predictionClosed": "Previsão fechada",
+    "changeChampion": "Alterar campeão",
+    "championClosedTitle": "Previsão do campeão encerrada",
+    "championClosedText": "O prazo para prever o campeão terminou.",
+    "activeMatchday": "Jornada ativa",
+    "upcomingMatches": "Próximos jogos",
+    "pendingSummary": "Ainda tens {pending} previsões por completar e {closingToday} jogos que fecham hoje.",
+    "pendingMatchesCount": "{count} jogos pendentes",
+    "active": "Ativo",
+    "pendingGroupMatchesCount": "{count} jogos pendentes",
+    "pending": "Pendente",
+    "predict": "Prever",
+    "fallbackUserName": "Utilizador",
+    "pointsLabel": "{count, plural, one {# ponto} other {# pontos}}",
+    "pointsCompact": "{count, plural, one {# pt} other {# pts}}",
+    "tied": "Empatado",
+    "onePoint": "1 ponto",
+    "battleBadge": "A tua batalha 🔥",
+    "battleHeadlineTied": "Empatado com #{position}",
+    "battleHeadlineBehind": "Estás {points} atrás de #{position}",
+    "battleHeadlineLeader": "Estás na liderança. Continua assim.",
+    "battleDescriptionAbove": "O teu rival mais próximo acima e quem está logo atrás de ti.",
+    "battleDescriptionLeaderWithPressure": "Estás no topo, mas ainda há pressão atrás.",
+    "battleDescriptionNoNearby": "De momento não tens referências próximas na classificação.",
+    "viewRanking": "Ver classificação",
+    "justAbove": "Logo acima",
+    "gapPrefix": "",
+    "battleTopCard": "Estás em primeiro. Todos te perseguem.",
+    "you": "Tu",
+    "yourPoints": "Os teus pontos",
+    "justBelow": "Logo abaixo",
+    "aheadByPrefix": "Estás à frente por",
+    "battleBottomCard": "Estás atualmente no fundo da classificação.",
+    "battleNeedPoints": "Precisas de {points} para ultrapassar o próximo jogador.",
+    "battleTieBreaker": "Estás empatado com o jogador acima. O desempate decide.",
+    "battleAlsoTiedBelow": "E atenção: também estás empatado com quem está logo atrás.",
+    "battleCushionBelow": "Tens uma vantagem de {points} sobre o jogador abaixo."
+  },
+
+  "matchCard": {
+    "datePending": "Data pendente",
+    "dateToBeConfirmed": "Data por confirmar",
+    "predict": "Prever",
+    "viewDetail": "Ver detalhe"
+  },
+
+  "predictionSection": {
+    "labels": {
+      "home": "Casa",
+      "away": "Fora"
+    },
+    "outcome": {
+      "noPoints": "Sem pontos",
+      "exact": "+{points} pontos · Resultado exato",
+      "tendency": "+{points} pontos · Tendência"
+    }
+  }
+}

@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PUMA World Cup 2026 Predictor",
-    short_name: "PUMA Predictor",
-    description: "Predice resultados, suma puntos y compite en el ranking del Mundial.",
+    name: "PUMA World Cup Royale",
+    short_name: "PUMA WCR",
+    description: "Predict results, score points, and compete in the World Cup rankings.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

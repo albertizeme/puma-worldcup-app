@@ -49,7 +49,7 @@ export default function MatchHeaderCard({
           ) : null}
 
           {stage ? <span>· {stage}</span> : null}
-          <span>· {formatMatchDate(matchDatetime, locale)}</span>
+          <span>· {formatMatchDate(matchDatetime, locale, t)}</span>
         </div>
       </div>
 

@@ -54,7 +54,7 @@ export default async function QuickMatchPage({ params }: Props) {
       </div>
 
       <MatchHeaderCard
-        matchStatusLabel={getStatusLabel(matchStatus)}
+        matchStatusLabel={getStatusLabel(matchStatus, t)}
         isPumaMatch={isPumaMatch}
         stage={match.stage}
         matchDatetime={match.match_datetime}

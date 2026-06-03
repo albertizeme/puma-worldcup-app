@@ -14,9 +14,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Barcelona/Madrid está en UTC+2 en abril de 2026
+// España peninsular durante Mundial 2026: CEST / UTC+2
 const MADRID_OFFSET = "+02:00";
-const START_DATE = "2026-04-10";
 
 type MatchSeed = {
   match_number: number;
@@ -25,15 +24,10 @@ type MatchSeed = {
   away_team: string;
   home_flag: string | null;
   away_flag: string | null;
-  source_kickoff_time: string;
+  source_match_date: string; // YYYY-MM-DD en fecha española
+  source_kickoff_time: string; // HH:mm en hora española
   group_round?: number;
 };
-
-function addDaysToDateString(baseDate: string, daysToAdd: number) {
-  const [year, month, day] = baseDate.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day + daysToAdd));
-  return date.toISOString().slice(0, 10);
-}
 
 function isPlaceholderTeam(name: string | null | undefined) {
   if (!name) return true;
@@ -41,6 +35,7 @@ function isPlaceholderTeam(name: string | null | undefined) {
   const value = name.trim();
 
   if (/^[12][A-L]$/i.test(value)) return true;
+  if (/^3[A-L]+$/i.test(value)) return true;
   if (/^Winner\s+\d+$/i.test(value)) return true;
   if (/^Loser\s+\d+$/i.test(value)) return true;
   if (/^Bronze/i.test(value)) return true;
@@ -63,65 +58,37 @@ function normalizeStage(stage: string) {
     case "Final":
       return "Final";
     default:
-      return stage; // Group A, Group B...
+      return stage;
   }
 }
 
-function getDayOffset(match: MatchSeed): number {
-  if (match.stage.startsWith("Group ")) {
-    if (match.group_round === 1) return 0;
-    if (match.group_round === 2) return 1;
-    if (match.group_round === 3) return 2;
-    throw new Error(`group_round inválido en partido ${match.match_number}`);
+function validateMatch(match: MatchSeed) {
+  if (!match.match_number) {
+    throw new Error("Hay un partido sin match_number");
   }
 
-  switch (match.stage) {
-    case "Round of 32":
-      return 3;
-    case "Round of 16":
-      return 4;
-    case "Quarter-finals":
-      return 5;
-    case "Semi-finals":
-      return 6;
-    case "Third-place play-off":
-      return 7;
-    case "Final":
-      return 8;
-    default:
-      throw new Error(`stage no soportado: ${match.stage}`);
-  }
-}
-
-function getAssignedKickoffTime(match: MatchSeed, indexWithinBlock: number) {
-  if (match.stage.startsWith("Group ")) {
-    const slots = ["12:00", "15:00", "18:00", "21:00"];
-    return slots[indexWithinBlock % slots.length];
+  if (!match.source_match_date) {
+    throw new Error(`Falta source_match_date en partido ${match.match_number}`);
   }
 
-  switch (match.stage) {
-    case "Round of 32": {
-      const slots = ["12:00", "15:00", "18:00", "21:00"];
-      return slots[indexWithinBlock % slots.length];
-    }
-    case "Round of 16": {
-      const slots = ["12:00", "15:00", "18:00", "21:00"];
-      return slots[indexWithinBlock % slots.length];
-    }
-    case "Quarter-finals": {
-      const slots = ["12:00", "15:00", "18:00", "21:00"];
-      return slots[indexWithinBlock % slots.length];
-    }
-    case "Semi-finals": {
-      const slots = ["18:00", "21:00"];
-      return slots[indexWithinBlock % slots.length];
-    }
-    case "Third-place play-off":
-      return "18:00";
-    case "Final":
-      return "21:00";
-    default:
-      return "18:00";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(match.source_match_date)) {
+    throw new Error(
+      `source_match_date inválido en partido ${match.match_number}: ${match.source_match_date}`
+    );
+  }
+
+  if (!match.source_kickoff_time) {
+    throw new Error(`Falta source_kickoff_time en partido ${match.match_number}`);
+  }
+
+  if (!/^\d{2}:\d{2}$/.test(match.source_kickoff_time)) {
+    throw new Error(
+      `source_kickoff_time inválido en partido ${match.match_number}: ${match.source_kickoff_time}`
+    );
+  }
+
+  if (!match.home_team || !match.away_team) {
+    throw new Error(`Faltan equipos en partido ${match.match_number}`);
   }
 }
 
@@ -130,8 +97,27 @@ async function main() {
     process.cwd(),
     "data/worldcup-2026-matches-official.json"
   );
+
   const raw = fs.readFileSync(dataPath, "utf-8");
   const matches = JSON.parse(raw) as MatchSeed[];
+
+  if (!Array.isArray(matches)) {
+    throw new Error("El JSON debe ser un array de partidos");
+  }
+
+  if (matches.length !== 104) {
+    throw new Error(`El JSON debería tener 104 partidos, pero tiene ${matches.length}`);
+  }
+
+  const duplicatedMatchNumbers = matches
+    .map((m) => m.match_number)
+    .filter((number, index, arr) => arr.indexOf(number) !== index);
+
+  if (duplicatedMatchNumbers.length > 0) {
+    throw new Error(
+      `Hay match_number duplicados: ${[...new Set(duplicatedMatchNumbers)].join(", ")}`
+    );
+  }
 
   const { data: teams, error: teamsError } = await supabase
     .from("teams")
@@ -143,27 +129,12 @@ async function main() {
     (teams ?? []).filter((t) => t.is_puma_team).map((t) => t.name)
   );
 
-  const groupedBlocks = new Map<string, MatchSeed[]>();
+  const rows = matches
+    .sort((a, b) => a.match_number - b.match_number)
+    .map((match) => {
+      validateMatch(match);
 
-  for (const match of matches) {
-    const blockKey = match.stage.startsWith("Group ")
-      ? `${match.stage}__round_${match.group_round}`
-      : match.stage;
-
-    if (!groupedBlocks.has(blockKey)) {
-      groupedBlocks.set(blockKey, []);
-    }
-
-    groupedBlocks.get(blockKey)!.push(match);
-  }
-
-  const rows: Array<Record<string, unknown>> = [];
-
-  for (const blockMatches of groupedBlocks.values()) {
-    blockMatches.forEach((match, indexWithinBlock) => {
-      const fakeDate = addDaysToDateString(START_DATE, getDayOffset(match));
-      const assignedTime = getAssignedKickoffTime(match, indexWithinBlock);
-      const iso = `${fakeDate}T${assignedTime}:00${MADRID_OFFSET}`;
+      const iso = `${match.source_match_date}T${match.source_kickoff_time}:00${MADRID_OFFSET}`;
 
       const isPumaMatch =
         pumaTeams.has(match.home_team) || pumaTeams.has(match.away_team);
@@ -172,14 +143,14 @@ async function main() {
         !isPlaceholderTeam(match.home_team) &&
         !isPlaceholderTeam(match.away_team);
 
-      rows.push({
+      return {
         stage: normalizeStage(match.stage),
         match_number: match.match_number,
         match_datetime: iso,
         home_team: match.home_team,
         away_team: match.away_team,
         is_puma_match: isPumaMatch,
-        match_time: assignedTime,
+        match_time: match.source_kickoff_time,
         home_flag: match.home_flag,
         away_flag: match.away_flag,
         home_score: null,
@@ -187,16 +158,21 @@ async function main() {
         status: "upcoming",
         is_prediction_open: hasRealTeams,
         is_visible: hasRealTeams,
-      });
+      };
     });
-  }
 
   const { error } = await supabase.from("matches").insert(rows);
+
   if (error) throw error;
 
   console.log(`✅ Partidos cargados: ${rows.length}`);
   console.log(
-    `📅 Mundial fake: ${START_DATE} → ${addDaysToDateString(START_DATE, 8)}`
+    `📅 Primer partido: ${rows[0].match_number} - ${rows[0].match_datetime}`
+  );
+  console.log(
+    `🏆 Final: ${rows[rows.length - 1].match_number} - ${
+      rows[rows.length - 1].match_datetime
+    }`
   );
 }
 

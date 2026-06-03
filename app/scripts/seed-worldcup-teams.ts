@@ -32,6 +32,7 @@ async function main() {
 
   const rows = teams.map((team) => ({
     name: team.name,
+    flag_code: team.flag_code,
     is_puma_team: team.is_puma_team ?? false,
     sponsor_brand: team.sponsor_brand ?? (team.is_puma_team ? "PUMA" : null),
     sponsor_campaign_image: team.sponsor_campaign_image ?? null,

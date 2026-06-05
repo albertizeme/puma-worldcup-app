@@ -110,7 +110,7 @@ function buildMatchesRedirectUrl(params: {
 
   const query = searchParams.toString();
   const base = withLocale(params.locale, "/admin/matches");
-  return query ? `/admin/matches?${query}` : "/admin/matches";
+  return query ? `${base}?${query}` : base;
 }
 
 function redirectMatchError(locale: string, code: string, filterStatus?: string | null): never {
@@ -185,7 +185,7 @@ export async function createMatchAction(formData: FormData) {
 
   if (error) {
     console.error("[createMatchAction]", error);
-    redirectMatchError("match-create", filterStatus);
+    redirectMatchError(locale, "match-create", filterStatus);
   }
 
   revalidateAdminSurfaces(locale);

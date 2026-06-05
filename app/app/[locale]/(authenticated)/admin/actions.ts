@@ -92,6 +92,7 @@ function buildMatchesRedirectUrl(params: {
   filterStatus?: string | null;
   success?: string;
   error?: string;
+  detail?: string | null;
 }) {
   const searchParams = new URLSearchParams();
 
@@ -107,13 +108,22 @@ function buildMatchesRedirectUrl(params: {
     searchParams.set("error", params.error);
   }
 
+  if (params.detail) {
+    searchParams.set("detail", params.detail.slice(0, 500));
+  }
+
   const query = searchParams.toString();
   const base = withLocale(params.locale, "/admin/matches");
   return query ? `${base}?${query}` : base;
 }
 
-function redirectMatchError(locale: string, code: string, filterStatus?: string | null): never {
-  redirect(buildMatchesRedirectUrl({ locale, filterStatus, error: code }));
+function redirectMatchError(
+  locale: string,
+  code: string,
+  filterStatus?: string | null,
+  detail?: string | null,
+): never {
+  redirect(buildMatchesRedirectUrl({ locale, filterStatus, error: code, detail }));
 }
 
 function redirectMatchSuccess(locale: string, code: string, filterStatus?: string | null): never {
@@ -134,6 +144,37 @@ function redirectAdminError(locale: string, code: string): never {
 
 function redirectAdminSuccess(locale: string, code: string): never {
   redirect(withLocale(locale, `/admin?success=${code}`));
+}
+
+function getErrorDetail(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return error instanceof Error ? error.message : null;
+  }
+
+  const source = error as {
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+    hint?: unknown;
+  };
+
+  return [
+    typeof source.code === "string" ? `code: ${source.code}` : null,
+    typeof source.message === "string" ? source.message : null,
+    typeof source.details === "string" ? source.details : null,
+    typeof source.hint === "string" ? `hint: ${source.hint}` : null,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
+function isNextRedirectError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT;");
 }
 
 export async function createMatchAction(formData: FormData) {
@@ -266,13 +307,17 @@ export async function updateMatchAction(formData: FormData) {
 
     if (error) {
       console.error("[updateMatchAction]", error);
-      redirectMatchError(locale, "match-update", filterStatus);
+      redirectMatchError(locale, "match-update", filterStatus, getErrorDetail(error));
     }
 
     revalidateAdminSurfaces(locale);
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
+
     console.error("[updateMatchAction][unexpected]", error);
-    redirectMatchError(locale, "match-update", filterStatus);
+    redirectMatchError(locale, "match-update", filterStatus, getErrorDetail(error));
   }
 
   redirectMatchSuccess(locale, "match-updated", filterStatus);

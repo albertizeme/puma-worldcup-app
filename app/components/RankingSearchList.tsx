@@ -57,7 +57,7 @@ function getLocaleFromPathname(pathname: string) {
 }
 
 function getFullRankingDetails() {
-  const details = Array.from(document.querySelectorAll("main details"));
+  const details = Array.from(document.querySelectorAll<HTMLDetailsElement>("main details"));
   return details[details.length - 1] ?? null;
 }
 

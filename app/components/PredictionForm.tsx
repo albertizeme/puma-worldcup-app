@@ -46,9 +46,9 @@ export default function PredictionForm({
     ? new Date(matchDatetime).getTime() - PREDICTION_LOCK_BUFFER_MS
     : null;
 
-  const isLocked = matchDatetime
-    ? new Date(matchDatetime).getTime() <= Date.now()
-    : false;
+  const isLocked = predictionDeadline !== null
+  ? Date.now() >= predictionDeadline
+  : false;
 
   const isEditing =
     initialHomeScore !== null || initialAwayScore !== null;

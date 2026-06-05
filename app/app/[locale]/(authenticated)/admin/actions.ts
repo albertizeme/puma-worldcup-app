@@ -261,7 +261,7 @@ export async function updateMatchAction(formData: FormData) {
     away_score: awayScore,
   };
 
-  if (matchStatus !== "finished") {
+  if (matchStatus === "upcoming") {
     payload.home_score = null;
     payload.away_score = null;
   }

@@ -1,6 +1,6 @@
 import AppTopBar from "@/components/AppTopBar";
+import RankingSearchList from "@/components/RankingSearchList";
 import { requireAuthenticatedUser } from "@/lib/auth-guard";
-import RankingSearchList from "./ranking/RankingSearchList";
 
 export default async function AppLayout({
   children,

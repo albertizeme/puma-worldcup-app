@@ -145,18 +145,18 @@ export default async function MatchDetailPage({ params }: Props) {
         matchStatus={matchStatus}
       />
 
+      {matchStatus === "finished" ? (
+        <MatchPointsBreakdownCard
+          breakdown={breakdown}
+          totalPoints={totalPoints}
+        />
+      ) : null}
+
       {communityPredictionStats ? (
         <CommunityPredictionStatsCard
           stats={communityPredictionStats}
           homeTeam={match.home_team}
           awayTeam={match.away_team}
-        />
-      ) : null}
-
-      {matchStatus === "finished" ? (
-        <MatchPointsBreakdownCard
-          breakdown={breakdown}
-          totalPoints={totalPoints}
         />
       ) : null}
     </main>

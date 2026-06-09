@@ -6,6 +6,9 @@ import { useEffect } from "react";
 const regionalIndicatorStart = 0x1f1e6;
 const regionalIndicatorEnd = 0x1f1ff;
 const regionalFlagPattern = /([\u{1f1e6}-\u{1f1ff}]{2})/u;
+const showTextNodes = 4;
+const filterAccept = 1;
+const filterReject = 2;
 
 function flagToCountryCode(flag: string) {
   const codePoints = Array.from(flag).map((character) =>
@@ -32,19 +35,21 @@ function flagToCountryCode(flag: string) {
     .toLowerCase();
 }
 
-function createFlagImage(flag: string) {
+function createFlagImageSpan(flag: string) {
   const countryCode = flagToCountryCode(flag);
 
   if (!countryCode) return document.createTextNode(flag);
 
-  const image = document.createElement("img");
-  image.src = `https://flagcdn.com/w40/${countryCode}.png`;
-  image.srcset = `https://flagcdn.com/w80/${countryCode}.png 2x`;
-  image.alt = countryCode.toUpperCase();
-  image.loading = "lazy";
-  image.className = "mx-1 inline-block h-4 w-6 rounded-sm object-cover align-[-2px] shadow-sm";
+  const span = document.createElement("span");
+  span.setAttribute("role", "img");
+  span.setAttribute("aria-label", countryCode.toUpperCase());
+  span.className = "mx-1 inline-block h-4 w-6 rounded-sm align-[-2px] shadow-sm";
+  span.style.backgroundImage = `url(https://flagcdn.com/w40/${countryCode}.png)`;
+  span.style.backgroundPosition = "center";
+  span.style.backgroundRepeat = "no-repeat";
+  span.style.backgroundSize = "cover";
 
-  return image;
+  return span;
 }
 
 function replaceFlagTextNode(textNode: Text) {
@@ -67,7 +72,7 @@ function replaceFlagTextNode(textNode: Text) {
     const before = remainingText.slice(0, nextMatch.index);
     if (before) fragment.append(document.createTextNode(before));
 
-    fragment.append(createFlagImage(nextMatch[0]));
+    fragment.append(createFlagImageSpan(nextMatch[0]));
     remainingText = remainingText.slice(nextMatch.index + nextMatch[0].length);
   }
 
@@ -83,21 +88,22 @@ export default function AdminCountryFlagImages() {
     const root = document.querySelector("main");
     if (!root) return;
 
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    const walker = document.createTreeWalker(root, showTextNodes, {
       acceptNode(node) {
-        const parentElement = node.parentElement;
-        const text = node.nodeValue ?? "";
+        const textNode = node as Text;
+        const parentElement = textNode.parentElement;
+        const text = textNode.nodeValue ?? "";
 
-        if (!regionalFlagPattern.test(text)) return NodeFilter.FILTER_REJECT;
-        if (!parentElement) return NodeFilter.FILTER_REJECT;
+        if (!regionalFlagPattern.test(text)) return filterReject;
+        if (!parentElement) return filterReject;
         if (parentElement.closest("script, style, select, option")) {
-          return NodeFilter.FILTER_REJECT;
+          return filterReject;
         }
         if (parentElement.closest("[data-admin-country-flag-enhanced]")) {
-          return NodeFilter.FILTER_REJECT;
+          return filterReject;
         }
 
-        return NodeFilter.FILTER_ACCEPT;
+        return filterAccept;
       },
     });
 

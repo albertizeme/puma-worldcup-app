@@ -30,6 +30,50 @@ type PredictionScoreRow = {
 type Tone = "default" | "success" | "warning" | "info";
 type BarColor = "slate" | "emerald" | "amber" | "sky" | "violet";
 
+type CountryRow = {
+  country: string;
+  flag: string;
+  users: number;
+  activeUsers: number;
+  usersWithPredictions: number;
+  predictions: number;
+  points: number;
+  pointsPerUser: number;
+  pointsPerActiveUser: number;
+  pointsPerParticipant: number;
+  topPredictionUser?: {
+    id: string;
+    displayName: string;
+    predictionsCount: number;
+  };
+  topPointsUser?: PredictionScoreRow;
+};
+
+const countryCodeByName: Record<string, string> = {
+  argentina: "AR",
+  brasil: "BR",
+  brazil: "BR",
+  chile: "CL",
+  colombia: "CO",
+  espana: "ES",
+  españa: "ES",
+  spain: "ES",
+  france: "FR",
+  francia: "FR",
+  germany: "DE",
+  alemania: "DE",
+  italy: "IT",
+  italia: "IT",
+  mexico: "MX",
+  portugal: "PT",
+  uk: "GB",
+  unitedkingdom: "GB",
+  unitedkingdomofgreatbritainandnorthernireland: "GB",
+  unitedstates: "US",
+  unitedstatesofamerica: "US",
+  usa: "US",
+};
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat("es-ES").format(value);
 }
@@ -41,9 +85,43 @@ function formatDecimal(value: number) {
   }).format(value);
 }
 
+function normalizeCountryKey(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z]/g, "");
+}
+
 function getCountryLabel(country: string | null) {
   const value = country?.trim();
   return value || "Sin pais";
+}
+
+function getCountryCode(country: string) {
+  const trimmed = country.trim();
+
+  if (/^[a-z]{2}$/i.test(trimmed)) {
+    return trimmed.toUpperCase();
+  }
+
+  return countryCodeByName[normalizeCountryKey(trimmed)] ?? null;
+}
+
+function getCountryFlag(country: string) {
+  const code = getCountryCode(country);
+
+  if (!code) return "🏳️";
+
+  return code
+    .split("")
+    .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
+    .join("");
+}
+
+function safeAverage(total: number, count: number) {
+  return count > 0 ? total / count : 0;
 }
 
 function toneClasses(tone: Tone) {
@@ -103,7 +181,12 @@ function MiniBarChart({
 }: {
   title: string;
   subtitle: string;
-  rows: Array<{ label: string; value: number; secondaryValue: number; color: BarColor }>;
+  rows: Array<{
+    label: string;
+    value: number;
+    secondaryLabel?: string;
+    color: BarColor;
+  }>;
 }) {
   const maxValue = Math.max(...rows.map((row) => row.value), 1);
 
@@ -126,7 +209,7 @@ function MiniBarChart({
                 <div className="mb-1 flex items-center justify-between gap-4 text-sm">
                   <span className="font-medium text-slate-800">{row.label}</span>
                   <span className="text-slate-500">
-                    {formatNumber(row.value)} activos · {formatNumber(row.secondaryValue)} con pred.
+                    {formatDecimal(row.value)}{row.secondaryLabel ? ` · ${row.secondaryLabel}` : ""}
                   </span>
                 </div>
                 <div className="h-3 w-full rounded-full bg-slate-100">
@@ -219,7 +302,7 @@ export default async function AdminCountryKpisPage({
 
   const scoresByUser = new Map(safeScores.map((score) => [score.user_id, score]));
 
-  const countryRows = countryOptions
+  const countryRows: CountryRow[] = countryOptions
     .map((country) => {
       const countryProfiles = safeProfiles.filter(
         (profile) => getCountryLabel(profile.country) === country
@@ -231,6 +314,14 @@ export default async function AdminCountryKpisPage({
       const countryScores = safeScores.filter((score) =>
         countryProfileIds.has(score.user_id)
       );
+      const usersWithPredictions = new Set(
+        countryPredictions.map((prediction) => prediction.user_id)
+      ).size;
+      const points = countryScores.reduce(
+        (acc, score) => acc + (score.total_points ?? 0),
+        0
+      );
+      const activeUsers = countryProfiles.filter((profile) => profile.is_active).length;
       const topPredictionUser = countryProfiles
         .map((profile) => {
           const score = scoresByUser.get(profile.id);
@@ -251,16 +342,15 @@ export default async function AdminCountryKpisPage({
 
       return {
         country,
+        flag: getCountryFlag(country),
         users: countryProfiles.length,
-        activeUsers: countryProfiles.filter((profile) => profile.is_active).length,
-        usersWithPredictions: new Set(
-          countryPredictions.map((prediction) => prediction.user_id)
-        ).size,
+        activeUsers,
+        usersWithPredictions,
         predictions: countryPredictions.length,
-        points: countryScores.reduce(
-          (acc, score) => acc + (score.total_points ?? 0),
-          0
-        ),
+        points,
+        pointsPerUser: safeAverage(points, countryProfiles.length),
+        pointsPerActiveUser: safeAverage(points, activeUsers),
+        pointsPerParticipant: safeAverage(points, usersWithPredictions),
         topPredictionUser,
         topPointsUser,
       };
@@ -284,6 +374,8 @@ export default async function AdminCountryKpisPage({
   );
   const participationPct =
     activeUsers > 0 ? (usersWithPredictions / activeUsers) * 100 : 0;
+  const selectedPointsPerActiveUser = safeAverage(totalPoints, activeUsers);
+  const selectedPointsPerParticipant = safeAverage(totalPoints, usersWithPredictions);
 
   const filteredPredictionsByUser = new Map<string, number>();
   for (const prediction of filteredPredictions) {
@@ -314,10 +406,10 @@ export default async function AdminCountryKpisPage({
     })
     .slice(0, 5);
 
-  const chartRows = countryRows.slice(0, 8).map((row, index) => ({
-    label: row.country,
+  const volumeChartRows = countryRows.slice(0, 8).map((row, index) => ({
+    label: `${row.flag} ${row.country}`,
     value: row.activeUsers,
-    secondaryValue: row.usersWithPredictions,
+    secondaryLabel: `${formatNumber(row.usersWithPredictions)} con pred.`,
     color:
       index === 0
         ? ("emerald" as BarColor)
@@ -325,6 +417,22 @@ export default async function AdminCountryKpisPage({
           ? ("sky" as BarColor)
           : ("violet" as BarColor),
   }));
+
+  const efficiencyChartRows = [...countryRows]
+    .filter((row) => row.usersWithPredictions > 0)
+    .sort((a, b) => b.pointsPerParticipant - a.pointsPerParticipant)
+    .slice(0, 8)
+    .map((row, index) => ({
+      label: `${row.flag} ${row.country}`,
+      value: row.pointsPerParticipant,
+      secondaryLabel: `${formatNumber(row.points)} pts · ${formatNumber(row.usersWithPredictions)} participantes`,
+      color:
+        index === 0
+          ? ("amber" as BarColor)
+          : index === 1
+            ? ("emerald" as BarColor)
+            : ("sky" as BarColor),
+    }));
 
   return (
     <div className="space-y-8">
@@ -365,7 +473,7 @@ export default async function AdminCountryKpisPage({
               <option value="all">Todos los paises</option>
               {countryOptions.map((country) => (
                 <option key={country} value={country}>
-                  {country}
+                  {getCountryFlag(country)} {country}
                 </option>
               ))}
             </select>
@@ -402,15 +510,15 @@ export default async function AdminCountryKpisPage({
             tone="info"
           />
           <StatCard
-            label="Predicciones"
-            value={formatNumber(filteredPredictions.length)}
-            hint="Total del filtro"
-            tone="info"
+            label="Pts / activo"
+            value={formatDecimal(selectedPointsPerActiveUser)}
+            hint="Normaliza por usuarios activos"
+            tone="warning"
           />
           <StatCard
-            label="Puntos"
-            value={formatNumber(totalPoints)}
-            hint={`${formatNumber(exactHits)} exact hits`}
+            label="Pts / participante"
+            value={formatDecimal(selectedPointsPerParticipant)}
+            hint="Normaliza por usuarios que predijeron"
             tone="warning"
           />
         </div>
@@ -419,16 +527,24 @@ export default async function AdminCountryKpisPage({
       <section className="grid gap-6 xl:grid-cols-2">
         <MiniBarChart
           title="Distribucion por pais"
-          subtitle="Usuarios activos y usuarios con predicciones por pais"
-          rows={chartRows}
+          subtitle="Volumen: usuarios activos y participantes por pais"
+          rows={volumeChartRows}
         />
 
+        <MiniBarChart
+          title="Eficiencia por pais"
+          subtitle="Ranking por puntos por participante, util para comparar paises de distinto tamano"
+          rows={efficiencyChartRows}
+        />
+      </section>
+
+      <section>
         <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">
             Comparativa de paises
           </h3>
           <p className="mt-1 text-sm text-slate-500">
-            Vista para activar o desactivar el filtro segun el pais.
+            Totales y medias ponderadas para evitar que el pais con mas usuarios gane siempre por volumen.
           </p>
 
           <div className="mt-6 overflow-x-auto">
@@ -438,8 +554,10 @@ export default async function AdminCountryKpisPage({
                   <th className="px-3 py-2">Pais</th>
                   <th className="px-3 py-2">Usuarios</th>
                   <th className="px-3 py-2">Activos</th>
-                  <th className="px-3 py-2">Pred.</th>
+                  <th className="px-3 py-2">Con pred.</th>
                   <th className="px-3 py-2">Puntos</th>
+                  <th className="px-3 py-2">Pts/activo</th>
+                  <th className="px-3 py-2">Pts/part.</th>
                   <th className="px-3 py-2">Accion</th>
                 </tr>
               </thead>
@@ -447,7 +565,7 @@ export default async function AdminCountryKpisPage({
                 {countryRows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={8}
                       className="rounded-2xl bg-slate-50 px-3 py-6 text-center text-sm text-slate-500"
                     >
                       No hay paises informados en los perfiles.
@@ -457,12 +575,17 @@ export default async function AdminCountryKpisPage({
                   countryRows.map((row) => (
                     <tr key={row.country} className="rounded-2xl bg-slate-50 text-sm">
                       <td className="px-3 py-3 font-semibold text-slate-900">
+                        <span className="mr-2 text-lg" aria-hidden="true">
+                          {row.flag}
+                        </span>
                         {row.country}
                       </td>
                       <td className="px-3 py-3 text-slate-800">{formatNumber(row.users)}</td>
                       <td className="px-3 py-3 text-slate-800">{formatNumber(row.activeUsers)}</td>
-                      <td className="px-3 py-3 text-slate-800">{formatNumber(row.predictions)}</td>
+                      <td className="px-3 py-3 text-slate-800">{formatNumber(row.usersWithPredictions)}</td>
                       <td className="px-3 py-3 text-slate-800">{formatNumber(row.points)}</td>
+                      <td className="px-3 py-3 text-slate-800">{formatDecimal(row.pointsPerActiveUser)}</td>
+                      <td className="px-3 py-3 font-semibold text-slate-900">{formatDecimal(row.pointsPerParticipant)}</td>
                       <td className="px-3 py-3">
                         <Link
                           href={`/${locale}/admin/kpis/country?country=${encodeURIComponent(row.country)}`}

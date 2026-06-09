@@ -4,45 +4,8 @@ import { Search, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
-type Labels = {
-  label: string;
-  placeholder: string;
-  clear: string;
-  resultCount: string;
-  noResults: string;
-};
-
-const labelsByLocale: Record<string, Labels> = {
-  en: {
-    label: "Search team",
-    placeholder: "Search team in your predictions",
-    clear: "Clear team search",
-    resultCount: "{count} predictions shown",
-    noResults: "No predictions match that team.",
-  },
-  es: {
-    label: "Buscar equipo",
-    placeholder: "Buscar equipo en tus predicciones",
-    clear: "Limpiar busqueda de equipo",
-    resultCount: "{count} predicciones visibles",
-    noResults: "No hay predicciones para ese equipo.",
-  },
-  it: {
-    label: "Cerca squadra",
-    placeholder: "Cerca squadra nei tuoi pronostici",
-    clear: "Cancella ricerca squadra",
-    resultCount: "{count} pronostici visibili",
-    noResults: "Nessun pronostico corrisponde a quella squadra.",
-  },
-  pt: {
-    label: "Pesquisar equipa",
-    placeholder: "Pesquisar equipa nas tuas previsoes",
-    clear: "Limpar pesquisa de equipa",
-    resultCount: "{count} previsoes visiveis",
-    noResults: "Nao ha previsoes para essa equipa.",
-  },
-};
 
 function getLocaleFromPathname(pathname: string) {
   return pathname.split("/").filter(Boolean)[0] ?? "en";
@@ -54,10 +17,6 @@ function normalizeSearchValue(value: string) {
     .toLocaleLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-}
-
-function getLabels(locale: string) {
-  return labelsByLocale[locale] ?? labelsByLocale.en;
 }
 
 function getPredictionSections() {
@@ -78,8 +37,7 @@ export default function MyPredictionsTeamSearch() {
   const [totalCount, setTotalCount] = useState(0);
   const [visibleCount, setVisibleCount] = useState(0);
 
-  const locale = getLocaleFromPathname(pathname);
-  const labels = getLabels(locale);
+  const t = useTranslations("myPredictionsTeamSearch");
 
   useEffect(() => {
     if (!pathname.includes("/my-predictions")) return;
@@ -179,7 +137,7 @@ export default function MyPredictionsTeamSearch() {
   return createPortal(
     <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <label className="sr-only" htmlFor="my-predictions-team-search">
-        {labels.label}
+        {t("label")}
       </label>
       <div className="relative">
         <Search
@@ -191,14 +149,14 @@ export default function MyPredictionsTeamSearch() {
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder={labels.placeholder}
+          placeholder={t("placeholder")}
           className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-11 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100"
         />
         {search ? (
           <button
             type="button"
             onClick={() => setSearch("")}
-            aria-label={labels.clear}
+            aria-label={t("clear")}
             className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-300"
           >
             <X aria-hidden="true" className="h-4 w-4" />
@@ -206,11 +164,11 @@ export default function MyPredictionsTeamSearch() {
         ) : null}
       </div>
       <p className="mt-2 text-xs font-medium text-slate-500">
-        {labels.resultCount.replace("{count}", String(visibleCount))}
+        {t("resultCount",{count: visibleCount})}
       </p>
       {search && visibleCount === 0 ? (
         <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
-          {labels.noResults}
+          {t("noResults")}
         </p>
       ) : null}
     </section>,

@@ -2,6 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { CommunityPredictionStats } from "@/lib/community-prediction-stats";
+import { useTranslations } from "next-intl";
 
 type Props = {
   stats: CommunityPredictionStats;
@@ -138,13 +139,12 @@ export default function CommunityPredictionStatsCard({
   homeTeam,
   awayTeam,
 }: Props) {
-  const locale = useLocale();
-  const labels = getLabels(locale);
+  const t = useTranslations("communityPredictionStats");
 
   const outcomeLabels = {
-    homeWin: interpolate(labels.homeWin, { team: homeTeam }),
-    draw: labels.draw,
-    awayWin: interpolate(labels.awayWin, { team: awayTeam }),
+    homeWin: t("homeWin", { team: homeTeam }),
+    draw: t("draw"),
+    awayWin: t("awayWin", { team: awayTeam }),
   };
 
   return (
@@ -152,12 +152,12 @@ export default function CommunityPredictionStatsCard({
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-700">
-            {labels.eyebrow}
+            {t("eyebrow")}
           </p>
           <h2 className="mt-1 text-lg font-bold text-slate-900">
-            {labels.title}
+            {t("title")}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">{labels.subtitle}</p>
+          <p className="mt-1 text-sm text-slate-600">{t("subtitle")}</p>
         </div>
 
         <div className="rounded-2xl bg-slate-50 px-4 py-3 text-left sm:text-right">
@@ -165,14 +165,14 @@ export default function CommunityPredictionStatsCard({
             {stats.totalPredictions}
           </p>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {labels.totalPredictions}
+            {t("totalPredictions")}
           </p>
         </div>
       </div>
 
       {stats.totalPredictions === 0 ? (
         <p className="mt-5 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
-          {labels.empty}
+          {t("empty")}
         </p>
       ) : (
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.75fr)]">
@@ -180,7 +180,7 @@ export default function CommunityPredictionStatsCard({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl bg-violet-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-wide text-violet-700">
-                  {labels.mostPopular}
+                  {t("mostPopular")}
                 </p>
                 <p className="mt-1 text-2xl font-black text-violet-950">
                   {stats.topScoreline
@@ -192,7 +192,7 @@ export default function CommunityPredictionStatsCard({
                 </p>
                 {stats.topScoreline ? (
                   <p className="mt-1 text-sm font-medium text-violet-700">
-                    {interpolate(labels.scorelineShare, {
+                    {t("scorelineShare", {
                       count: stats.topScoreline.count,
                       percentage: stats.topScoreline.percentage,
                     })}
@@ -203,13 +203,13 @@ export default function CommunityPredictionStatsCard({
               {stats.exactResultHits ? (
                 <div className="rounded-2xl bg-emerald-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">
-                    {labels.exactResult}
+                    {t("exactResult")}
                   </p>
                   <p className="mt-1 text-2xl font-black text-emerald-950">
                     {stats.exactResultHits.count}
                   </p>
                   <p className="mt-1 text-sm font-medium text-emerald-700">
-                    {interpolate(labels.exactResultShare, {
+                    {t("exactResultShare", {
                       percentage: stats.exactResultHits.percentage,
                     })}
                   </p>
@@ -231,7 +231,7 @@ export default function CommunityPredictionStatsCard({
 
           <div>
             <h3 className="text-sm font-bold text-slate-900">
-              {labels.scorelineBreakdown}
+              {t("scorelineBreakdown")}
             </h3>
             <div className="mt-3 space-y-2">
               {stats.scorelines.map((scoreline) => (

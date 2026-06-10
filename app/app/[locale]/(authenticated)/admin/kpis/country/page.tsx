@@ -10,13 +10,10 @@ type ProfileRow = {
   role: "user" | "admin";
   is_active: boolean;
   country: string | null;
-  last_seen_at: string | null;
-  last_prediction_at: string | null;
 };
 
 type PredictionRow = {
   user_id: string;
-  created_at: string;
 };
 
 type PredictionScoreRow = {
@@ -24,7 +21,6 @@ type PredictionScoreRow = {
   display_name: string | null;
   total_points: number | null;
   exact_hits: number | null;
-  resolved_predictions: number | null;
 };
 
 type Tone = "default" | "success" | "warning" | "info";
@@ -32,21 +28,14 @@ type BarColor = "slate" | "emerald" | "amber" | "sky" | "violet";
 
 type CountryRow = {
   country: string;
-  flag: string;
+  countryCode: string | null;
   users: number;
   activeUsers: number;
   usersWithPredictions: number;
   predictions: number;
   points: number;
-  pointsPerUser: number;
   pointsPerActiveUser: number;
   pointsPerParticipant: number;
-  topPredictionUser?: {
-    id: string;
-    displayName: string;
-    predictionsCount: number;
-  };
-  topPointsUser?: PredictionScoreRow;
 };
 
 const countryCodeByName: Record<string, string> = {
@@ -56,7 +45,6 @@ const countryCodeByName: Record<string, string> = {
   chile: "CL",
   colombia: "CO",
   espana: "ES",
-  españa: "ES",
   spain: "ES",
   france: "FR",
   francia: "FR",
@@ -68,7 +56,6 @@ const countryCodeByName: Record<string, string> = {
   portugal: "PT",
   uk: "GB",
   unitedkingdom: "GB",
-  unitedkingdomofgreatbritainandnorthernireland: "GB",
   unitedstates: "US",
   unitedstatesofamerica: "US",
   usa: "US",
@@ -109,15 +96,14 @@ function getCountryCode(country: string) {
   return countryCodeByName[normalizeCountryKey(trimmed)] ?? null;
 }
 
-function getCountryFlag(country: string) {
-  const code = getCountryCode(country);
+function getFlagUrl(countryCode: string | null) {
+  if (!countryCode) return null;
+  return `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+}
 
-  if (!code) return "🏳️";
-
-  return code
-    .split("")
-    .map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)))
-    .join("");
+function getFlagSrcSet(countryCode: string | null) {
+  if (!countryCode) return undefined;
+  return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png 2x`;
 }
 
 function safeAverage(total: number, count: number) {
@@ -152,6 +138,43 @@ function barColorClasses(color: BarColor) {
   }
 }
 
+function CountryFlag({
+  country,
+  countryCode,
+}: {
+  country: string;
+  countryCode: string | null;
+}) {
+  const flagUrl = getFlagUrl(countryCode);
+
+  if (!flagUrl) {
+    return (
+      <span className="inline-flex h-4 w-6 items-center justify-center rounded-sm bg-slate-200 text-[10px] font-bold text-slate-500">
+        --
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={flagUrl}
+      srcSet={getFlagSrcSet(countryCode)}
+      alt={`Bandera de ${country}`}
+      className="h-4 w-6 rounded-sm object-cover shadow-sm"
+      loading="lazy"
+    />
+  );
+}
+
+function CountryLabel({ row }: { row: Pick<CountryRow, "country" | "countryCode"> }) {
+  return (
+    <span className="flex items-center gap-2">
+      <CountryFlag country={row.country} countryCode={row.countryCode} />
+      <span>{row.country}</span>
+    </span>
+  );
+}
+
 function StatCard({
   label,
   value,
@@ -182,7 +205,8 @@ function MiniBarChart({
   title: string;
   subtitle: string;
   rows: Array<{
-    label: string;
+    country: string;
+    countryCode: string | null;
     value: number;
     secondaryLabel?: string;
     color: BarColor;
@@ -205,11 +229,14 @@ function MiniBarChart({
             const widthPct = (row.value / maxValue) * 100;
 
             return (
-              <div key={row.label}>
+              <div key={row.country}>
                 <div className="mb-1 flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium text-slate-800">{row.label}</span>
+                  <span className="font-medium text-slate-800">
+                    <CountryLabel row={row} />
+                  </span>
                   <span className="text-slate-500">
-                    {formatDecimal(row.value)}{row.secondaryLabel ? ` · ${row.secondaryLabel}` : ""}
+                    {formatDecimal(row.value)}
+                    {row.secondaryLabel ? ` · ${row.secondaryLabel}` : ""}
                   </span>
                 </div>
                 <div className="h-3 w-full rounded-full bg-slate-100">
@@ -246,11 +273,11 @@ export default async function AdminCountryKpisPage({
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, display_name, role, is_active, country, last_seen_at, last_prediction_at"),
-    supabase.from("predictions").select("user_id, created_at"),
+      .select("id, email, display_name, role, is_active, country"),
+    supabase.from("predictions").select("user_id"),
     supabase
       .from("prediction_scores")
-      .select("user_id, display_name, total_points, exact_hits, resolved_predictions"),
+      .select("user_id, display_name, total_points, exact_hits"),
   ]);
 
   if (profilesError) {
@@ -322,37 +349,17 @@ export default async function AdminCountryKpisPage({
         0
       );
       const activeUsers = countryProfiles.filter((profile) => profile.is_active).length;
-      const topPredictionUser = countryProfiles
-        .map((profile) => {
-          const score = scoresByUser.get(profile.id);
-
-          return {
-            id: profile.id,
-            displayName:
-              score?.display_name || profile.display_name || profile.email || "Usuario",
-            predictionsCount: predictionsByUser.get(profile.id) ?? 0,
-          };
-        })
-        .sort((a, b) => b.predictionsCount - a.predictionsCount)[0];
-      const topPointsUser = [...countryScores].sort((a, b) => {
-        const pointsDiff = (b.total_points ?? 0) - (a.total_points ?? 0);
-        if (pointsDiff !== 0) return pointsDiff;
-        return (b.exact_hits ?? 0) - (a.exact_hits ?? 0);
-      })[0];
 
       return {
         country,
-        flag: getCountryFlag(country),
+        countryCode: getCountryCode(country),
         users: countryProfiles.length,
         activeUsers,
         usersWithPredictions,
         predictions: countryPredictions.length,
         points,
-        pointsPerUser: safeAverage(points, countryProfiles.length),
         pointsPerActiveUser: safeAverage(points, activeUsers),
         pointsPerParticipant: safeAverage(points, usersWithPredictions),
-        topPredictionUser,
-        topPointsUser,
       };
     })
     .sort((a, b) => {
@@ -407,7 +414,8 @@ export default async function AdminCountryKpisPage({
     .slice(0, 5);
 
   const volumeChartRows = countryRows.slice(0, 8).map((row, index) => ({
-    label: `${row.flag} ${row.country}`,
+    country: row.country,
+    countryCode: row.countryCode,
     value: row.activeUsers,
     secondaryLabel: `${formatNumber(row.usersWithPredictions)} con pred.`,
     color:
@@ -423,7 +431,8 @@ export default async function AdminCountryKpisPage({
     .sort((a, b) => b.pointsPerParticipant - a.pointsPerParticipant)
     .slice(0, 8)
     .map((row, index) => ({
-      label: `${row.flag} ${row.country}`,
+      country: row.country,
+      countryCode: row.countryCode,
       value: row.pointsPerParticipant,
       secondaryLabel: `${formatNumber(row.points)} pts · ${formatNumber(row.usersWithPredictions)} participantes`,
       color:
@@ -471,11 +480,15 @@ export default async function AdminCountryKpisPage({
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
               <option value="all">Todos los paises</option>
-              {countryOptions.map((country) => (
-                <option key={country} value={country}>
-                  {getCountryFlag(country)} {country}
-                </option>
-              ))}
+              {countryOptions.map((country) => {
+                const code = getCountryCode(country);
+                return (
+                  <option key={country} value={country}>
+                    {code ? `${code} - ` : ""}
+                    {country}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -575,10 +588,7 @@ export default async function AdminCountryKpisPage({
                   countryRows.map((row) => (
                     <tr key={row.country} className="rounded-2xl bg-slate-50 text-sm">
                       <td className="px-3 py-3 font-semibold text-slate-900">
-                        <span className="mr-2 text-lg" aria-hidden="true">
-                          {row.flag}
-                        </span>
-                        {row.country}
+                        <CountryLabel row={row} />
                       </td>
                       <td className="px-3 py-3 text-slate-800">{formatNumber(row.users)}</td>
                       <td className="px-3 py-3 text-slate-800">{formatNumber(row.activeUsers)}</td>

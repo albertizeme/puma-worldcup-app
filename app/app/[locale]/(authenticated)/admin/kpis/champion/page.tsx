@@ -1,5 +1,5 @@
 import CountryFlag from "@/components/CountryFlag";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 type ProfileRow = {
   id: string;
@@ -82,7 +82,7 @@ function EmptyState() {
 }
 
 export default async function AdminChampionKpisPage() {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getSupabaseAdminClient();
 
   const [
     { data: profiles, error: profilesError },

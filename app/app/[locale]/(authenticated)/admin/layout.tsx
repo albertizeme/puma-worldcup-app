@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AdminCountryFlagImages from "@/components/AdminCountryFlagImages";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 
 export default async function AdminLayout({
@@ -34,7 +33,6 @@ export default async function AdminLayout({
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <AdminCountryFlagImages />
       <div className="mx-auto max-w-7xl px-4 py-8">
         <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">

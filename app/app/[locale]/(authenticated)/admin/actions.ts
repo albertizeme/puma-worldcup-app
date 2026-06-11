@@ -336,6 +336,70 @@ export async function updateMatchAction(formData: FormData) {
   redirectMatchSuccess(locale, "match-updated", filterStatus);
 }
 
+export async function simulateLiveScoreAction(formData: FormData) {
+  const locale = parseLocale(formData.get("locale"));
+  const filterStatus = String(formData.get("filter_status") ?? "all");
+  await requireAdmin(locale);
+
+  if (process.env.LIVE_SCORE_ALLOW_MOCKS !== "true") {
+    redirectMatchError(locale, "live-score-mocks-disabled", filterStatus);
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  const mode = String(formData.get("mode") ?? "").trim();
+
+  if (!id || (mode !== "live" && mode !== "finished")) {
+    redirectMatchError(locale, "live-score-test", filterStatus);
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { data: match, error: matchError } = await supabaseAdmin
+    .from("matches")
+    .select("id, status, external_fixture_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (matchError || !match?.external_fixture_id || match.status === "finished") {
+    redirectMatchError(
+      locale,
+      "live-score-test",
+      filterStatus,
+      matchError ? getErrorDetail(matchError) : "Match is not eligible for mock sync"
+    );
+  }
+
+  const isFinished = mode === "finished";
+  const { error } = await supabaseAdmin
+    .from("matches")
+    .update({
+      status: "live",
+      home_score: isFinished ? 2 : 1,
+      away_score: 1,
+      is_prediction_open: false,
+      external_status: isFinished ? "FT" : "LIVE",
+      external_updated_at: new Date().toISOString(),
+      awaiting_admin_confirmation: isFinished,
+    })
+    .eq("id", id)
+    .neq("status", "finished");
+
+  if (error) {
+    redirectMatchError(
+      locale,
+      "live-score-test",
+      filterStatus,
+      getErrorDetail(error)
+    );
+  }
+
+  revalidateAdminSurfaces(locale);
+  redirectMatchSuccess(
+    locale,
+    isFinished ? "live-score-test-finished" : "live-score-test-live",
+    filterStatus
+  );
+}
+
 export async function deleteMatchAction(formData: FormData) {
   const locale = parseLocale(formData.get("locale"));
   await requireAdmin(locale);

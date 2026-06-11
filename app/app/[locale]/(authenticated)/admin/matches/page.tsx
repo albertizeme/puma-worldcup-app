@@ -23,6 +23,11 @@ type MatchRow = {
   is_prediction_open: boolean;
   home_flag: string | null;
   away_flag: string | null;
+  external_provider: string | null;
+  external_fixture_id: string | null;
+  external_status: string | null;
+  external_updated_at: string | null;
+  awaiting_admin_confirmation: boolean;
 };
 
 type SearchParams = Promise<{
@@ -159,7 +164,7 @@ export default async function AdminMatchesPage({
   let matchesQuery = supabase
     .from("matches")
     .select(
-      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag"
+      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag, external_provider, external_fixture_id, external_status, external_updated_at, awaiting_admin_confirmation"
     )
     .order("match_datetime", { ascending: true });
 
@@ -264,6 +269,21 @@ export default async function AdminMatchesPage({
                 placeholder="Ej. 🇮🇹"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Sportmonks fixture ID
+              </label>
+              <input
+                name="external_fixture_id"
+                inputMode="numeric"
+                placeholder="Ej. 19609149"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Déjalo vacío para gestionar el partido manualmente.
+              </p>
             </div>
 
             <div>
@@ -399,6 +419,18 @@ export default async function AdminMatchesPage({
                         {match.status}
                       </span>
 
+                      {match.external_fixture_id && (
+                        <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                          Sportmonks #{match.external_fixture_id}
+                        </span>
+                      )}
+
+                      {match.awaiting_admin_confirmation && (
+                        <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                          Final externo pendiente de confirmar
+                        </span>
+                      )}
+
                       {match.is_puma_match && (
                         <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
                           PUMA
@@ -435,6 +467,15 @@ export default async function AdminMatchesPage({
                       <p className="mt-2 text-sm font-semibold text-slate-700">
                         Marcador actual: {match.home_score ?? "-"} -{" "}
                         {match.away_score ?? "-"}
+                      </p>
+                    )}
+
+                    {match.external_status && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Estado proveedor: {match.external_status}
+                        {match.external_updated_at
+                          ? ` · ${formatDateTimeDisplay(match.external_updated_at)}`
+                          : ""}
                       </p>
                     )}
                   </div>
@@ -528,6 +569,22 @@ export default async function AdminMatchesPage({
                         defaultValue={match.away_flag ?? ""}
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                       />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Sportmonks fixture ID
+                      </label>
+                      <input
+                        name="external_fixture_id"
+                        inputMode="numeric"
+                        defaultValue={match.external_fixture_id ?? ""}
+                        placeholder="Ej. 19609149"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                      <p className="mt-1 text-xs text-slate-400">
+                        Vacío = actualización manual.
+                      </p>
                     </div>
 
                     <div>

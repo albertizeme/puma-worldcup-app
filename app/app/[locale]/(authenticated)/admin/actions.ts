@@ -190,6 +190,7 @@ export async function createMatchAction(formData: FormData) {
   const awayTeam = parseNullableText(formData.get("away_team"));
   const homeFlag = parseNullableText(formData.get("home_flag"));
   const awayFlag = parseNullableText(formData.get("away_flag"));
+  const externalFixtureId = parseNullableText(formData.get("external_fixture_id"));
   const matchStatus = String(
     formData.get("match_status") ?? "upcoming"
   ) as MatchStatus;
@@ -219,6 +220,8 @@ export async function createMatchAction(formData: FormData) {
     is_prediction_open: isPredictionOpen,
     home_score: null,
     away_score: null,
+    external_provider: externalFixtureId ? "sportmonks" : null,
+    external_fixture_id: externalFixtureId,
   };
 
   const { error } = await supabaseAdmin.from("matches").insert(payload);
@@ -248,6 +251,7 @@ export async function updateMatchAction(formData: FormData) {
     const awayTeam = parseNullableText(formData.get("away_team"));
     const homeFlag = parseNullableText(formData.get("home_flag"));
     const awayFlag = parseNullableText(formData.get("away_flag"));
+    const externalFixtureId = parseNullableText(formData.get("external_fixture_id"));
     const matchStatus = String(
       formData.get("match_status") ?? "upcoming"
     ) as MatchStatus;
@@ -280,6 +284,9 @@ export async function updateMatchAction(formData: FormData) {
       is_prediction_open: boolean;
       home_score: number | null;
       away_score: number | null;
+      external_provider: string | null;
+      external_fixture_id: string | null;
+      awaiting_admin_confirmation?: boolean;
     } = {
       stage,
       match_datetime: matchDatetime,
@@ -293,7 +300,13 @@ export async function updateMatchAction(formData: FormData) {
       is_prediction_open: isPredictionOpen,
       home_score: homeScore,
       away_score: awayScore,
+      external_provider: externalFixtureId ? "sportmonks" : null,
+      external_fixture_id: externalFixtureId,
     };
+
+    if (matchStatus === "finished") {
+      payload.awaiting_admin_confirmation = false;
+    }
 
     if (matchStatus === "upcoming") {
       payload.home_score = null;

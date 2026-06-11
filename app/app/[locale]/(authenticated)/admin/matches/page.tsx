@@ -161,27 +161,72 @@ export default async function AdminMatchesPage({
 
   const supabase = await getSupabaseServerClient();
 
+  const baseColumns =
+    "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag";
+  const liveScoreColumns =
+    "external_provider, external_fixture_id, external_status, external_updated_at, awaiting_admin_confirmation";
+
   let matchesQuery = supabase
     .from("matches")
-    .select(
-      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag, external_provider, external_fixture_id, external_status, external_updated_at, awaiting_admin_confirmation"
-    )
+    .select(`${baseColumns}, ${liveScoreColumns}`)
     .order("match_datetime", { ascending: true });
 
   if (selectedStatus !== "all") {
     matchesQuery = matchesQuery.eq("status", selectedStatus);
   }
 
-  const { data: matches, error } = await matchesQuery;
+  let { data: matches, error } = await matchesQuery;
+  let liveScoreSchemaReady = true;
 
   if (error) {
-    throw new Error(`Error cargando partidos: ${error.message}`);
+    let fallbackQuery = supabase
+      .from("matches")
+      .select(baseColumns)
+      .order("match_datetime", { ascending: true });
+
+    if (selectedStatus !== "all") {
+      fallbackQuery = fallbackQuery.eq("status", selectedStatus);
+    }
+
+    const fallbackResult = await fallbackQuery;
+
+    if (fallbackResult.error) {
+      throw new Error(
+        `Error cargando partidos: ${fallbackResult.error.message}`
+      );
+    }
+
+    liveScoreSchemaReady = false;
+    matches = (fallbackResult.data ?? []).map((match) => ({
+      ...match,
+      external_provider: null,
+      external_fixture_id: null,
+      external_status: null,
+      external_updated_at: null,
+      awaiting_admin_confirmation: false,
+    }));
   }
 
   const safeMatches = (matches as MatchRow[] | null) ?? [];
 
   return (
     <div className="space-y-8">
+      {!liveScoreSchemaReady && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">
+            La migración de resultados en directo todavía no está aplicada.
+          </p>
+          <p className="mt-1">
+            La gestión manual sigue disponible, pero debes ejecutar
+            <code className="mx-1 rounded bg-amber-100 px-1 py-0.5">
+              20260611130000_add_live_score_sync_fields.sql
+            </code>
+            en el proyecto Supabase conectado a este Preview antes de usar
+            Sportmonks.
+          </p>
+        </div>
+      )}
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">Crear partido</h2>
         <p className="mt-1 text-sm text-slate-500">

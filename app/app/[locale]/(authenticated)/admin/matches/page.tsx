@@ -3,6 +3,7 @@ import {
   createMatchAction,
   deleteMatchAction,
   updateMatchAction,
+  simulateLiveScoreAction,
 } from "../actions";
 import DeleteMatchButton from "../DeleteMatchButton";
 import Link from "next/link";
@@ -108,6 +109,16 @@ function getAlertFromQuery(success?: string, error?: string) {
           type: "error" as const,
           message: "No se pudo eliminar el partido.",
         };
+      case "live-score-mocks-disabled":
+        return {
+          type: "error" as const,
+          message: "Las pruebas de resultados en directo no están habilitadas.",
+        };
+      case "live-score-test":
+        return {
+          type: "error" as const,
+          message: "No se pudo simular el resultado en directo.",
+        };
       default:
         return {
           type: "error" as const,
@@ -132,6 +143,16 @@ function getAlertFromQuery(success?: string, error?: string) {
         return {
           type: "success" as const,
           message: "Partido eliminado correctamente.",
+        };
+      case "live-score-test-live":
+        return {
+          type: "success" as const,
+          message: "Prueba LIVE aplicada: marcador 1-1 y predicciones cerradas.",
+        };
+      case "live-score-test-finished":
+        return {
+          type: "success" as const,
+          message: "Prueba FT aplicada: marcador 2-1 pendiente de confirmación admin.",
         };
       default:
         return {
@@ -208,6 +229,8 @@ export default async function AdminMatchesPage({
   }
 
   const safeMatches = (matches as MatchRow[] | null) ?? [];
+  const mockControlsEnabled =
+    liveScoreSchemaReady && process.env.LIVE_SCORE_ALLOW_MOCKS === "true";
 
   return (
     <div className="space-y-8">
@@ -525,18 +548,60 @@ export default async function AdminMatchesPage({
                     )}
                   </div>
 
-                  <form action={deleteMatchAction}>
-                    <input type="hidden" name="id" value={match.id} />
-                    <input
-                      type="hidden"
-                      name="filter_status"
-                      value={selectedStatus}
-                    />
-                    <input type="hidden" name="locale" value={locale} />
-                    <DeleteMatchButton
-                      label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
-                    />
-                  </form>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {mockControlsEnabled &&
+                      match.external_fixture_id &&
+                      match.status !== "finished" && (
+                        <>
+                          <form action={simulateLiveScoreAction}>
+                            <input type="hidden" name="id" value={match.id} />
+                            <input type="hidden" name="mode" value="live" />
+                            <input
+                              type="hidden"
+                              name="filter_status"
+                              value={selectedStatus}
+                            />
+                            <input type="hidden" name="locale" value={locale} />
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                            >
+                              Probar LIVE 1-1
+                            </button>
+                          </form>
+
+                          <form action={simulateLiveScoreAction}>
+                            <input type="hidden" name="id" value={match.id} />
+                            <input type="hidden" name="mode" value="finished" />
+                            <input
+                              type="hidden"
+                              name="filter_status"
+                              value={selectedStatus}
+                            />
+                            <input type="hidden" name="locale" value={locale} />
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                            >
+                              Probar FT 2-1
+                            </button>
+                          </form>
+                        </>
+                      )}
+
+                    <form action={deleteMatchAction}>
+                      <input type="hidden" name="id" value={match.id} />
+                      <input
+                        type="hidden"
+                        name="filter_status"
+                        value={selectedStatus}
+                      />
+                      <input type="hidden" name="locale" value={locale} />
+                      <DeleteMatchButton
+                        label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
+                      />
+                    </form>
+                  </div>
                 </div>
 
                 <form action={updateMatchAction}>

@@ -13,7 +13,7 @@ export type LiveScoreFixture = {
 type SportmonksScore = {
   description?: string | null;
   participant?: string | null;
-  score?: { goals?: number | null } | null;
+  score?: { goals?: number | null; participant?: string | null } | null;
 };
 type SportmonksFixture = {
   id?: number | string | null;
@@ -37,7 +37,11 @@ function mapState(rawState: string): LiveScoreState {
   return "unknown";
 }
 function readCurrentScore(scores: SportmonksScore[] | null | undefined, participant: "home" | "away") {
-  const matches = (scores ?? []).filter((entry) => entry.participant?.toLowerCase() === participant);
+  const matches = (scores ?? []).filter(
+    (entry) =>
+      (entry.participant ?? entry.score?.participant)?.toLowerCase() ===
+      participant
+  );
   const current = matches.find((entry) => entry.description?.toUpperCase() === "CURRENT") ?? matches.at(-1);
   const goals = current?.score?.goals;
   return typeof goals === "number" && goals >= 0 ? goals : null;

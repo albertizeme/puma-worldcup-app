@@ -400,6 +400,53 @@ export async function simulateLiveScoreAction(formData: FormData) {
   );
 }
 
+export async function mapSportmonksFixtureAction(formData: FormData) {
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
+
+  const matchId = String(formData.get("match_id") ?? "").trim();
+  const fixtureId = String(formData.get("fixture_id") ?? "").trim();
+
+  if (!matchId || (fixtureId && !/^\d+$/.test(fixtureId))) {
+    redirect(
+      withLocale(locale, "/admin/live-scores?load=1&error=invalid-mapping")
+    );
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { error } = await supabaseAdmin
+    .from("matches")
+    .update({
+      external_provider: fixtureId ? "sportmonks" : null,
+      external_fixture_id: fixtureId || null,
+      external_status: null,
+      external_updated_at: null,
+      awaiting_admin_confirmation: false,
+    })
+    .eq("id", matchId);
+
+  if (error) {
+    console.error("[mapSportmonksFixtureAction]", error);
+    redirect(
+      withLocale(
+        locale,
+        `/admin/live-scores?load=1&error=mapping-failed&detail=${encodeURIComponent(
+          getErrorDetail(error)
+        )}`
+      )
+    );
+  }
+
+  revalidatePath(withLocale(locale, "/admin/live-scores"));
+  revalidatePath(withLocale(locale, "/admin/matches"));
+  redirect(
+    withLocale(
+      locale,
+      `/admin/live-scores?load=1&success=${fixtureId ? "mapped" : "unmapped"}`
+    )
+  );
+}
+
 export async function deleteMatchAction(formData: FormData) {
   const locale = parseLocale(formData.get("locale"));
   await requireAdmin(locale);

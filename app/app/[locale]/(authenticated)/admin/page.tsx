@@ -194,7 +194,7 @@ export default async function AdminHomePage({
           </div>
         )}
 
-        <DailySnapshotForm locale={locale} existingSnapshots={dailySnapshots} />
+        <DailySnapshotForm existingSnapshots={dailySnapshots} />
       </section>
     </div>
   );

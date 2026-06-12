@@ -11,7 +11,6 @@ type DailySnapshot = {
 };
 
 type Props = {
-  locale: string;
   existingSnapshots: DailySnapshot[];
 };
 
@@ -25,22 +24,17 @@ function getSnapshotKey(date: string) {
   return date ? `day_${date.replaceAll("-", "_")}` : "";
 }
 
-function formatSnapshotLabel(date: string, locale: string) {
+function formatSnapshotLabel(date: string) {
   if (!date) return "";
 
-  const parsedDate = new Date(`${date}T12:00:00`);
-
-  return new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(parsedDate);
+  const [year, month, day] = date.split("-");
+  return `${day}-${month}-${year}`;
 }
 
-export default function DailySnapshotForm({ locale, existingSnapshots }: Props) {
+export default function DailySnapshotForm({ existingSnapshots }: Props) {
   const [selectedDate, setSelectedDate] = useState(getTodayValue);
   const snapshotKey = getSnapshotKey(selectedDate);
-  const snapshotLabel = formatSnapshotLabel(selectedDate, locale);
+  const snapshotLabel = formatSnapshotLabel(selectedDate);
 
   const existingSnapshot = useMemo(
     () => existingSnapshots.find((snapshot) => snapshot.key === snapshotKey) ?? null,

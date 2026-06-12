@@ -321,6 +321,9 @@ export default function RankingSearchList() {
     const details = portalHost.closest("details");
     if (!(details instanceof HTMLDetailsElement)) return;
 
+    const main = details.closest("main");
+    if (!(main instanceof HTMLElement)) return;
+
     const rows = getRankingRows(details);
 
     rows.forEach((row) => {
@@ -337,36 +340,43 @@ export default function RankingSearchList() {
       );
     });
 
-    const handleClick = (event: MouseEvent) => {
-      const target = event.target instanceof HTMLElement ? event.target : null;
-      const nameElement = target?.closest<HTMLElement>("p.truncate");
-      if (!nameElement || !details.contains(nameElement)) return;
+    const getInteractiveUserName = (target: EventTarget | null) => {
+      const element = target instanceof HTMLElement ? target : null;
+      const nameElement = element?.closest<HTMLElement>("[data-ranking-user-name], p.truncate");
+      if (!nameElement || !main.contains(nameElement)) return null;
 
-      const displayName = nameElement.textContent?.trim();
-      if (!displayName) return;
-      openUserResults(displayName);
+      const isSurroundingsUser = nameElement.matches("[data-ranking-user-name]");
+      const isFullRankingUser = details.contains(nameElement) && nameElement.matches("p.truncate");
+
+      return isSurroundingsUser || isFullRankingUser ? nameElement : null;
+    };
+
+    const openSelectedUser = (nameElement: HTMLElement) => {
+      const displayName = nameElement.dataset.displayName ?? nameElement.textContent?.trim();
+      if (displayName) openUserResults(displayName);
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      const nameElement = getInteractiveUserName(event.target);
+      if (nameElement) openSelectedUser(nameElement);
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Enter" && event.key !== " ") return;
 
-      const target = event.target instanceof HTMLElement ? event.target : null;
-      const nameElement = target?.closest<HTMLElement>("p.truncate");
-      if (!nameElement || !details.contains(nameElement)) return;
-
-      const displayName = nameElement.textContent?.trim();
-      if (!displayName) return;
+      const nameElement = getInteractiveUserName(event.target);
+      if (!nameElement) return;
 
       event.preventDefault();
-      openUserResults(displayName);
+      openSelectedUser(nameElement);
     };
 
-    details.addEventListener("click", handleClick);
-    details.addEventListener("keydown", handleKeyDown);
+    main.addEventListener("click", handleClick);
+    main.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      details.removeEventListener("click", handleClick);
-      details.removeEventListener("keydown", handleKeyDown);
+      main.removeEventListener("click", handleClick);
+      main.removeEventListener("keydown", handleKeyDown);
     };
   }, [openUserResults, portalHost]);
 

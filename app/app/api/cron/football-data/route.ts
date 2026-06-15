@@ -72,6 +72,12 @@ async function syncMatches(dryRun: boolean) {
     externalId: number;
     match: string;
     kickoff: string;
+    closestLocalMatches: Array<{
+      localId: string;
+      match: string;
+      kickoff: string | null;
+      kickoffDifferenceMinutes: number | null;
+    }>;
   }> = [];
 
   for (const external of externalMatches) {
@@ -82,10 +88,35 @@ async function syncMatches(dryRun: boolean) {
     );
 
     if (!local) {
+      const externalKickoff = new Date(external.utcDate).getTime();
+      const closestLocalMatches = localMatches
+        .map((candidate) => {
+          const candidateKickoff = candidate.match_datetime
+            ? new Date(candidate.match_datetime).getTime()
+            : Number.NaN;
+          const difference = Number.isFinite(candidateKickoff)
+            ? Math.abs(candidateKickoff - externalKickoff)
+            : Number.POSITIVE_INFINITY;
+
+          return {
+            localId: candidate.id,
+            match: `${candidate.home_team} vs ${candidate.away_team}`,
+            kickoff: candidate.match_datetime,
+            kickoffDifferenceMinutes: Number.isFinite(difference)
+              ? Math.round(difference / 60_000)
+              : null,
+            difference,
+          };
+        })
+        .sort((a, b) => a.difference - b.difference)
+        .slice(0, 3)
+        .map(({ difference: _difference, ...candidate }) => candidate);
+
       unmatched.push({
         externalId: external.id,
         match: `${external.homeTeam.name} vs ${external.awayTeam.name}`,
         kickoff: external.utcDate,
+        closestLocalMatches,
       });
       continue;
     }

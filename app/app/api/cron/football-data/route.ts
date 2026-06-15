@@ -81,11 +81,25 @@ async function syncMatches(dryRun: boolean) {
   }> = [];
 
   for (const external of externalMatches) {
-    const local = localMatches.find(
+    const namedLocal = localMatches.find(
       (candidate) =>
         teamsMatch(candidate.home_team, candidate.away_team, external) &&
         kickoffsMatch(candidate.match_datetime, external.utcDate)
     );
+    const hasExternalTeams = Boolean(
+      external.homeTeam.name && external.awayTeam.name
+    );
+    const kickoffOnlyCandidates = hasExternalTeams
+      ? []
+      : localMatches.filter(
+          (candidate) =>
+            candidate.match_datetime &&
+            new Date(candidate.match_datetime).getTime() ===
+              new Date(external.utcDate).getTime()
+        );
+    const local =
+      namedLocal ??
+      (kickoffOnlyCandidates.length === 1 ? kickoffOnlyCandidates[0] : undefined);
 
     if (!local) {
       const externalKickoff = new Date(external.utcDate).getTime();

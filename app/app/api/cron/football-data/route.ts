@@ -28,21 +28,23 @@ function isAuthorized(request: Request) {
   return request.headers.get("authorization") === `Bearer ${secret}`;
 }
 
-async function syncMatches() {
+async function syncMatches(dryRun: boolean) {
   const supabase = getSupabaseAdminClient();
   const now = new Date().toISOString();
 
-  const { error: kickoffUpdateError } = await supabase
-    .from("matches")
-    .update({
-      status: "live",
-      is_prediction_open: false,
-    })
-    .eq("status", "upcoming")
-    .lte("match_datetime", now);
+  if (!dryRun) {
+    const { error: kickoffUpdateError } = await supabase
+      .from("matches")
+      .update({
+        status: "live",
+        is_prediction_open: false,
+      })
+      .eq("status", "upcoming")
+      .lte("match_datetime", now);
 
-  if (kickoffUpdateError) {
-    throw new Error(`Could not mark started matches live: ${kickoffUpdateError.message}`);
+    if (kickoffUpdateError) {
+      throw new Error(`Could not mark started matches live: ${kickoffUpdateError.message}`);
+    }
   }
 
   const [{ data: localData, error: localError }, externalMatches] = await Promise.all([
@@ -122,15 +124,17 @@ async function syncMatches() {
 
     if (Object.keys(payload).length === 0) continue;
 
-    const { error: updateError } = await supabase
-      .from("matches")
-      .update(payload)
-      .eq("id", local.id);
+    if (!dryRun) {
+      const { error: updateError } = await supabase
+        .from("matches")
+        .update(payload)
+        .eq("id", local.id);
 
-    if (updateError) {
-      throw new Error(
-        `Could not update ${local.home_team} vs ${local.away_team}: ${updateError.message}`
-      );
+      if (updateError) {
+        throw new Error(
+          `Could not update ${local.home_team} vs ${local.away_team}: ${updateError.message}`
+        );
+      }
     }
 
     updated.push({
@@ -146,6 +150,7 @@ async function syncMatches() {
   }
 
   return {
+    dryRun,
     checkedAt: now,
     providerMatches: externalMatches.length,
     localMatches: localMatches.length,
@@ -161,7 +166,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    return NextResponse.json(await syncMatches());
+    const dryRun = new URL(request.url).searchParams.get("dryRun") === "true";
+    return NextResponse.json(await syncMatches(dryRun));
   } catch (error) {
     console.error("[football-data-sync]", error);
     return NextResponse.json(

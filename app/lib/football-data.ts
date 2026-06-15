@@ -50,6 +50,10 @@ const TEAM_ALIASES: Record<string, string> = {
   iriran: "iran",
   coteivoire: "ivorycoast",
   caboverde: "capeverde",
+  capeverdeislands: "capeverde",
+  bosniaandherzegovina: "bosniaherzegovina",
+  taarkiye: "turkey",
+  turkiye: "turkey",
   drcongo: "congodr",
   democraticrepublicofthecongo: "congodr",
 };

@@ -154,7 +154,7 @@ export default async function AdminHomePage({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-3">
         <Link
           href={`/${locale}/admin/users`}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:bg-slate-50"
@@ -172,6 +172,16 @@ export default async function AdminHomePage({
           <h3 className="text-lg font-bold text-slate-900">Gestión de partidos</h3>
           <p className="mt-2 text-sm text-slate-600">
             Alta de partidos, actualización de resultados, estados y partidos PUMA.
+          </p>
+        </Link>
+
+        <Link
+          href={`/${locale}/admin/predictions`}
+          className="rounded-2xl border border-violet-200 bg-violet-50 p-6 shadow-sm hover:bg-violet-100"
+        >
+          <h3 className="text-lg font-bold text-slate-900">Editar predicciones iniciadas</h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Corrige la predicción existente de un usuario mientras el partido está en juego.
           </p>
         </Link>
       </section>

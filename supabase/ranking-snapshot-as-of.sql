@@ -113,7 +113,7 @@ begin
       exact_hits,
       tendency_hits,
       champion_bonus_points,
-      rank() over (order by total_points desc)::integer as position
+      (rank() over (order by total_points desc))::integer as position
     from user_scores
   )
   select

@@ -374,6 +374,7 @@ function RankingListItem({
   competitiveHint,
   movement,
   movementClass,
+  isUserNameClickable = false,
   t,
 }: {
   row: RankedRow;
@@ -382,6 +383,7 @@ function RankingListItem({
   competitiveHint: string | null;
   movement: MovementInfo | null;
   movementClass: string;
+  isUserNameClickable?: boolean;
   t: Translator;
 }) {
   const isCurrentUser = row.user_id === userId;
@@ -403,7 +405,19 @@ function RankingListItem({
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate text-sm font-bold text-neutral-900 sm:text-base">
+            <p
+              data-ranking-user-name={isUserNameClickable ? "" : undefined}
+              data-display-name={
+                isUserNameClickable ? getDisplayName(row, t("userFallback")) : undefined
+              }
+              role={isUserNameClickable ? "button" : undefined}
+              tabIndex={isUserNameClickable ? 0 : undefined}
+              className={`truncate text-sm font-bold text-neutral-900 sm:text-base ${
+                isUserNameClickable
+                  ? "cursor-pointer transition hover:text-violet-700 hover:underline focus:outline-none focus:ring-2 focus:ring-violet-300"
+                  : ""
+              }`}
+            >
               {getDisplayName(row, t("userFallback"))}
             </p>
 
@@ -846,6 +860,7 @@ export default async function RankingPage() {
                   competitiveHint={competitiveHint}
                   movement={movement}
                   movementClass={movementClass}
+                  isUserNameClickable
                   t={t}
                 />
               );

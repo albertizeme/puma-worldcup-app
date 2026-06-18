@@ -190,6 +190,7 @@ export async function createMatchAction(formData: FormData) {
   const awayTeam = parseNullableText(formData.get("away_team"));
   const homeFlag = parseNullableText(formData.get("home_flag"));
   const awayFlag = parseNullableText(formData.get("away_flag"));
+  const externalFixtureId = parseNullableText(formData.get("external_fixture_id"));
   const matchStatus = String(
     formData.get("match_status") ?? "upcoming"
   ) as MatchStatus;
@@ -219,6 +220,8 @@ export async function createMatchAction(formData: FormData) {
     is_prediction_open: isPredictionOpen,
     home_score: null,
     away_score: null,
+    external_provider: externalFixtureId ? "sportmonks" : null,
+    external_fixture_id: externalFixtureId,
   };
 
   const { error } = await supabaseAdmin.from("matches").insert(payload);
@@ -248,6 +251,7 @@ export async function updateMatchAction(formData: FormData) {
     const awayTeam = parseNullableText(formData.get("away_team"));
     const homeFlag = parseNullableText(formData.get("home_flag"));
     const awayFlag = parseNullableText(formData.get("away_flag"));
+    const externalFixtureId = parseNullableText(formData.get("external_fixture_id"));
     const matchStatus = String(
       formData.get("match_status") ?? "upcoming"
     ) as MatchStatus;
@@ -280,6 +284,9 @@ export async function updateMatchAction(formData: FormData) {
       is_prediction_open: boolean;
       home_score: number | null;
       away_score: number | null;
+      external_provider: string | null;
+      external_fixture_id: string | null;
+      awaiting_admin_confirmation?: boolean;
     } = {
       stage,
       match_datetime: matchDatetime,
@@ -293,7 +300,13 @@ export async function updateMatchAction(formData: FormData) {
       is_prediction_open: isPredictionOpen,
       home_score: homeScore,
       away_score: awayScore,
+      external_provider: externalFixtureId ? "sportmonks" : null,
+      external_fixture_id: externalFixtureId,
     };
+
+    if (matchStatus === "finished") {
+      payload.awaiting_admin_confirmation = false;
+    }
 
     if (matchStatus === "upcoming") {
       payload.home_score = null;
@@ -321,6 +334,117 @@ export async function updateMatchAction(formData: FormData) {
   }
 
   redirectMatchSuccess(locale, "match-updated", filterStatus);
+}
+
+export async function simulateLiveScoreAction(formData: FormData) {
+  const locale = parseLocale(formData.get("locale"));
+  const filterStatus = String(formData.get("filter_status") ?? "all");
+  await requireAdmin(locale);
+
+  if (process.env.LIVE_SCORE_ALLOW_MOCKS !== "true") {
+    redirectMatchError(locale, "live-score-mocks-disabled", filterStatus);
+  }
+
+  const id = String(formData.get("id") ?? "").trim();
+  const mode = String(formData.get("mode") ?? "").trim();
+
+  if (!id || (mode !== "live" && mode !== "finished")) {
+    redirectMatchError(locale, "live-score-test", filterStatus);
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { data: match, error: matchError } = await supabaseAdmin
+    .from("matches")
+    .select("id, status, external_fixture_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (matchError || !match?.external_fixture_id || match.status === "finished") {
+    redirectMatchError(
+      locale,
+      "live-score-test",
+      filterStatus,
+      matchError ? getErrorDetail(matchError) : "Match is not eligible for mock sync"
+    );
+  }
+
+  const isFinished = mode === "finished";
+  const { error } = await supabaseAdmin
+    .from("matches")
+    .update({
+      status: "live",
+      home_score: isFinished ? 2 : 1,
+      away_score: 1,
+      is_prediction_open: false,
+      external_status: isFinished ? "FT" : "LIVE",
+      external_updated_at: new Date().toISOString(),
+      awaiting_admin_confirmation: isFinished,
+    })
+    .eq("id", id)
+    .neq("status", "finished");
+
+  if (error) {
+    redirectMatchError(
+      locale,
+      "live-score-test",
+      filterStatus,
+      getErrorDetail(error)
+    );
+  }
+
+  revalidateAdminSurfaces(locale);
+  redirectMatchSuccess(
+    locale,
+    isFinished ? "live-score-test-finished" : "live-score-test-live",
+    filterStatus
+  );
+}
+
+export async function mapSportmonksFixtureAction(formData: FormData) {
+  const locale = parseLocale(formData.get("locale"));
+  await requireAdmin(locale);
+
+  const matchId = String(formData.get("match_id") ?? "").trim();
+  const fixtureId = String(formData.get("fixture_id") ?? "").trim();
+
+  if (!matchId || (fixtureId && !/^\d+$/.test(fixtureId))) {
+    redirect(
+      withLocale(locale, "/admin/live-scores?load=1&error=invalid-mapping")
+    );
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { error } = await supabaseAdmin
+    .from("matches")
+    .update({
+      external_provider: fixtureId ? "sportmonks" : null,
+      external_fixture_id: fixtureId || null,
+      external_status: null,
+      external_updated_at: null,
+      awaiting_admin_confirmation: false,
+    })
+    .eq("id", matchId);
+
+  if (error) {
+    console.error("[mapSportmonksFixtureAction]", error);
+    redirect(
+      withLocale(
+        locale,
+        `/admin/live-scores?load=1&error=mapping-failed&detail=${encodeURIComponent(
+          getErrorDetail(error)
+        )}`
+      )
+    );
+  }
+
+  revalidatePath(withLocale(locale, "/admin/live-scores"));
+  revalidatePath(withLocale(locale, "/admin/matches"));
+  redirect(
+    withLocale(
+      locale,
+      `/admin/live-scores?load=1&success=${fixtureId ? "mapped" : "unmapped"}`
+    )
+  );
 }
 
 export async function deleteMatchAction(formData: FormData) {

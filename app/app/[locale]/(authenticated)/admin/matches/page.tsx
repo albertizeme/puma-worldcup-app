@@ -3,6 +3,7 @@ import {
   createMatchAction,
   deleteMatchAction,
   updateMatchAction,
+  simulateLiveScoreAction,
 } from "../actions";
 import DeleteMatchButton from "../DeleteMatchButton";
 import Link from "next/link";
@@ -23,6 +24,11 @@ type MatchRow = {
   is_prediction_open: boolean;
   home_flag: string | null;
   away_flag: string | null;
+  external_provider: string | null;
+  external_fixture_id: string | null;
+  external_status: string | null;
+  external_updated_at: string | null;
+  awaiting_admin_confirmation: boolean;
 };
 
 type SearchParams = Promise<{
@@ -103,6 +109,16 @@ function getAlertFromQuery(success?: string, error?: string) {
           type: "error" as const,
           message: "No se pudo eliminar el partido.",
         };
+      case "live-score-mocks-disabled":
+        return {
+          type: "error" as const,
+          message: "Las pruebas de resultados en directo no están habilitadas.",
+        };
+      case "live-score-test":
+        return {
+          type: "error" as const,
+          message: "No se pudo simular el resultado en directo.",
+        };
       default:
         return {
           type: "error" as const,
@@ -127,6 +143,16 @@ function getAlertFromQuery(success?: string, error?: string) {
         return {
           type: "success" as const,
           message: "Partido eliminado correctamente.",
+        };
+      case "live-score-test-live":
+        return {
+          type: "success" as const,
+          message: "Prueba LIVE aplicada: marcador 1-1 y predicciones cerradas.",
+        };
+      case "live-score-test-finished":
+        return {
+          type: "success" as const,
+          message: "Prueba FT aplicada: marcador 2-1 pendiente de confirmación admin.",
         };
       default:
         return {
@@ -156,27 +182,74 @@ export default async function AdminMatchesPage({
 
   const supabase = await getSupabaseServerClient();
 
+  const baseColumns =
+    "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag";
+  const liveScoreColumns =
+    "external_provider, external_fixture_id, external_status, external_updated_at, awaiting_admin_confirmation";
+
   let matchesQuery = supabase
     .from("matches")
-    .select(
-      "id, stage, match_datetime, home_team, away_team, status, home_score, away_score, is_puma_match, is_visible, is_prediction_open, home_flag, away_flag"
-    )
+    .select(`${baseColumns}, ${liveScoreColumns}`)
     .order("match_datetime", { ascending: true });
 
   if (selectedStatus !== "all") {
     matchesQuery = matchesQuery.eq("status", selectedStatus);
   }
 
-  const { data: matches, error } = await matchesQuery;
+  let { data: matches, error } = await matchesQuery;
+  let liveScoreSchemaReady = true;
 
   if (error) {
-    throw new Error(`Error cargando partidos: ${error.message}`);
+    let fallbackQuery = supabase
+      .from("matches")
+      .select(baseColumns)
+      .order("match_datetime", { ascending: true });
+
+    if (selectedStatus !== "all") {
+      fallbackQuery = fallbackQuery.eq("status", selectedStatus);
+    }
+
+    const fallbackResult = await fallbackQuery;
+
+    if (fallbackResult.error) {
+      throw new Error(
+        `Error cargando partidos: ${fallbackResult.error.message}`
+      );
+    }
+
+    liveScoreSchemaReady = false;
+    matches = (fallbackResult.data ?? []).map((match) => ({
+      ...match,
+      external_provider: null,
+      external_fixture_id: null,
+      external_status: null,
+      external_updated_at: null,
+      awaiting_admin_confirmation: false,
+    }));
   }
 
   const safeMatches = (matches as MatchRow[] | null) ?? [];
+  const mockControlsEnabled =
+    liveScoreSchemaReady && process.env.LIVE_SCORE_ALLOW_MOCKS === "true";
 
   return (
     <div className="space-y-8">
+      {!liveScoreSchemaReady && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">
+            La migración de resultados en directo todavía no está aplicada.
+          </p>
+          <p className="mt-1">
+            La gestión manual sigue disponible, pero debes ejecutar
+            <code className="mx-1 rounded bg-amber-100 px-1 py-0.5">
+              20260611130000_add_live_score_sync_fields.sql
+            </code>
+            en el proyecto Supabase conectado a este Preview antes de usar
+            Sportmonks.
+          </p>
+        </div>
+      )}
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">Crear partido</h2>
         <p className="mt-1 text-sm text-slate-500">
@@ -264,6 +337,21 @@ export default async function AdminMatchesPage({
                 placeholder="Ej. 🇮🇹"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Sportmonks fixture ID
+              </label>
+              <input
+                name="external_fixture_id"
+                inputMode="numeric"
+                placeholder="Ej. 19609149"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Déjalo vacío para gestionar el partido manualmente.
+              </p>
             </div>
 
             <div>
@@ -399,6 +487,18 @@ export default async function AdminMatchesPage({
                         {match.status}
                       </span>
 
+                      {match.external_fixture_id && (
+                        <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                          Sportmonks #{match.external_fixture_id}
+                        </span>
+                      )}
+
+                      {match.awaiting_admin_confirmation && (
+                        <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                          Final externo pendiente de confirmar
+                        </span>
+                      )}
+
                       {match.is_puma_match && (
                         <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
                           PUMA
@@ -437,20 +537,71 @@ export default async function AdminMatchesPage({
                         {match.away_score ?? "-"}
                       </p>
                     )}
+
+                    {match.external_status && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Estado proveedor: {match.external_status}
+                        {match.external_updated_at
+                          ? ` · ${formatDateTimeDisplay(match.external_updated_at)}`
+                          : ""}
+                      </p>
+                    )}
                   </div>
 
-                  <form action={deleteMatchAction}>
-                    <input type="hidden" name="id" value={match.id} />
-                    <input
-                      type="hidden"
-                      name="filter_status"
-                      value={selectedStatus}
-                    />
-                    <input type="hidden" name="locale" value={locale} />
-                    <DeleteMatchButton
-                      label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
-                    />
-                  </form>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {mockControlsEnabled &&
+                      match.external_fixture_id &&
+                      match.status !== "finished" && (
+                        <>
+                          <form action={simulateLiveScoreAction}>
+                            <input type="hidden" name="id" value={match.id} />
+                            <input type="hidden" name="mode" value="live" />
+                            <input
+                              type="hidden"
+                              name="filter_status"
+                              value={selectedStatus}
+                            />
+                            <input type="hidden" name="locale" value={locale} />
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                            >
+                              Probar LIVE 1-1
+                            </button>
+                          </form>
+
+                          <form action={simulateLiveScoreAction}>
+                            <input type="hidden" name="id" value={match.id} />
+                            <input type="hidden" name="mode" value="finished" />
+                            <input
+                              type="hidden"
+                              name="filter_status"
+                              value={selectedStatus}
+                            />
+                            <input type="hidden" name="locale" value={locale} />
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                            >
+                              Probar FT 2-1
+                            </button>
+                          </form>
+                        </>
+                      )}
+
+                    <form action={deleteMatchAction}>
+                      <input type="hidden" name="id" value={match.id} />
+                      <input
+                        type="hidden"
+                        name="filter_status"
+                        value={selectedStatus}
+                      />
+                      <input type="hidden" name="locale" value={locale} />
+                      <DeleteMatchButton
+                        label={`${match.home_team || "Local"} vs ${match.away_team || "Visitante"}`}
+                      />
+                    </form>
+                  </div>
                 </div>
 
                 <form action={updateMatchAction}>
@@ -528,6 +679,22 @@ export default async function AdminMatchesPage({
                         defaultValue={match.away_flag ?? ""}
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                       />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Sportmonks fixture ID
+                      </label>
+                      <input
+                        name="external_fixture_id"
+                        inputMode="numeric"
+                        defaultValue={match.external_fixture_id ?? ""}
+                        placeholder="Ej. 19609149"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                      <p className="mt-1 text-xs text-slate-400">
+                        Vacío = actualización manual.
+                      </p>
                     </div>
 
                     <div>

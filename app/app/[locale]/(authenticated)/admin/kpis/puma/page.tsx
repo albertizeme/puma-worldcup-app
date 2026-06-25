@@ -203,11 +203,11 @@ export default async function AdminPumaMatchKpisPage() {
           )
         `
       )
-      .eq("matches.is_puma_match", true),
+      .filter("matches.is_puma_match", "is", "true"),
     supabase
       .from("matches")
       .select("id, home_team, away_team, status, is_puma_match, home_score, away_score")
-      .eq("is_puma_match", true),
+      .is("is_puma_match", true),
     supabase
       .from("predictions")
       .select("id", { count: "exact", head: true }),

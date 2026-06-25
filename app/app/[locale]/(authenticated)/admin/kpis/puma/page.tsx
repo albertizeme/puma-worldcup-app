@@ -4,8 +4,8 @@ type ProfileRow = {
   id: string;
   display_name: string | null;
   email: string | null;
-  role: "user" | "admin";
-  is_active: boolean;
+  role: string | null;
+  is_active: boolean | null;
 };
 
 type PredictionRow = {
@@ -37,13 +37,10 @@ type UserPumaKpiRow = {
   exactHits: number;
   totalHits: number;
   hitRate: number;
-  exactRate: number;
-  tendencyRate: number;
   shareOfAllPumaPredictions: number;
 };
 
 type Tone = "default" | "success" | "warning" | "info";
-
 type BarColor = "slate" | "emerald" | "amber" | "sky" | "violet";
 
 function formatNumber(value: number) {
@@ -164,8 +161,8 @@ function getResultSign(home: number, away: number) {
   return Math.sign(home - away);
 }
 
-function getDisplayName(profile: ProfileRow) {
-  return profile.display_name || profile.email || `Usuario ${profile.id.slice(0, 8)}`;
+function getDisplayName(userId: string, profile?: ProfileRow) {
+  return profile?.display_name || profile?.email || `Usuario ${userId.slice(0, 8)}`;
 }
 
 export default async function AdminPumaMatchKpisPage() {
@@ -203,9 +200,10 @@ export default async function AdminPumaMatchKpisPage() {
   const safePredictions = (predictions as PredictionRow[] | null) ?? [];
   const safeMatches = (matches as MatchRow[] | null) ?? [];
 
-  const userProfiles = safeProfiles.filter((profile) => profile.role === "user");
-  const activeUsers = userProfiles.filter((profile) => profile.is_active).length;
-  const profilesById = new Map(userProfiles.map((profile) => [profile.id, profile]));
+  const activeUsers = safeProfiles.filter(
+    (profile) => profile.role !== "admin" && profile.is_active !== false
+  ).length;
+  const profilesById = new Map(safeProfiles.map((profile) => [profile.id, profile]));
   const pumaMatches = safeMatches.filter((match) => Boolean(match.is_puma_match));
   const pumaMatchesById = new Map(pumaMatches.map((match) => [match.id, match]));
   const resolvedPumaMatches = pumaMatches.filter(
@@ -215,31 +213,28 @@ export default async function AdminPumaMatchKpisPage() {
       match.away_score !== null
   );
 
-  const rowsByUser = new Map<string, UserPumaKpiRow>();
   const pumaPredictions = safePredictions.filter((prediction) =>
     pumaMatchesById.has(prediction.match_id)
   );
 
-  for (const prediction of pumaPredictions) {
-    const profile = profilesById.get(prediction.user_id);
-    if (!profile) continue;
+  const rowsByUser = new Map<string, UserPumaKpiRow>();
 
+  for (const prediction of pumaPredictions) {
     const match = pumaMatchesById.get(prediction.match_id);
     if (!match) continue;
 
+    const profile = profilesById.get(prediction.user_id);
     const current = rowsByUser.get(prediction.user_id) ?? {
       userId: prediction.user_id,
-      name: getDisplayName(profile),
-      email: profile.email,
-      isActive: profile.is_active,
+      name: getDisplayName(prediction.user_id, profile),
+      email: profile?.email ?? null,
+      isActive: profile?.is_active !== false,
       pumaPredictions: 0,
       resolvedPumaPredictions: 0,
       tendencyHits: 0,
       exactHits: 0,
       totalHits: 0,
       hitRate: 0,
-      exactRate: 0,
-      tendencyRate: 0,
       shareOfAllPumaPredictions: 0,
     };
 
@@ -257,7 +252,6 @@ export default async function AdminPumaMatchKpisPage() {
       current.resolvedPumaPredictions += 1;
 
       const isExact = predictedHome === actualHome && predictedAway === actualAway;
-
       const isTendency =
         !isExact &&
         getResultSign(predictedHome, predictedAway) ===
@@ -279,8 +273,6 @@ export default async function AdminPumaMatchKpisPage() {
         ...row,
         totalHits,
         hitRate: resolved > 0 ? (totalHits / resolved) * 100 : 0,
-        exactRate: resolved > 0 ? (row.exactHits / resolved) * 100 : 0,
-        tendencyRate: resolved > 0 ? (row.tendencyHits / resolved) * 100 : 0,
         shareOfAllPumaPredictions:
           pumaPredictions.length > 0
             ? (row.pumaPredictions / pumaPredictions.length) * 100
@@ -294,8 +286,8 @@ export default async function AdminPumaMatchKpisPage() {
       const hitRateDiff = b.hitRate - a.hitRate;
       if (hitRateDiff !== 0) return hitRateDiff;
 
-      const exactDiff = b.exactHits - a.exactHits;
-      if (exactDiff !== 0) return exactDiff;
+      const volumeDiff = b.pumaPredictions - a.pumaPredictions;
+      if (volumeDiff !== 0) return volumeDiff;
 
       return a.name.localeCompare(b.name, "es-ES");
     });
@@ -314,6 +306,9 @@ export default async function AdminPumaMatchKpisPage() {
     0
   );
   const totalHits = totalExactHits + totalTendencyHits;
+  const pumaPredictionsWithoutProfile = pumaPredictions.filter(
+    (prediction) => !profilesById.has(prediction.user_id)
+  ).length;
 
   const pumaParticipationPct =
     activeUsers > 0 ? (usersWithPumaPredictions / activeUsers) * 100 : 0;
@@ -374,7 +369,7 @@ export default async function AdminPumaMatchKpisPage() {
         <StatCard
           label="Usuarios con PUMA predicción"
           value={formatPercent(pumaParticipationPct)}
-          hint={`${formatNumber(usersWithPumaPredictions)} de ${formatNumber(activeUsers)} usuarios activos`}
+          hint={`${formatNumber(usersWithPumaPredictions)} usuarios · base activa: ${formatNumber(activeUsers)}`}
           tone="info"
         />
         <StatCard
@@ -421,6 +416,10 @@ export default async function AdminPumaMatchKpisPage() {
           hint={`${formatNumber(totalTendencyHits)} tendencias sin exacto`}
           tone="warning"
         />
+      </section>
+
+      <section className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        Diagnóstico: {formatNumber(safePredictions.length)} predicciones totales · {formatNumber(safeMatches.length)} partidos totales · {formatNumber(pumaMatches.length)} partidos marcados como PUMA · {formatNumber(pumaPredictionsWithoutProfile)} PUMA predicciones sin perfil asociado.
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -479,7 +478,7 @@ export default async function AdminPumaMatchKpisPage() {
               {userRows.length === 0 ? (
                 <tr>
                   <td className="px-4 py-5 text-slate-500" colSpan={7}>
-                    Todavía no hay predicciones en PUMA matches.
+                    Todavía no hay predicciones en PUMA matches. Revisa el diagnóstico superior para confirmar si hay partidos marcados como PUMA.
                   </td>
                 </tr>
               ) : (

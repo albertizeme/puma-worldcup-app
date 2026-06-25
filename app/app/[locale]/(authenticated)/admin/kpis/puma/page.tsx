@@ -184,6 +184,19 @@ function isResolvedMatch(match: MatchRow) {
   );
 }
 
+function sortPrizeRows(a: UserPumaKpiRow, b: UserPumaKpiRow) {
+  const hitRateDiff = b.hitRate - a.hitRate;
+  if (hitRateDiff !== 0) return hitRateDiff;
+
+  const exactDiff = b.exactHits - a.exactHits;
+  if (exactDiff !== 0) return exactDiff;
+
+  const resolvedDiff = b.resolvedPumaPredictions - a.resolvedPumaPredictions;
+  if (resolvedDiff !== 0) return resolvedDiff;
+
+  return a.name.localeCompare(b.name, "es-ES");
+}
+
 export default async function AdminPumaMatchKpisPage() {
   const supabase = getSupabaseAdminClient();
 
@@ -415,15 +428,20 @@ export default async function AdminPumaMatchKpisPage() {
       ? (totalHits / totalResolvedPumaPredictions) * 100
       : 0;
 
+  const minimumPrizePredictions =
+    resolvedPumaMatches.length > 0 ? Math.ceil(resolvedPumaMatches.length * 0.5) : 0;
+  const prizeRows = userRows
+    .filter(
+      (row) =>
+        minimumPrizePredictions > 0 &&
+        row.resolvedPumaPredictions >= minimumPrizePredictions
+    )
+    .sort(sortPrizeRows);
+  const prizeLeader = prizeRows[0];
+
   const topAccuracyRows = userRows
     .filter((row) => row.resolvedPumaPredictions > 0)
-    .sort((a, b) => {
-      const hitRateDiff = b.hitRate - a.hitRate;
-      if (hitRateDiff !== 0) return hitRateDiff;
-      const exactDiff = b.exactHits - a.exactHits;
-      if (exactDiff !== 0) return exactDiff;
-      return b.resolvedPumaPredictions - a.resolvedPumaPredictions;
-    })
+    .sort(sortPrizeRows)
     .slice(0, 8);
 
   const topVolumeRows = [...userRows]
@@ -450,6 +468,107 @@ export default async function AdminPumaMatchKpisPage() {
           <div className="rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-800">
             {formatNumber(resolvedPumaMatches.length)} de {formatNumber(pumaMatches.length)} PUMA matches resueltos
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-amber-200 bg-amber-50 p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+          Premio PUMA
+        </p>
+        <div className="mt-3 grid gap-5 lg:grid-cols-[1.1fr_1.4fr] lg:items-start">
+          <div>
+            <h3 className="text-2xl font-extrabold text-slate-950">
+              Mejor predictor elegible
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Regla propuesta: minimo 50% de los PUMA matches resueltos. Ranking
+              por hit rate, desempate por exact results y luego volumen resuelto.
+            </p>
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-700">
+              Minimo para optar al premio: <strong>{formatNumber(minimumPrizePredictions)}</strong> predicciones resueltas de <strong>{formatNumber(resolvedPumaMatches.length)}</strong> PUMA matches resueltos.
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-white p-4">
+            {prizeLeader ? (
+              <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-amber-700">Lider actual</p>
+                    <p className="mt-1 text-2xl font-extrabold text-slate-950">
+                      {prizeLeader.name}
+                    </p>
+                    {prizeLeader.email && (
+                      <p className="text-xs text-slate-500">{prizeLeader.email}</p>
+                    )}
+                  </div>
+                  <div className="rounded-2xl bg-amber-100 px-4 py-3 text-right">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">
+                      Hit rate
+                    </p>
+                    <p className="text-3xl font-extrabold text-slate-950">
+                      {formatPercent(prizeLeader.hitRate)}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm text-slate-600">
+                  {formatNumber(prizeLeader.totalHits)} hits · {formatNumber(prizeLeader.exactHits)} exact · {formatNumber(prizeLeader.tendencyHits)} tendencies · {formatNumber(prizeLeader.resolvedPumaPredictions)} resueltas
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-8 text-center text-sm text-amber-800">
+                Todavia no hay usuarios elegibles para premio con la regla del 50%.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-2xl border border-amber-200 bg-white">
+          <table className="min-w-full divide-y divide-amber-100 text-sm">
+            <thead className="bg-amber-100/70 text-left text-xs font-semibold uppercase tracking-[0.14em] text-amber-800">
+              <tr>
+                <th className="px-4 py-3">#</th>
+                <th className="px-4 py-3">Usuario elegible</th>
+                <th className="px-4 py-3 text-right">Hit rate</th>
+                <th className="px-4 py-3 text-right">Exact</th>
+                <th className="px-4 py-3 text-right">Tendencies</th>
+                <th className="px-4 py-3 text-right">Resueltas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-amber-100">
+              {prizeRows.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-5 text-slate-500" colSpan={6}>
+                    Sin usuarios elegibles todavia.
+                  </td>
+                </tr>
+              ) : (
+                prizeRows.slice(0, 10).map((row, index) => (
+                  <tr key={row.userId}>
+                    <td className="px-4 py-3 font-semibold text-amber-700">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-slate-900">{row.name}</p>
+                      {row.email && <p className="text-xs text-slate-500">{row.email}</p>}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-violet-700">
+                      {formatPercent(row.hitRate)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-emerald-700">
+                      {formatNumber(row.exactHits)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-amber-700">
+                      {formatNumber(row.tendencyHits)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-700">
+                      {formatNumber(row.resolvedPumaPredictions)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

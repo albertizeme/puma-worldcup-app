@@ -8,14 +8,6 @@ type ProfileRow = {
   is_active: boolean | null;
 };
 
-type PredictionRow = {
-  id: string;
-  user_id: string;
-  match_id: string;
-  home_score_pred: number | null;
-  away_score_pred: number | null;
-};
-
 type MatchRow = {
   id: string;
   home_team: string | null;
@@ -24,6 +16,15 @@ type MatchRow = {
   is_puma_match: boolean | null;
   home_score: number | null;
   away_score: number | null;
+};
+
+type PredictionWithMatchRow = {
+  id: string;
+  user_id: string;
+  match_id: string;
+  home_score_pred: number | null;
+  away_score_pred: number | null;
+  matches: MatchRow | MatchRow[] | null;
 };
 
 type UserPumaKpiRow = {
@@ -165,47 +166,97 @@ function getDisplayName(userId: string, profile?: ProfileRow) {
   return profile?.display_name || profile?.email || `Usuario ${userId.slice(0, 8)}`;
 }
 
+function normalizeJoinedMatch(value: MatchRow | MatchRow[] | null) {
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
 export default async function AdminPumaMatchKpisPage() {
   const supabase = getSupabaseAdminClient();
 
   const [
     { data: profiles, error: profilesError },
-    { data: predictions, error: predictionsError },
-    { data: matches, error: matchesError },
+    { data: pumaPredictionsData, error: pumaPredictionsError },
+    { data: pumaMatchesData, error: pumaMatchesError },
+    { count: allPredictionsCount, error: allPredictionsCountError },
+    { count: allMatchesCount, error: allMatchesCountError },
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, display_name, email, role, is_active"),
     supabase
       .from("predictions")
-      .select("id, user_id, match_id, home_score_pred, away_score_pred"),
+      .select(
+        `
+          id,
+          user_id,
+          match_id,
+          home_score_pred,
+          away_score_pred,
+          matches!inner (
+            id,
+            home_team,
+            away_team,
+            status,
+            is_puma_match,
+            home_score,
+            away_score
+          )
+        `
+      )
+      .eq("matches.is_puma_match", true),
     supabase
       .from("matches")
-      .select("id, home_team, away_team, status, is_puma_match, home_score, away_score"),
+      .select("id, home_team, away_team, status, is_puma_match, home_score, away_score")
+      .eq("is_puma_match", true),
+    supabase
+      .from("predictions")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("matches")
+      .select("id", { count: "exact", head: true }),
   ]);
 
   if (profilesError) {
     throw new Error(`Error cargando usuarios: ${profilesError.message}`);
   }
 
-  if (predictionsError) {
-    throw new Error(`Error cargando predicciones: ${predictionsError.message}`);
+  if (pumaPredictionsError) {
+    throw new Error(`Error cargando predicciones PUMA: ${pumaPredictionsError.message}`);
   }
 
-  if (matchesError) {
-    throw new Error(`Error cargando partidos: ${matchesError.message}`);
+  if (pumaMatchesError) {
+    throw new Error(`Error cargando partidos PUMA: ${pumaMatchesError.message}`);
+  }
+
+  if (allPredictionsCountError) {
+    throw new Error(
+      `Error contando predicciones: ${allPredictionsCountError.message}`
+    );
+  }
+
+  if (allMatchesCountError) {
+    throw new Error(`Error contando partidos: ${allMatchesCountError.message}`);
   }
 
   const safeProfiles = (profiles as ProfileRow[] | null) ?? [];
-  const safePredictions = (predictions as PredictionRow[] | null) ?? [];
-  const safeMatches = (matches as MatchRow[] | null) ?? [];
+  const pumaPredictions =
+    (pumaPredictionsData as PredictionWithMatchRow[] | null) ?? [];
+  const explicitPumaMatches = (pumaMatchesData as MatchRow[] | null) ?? [];
 
+  const profilesById = new Map(safeProfiles.map((profile) => [profile.id, profile]));
   const activeUsers = safeProfiles.filter(
     (profile) => profile.role !== "admin" && profile.is_active !== false
   ).length;
-  const profilesById = new Map(safeProfiles.map((profile) => [profile.id, profile]));
-  const pumaMatches = safeMatches.filter((match) => Boolean(match.is_puma_match));
-  const pumaMatchesById = new Map(pumaMatches.map((match) => [match.id, match]));
+
+  const pumaMatchesById = new Map(explicitPumaMatches.map((match) => [match.id, match]));
+  for (const prediction of pumaPredictions) {
+    const match = normalizeJoinedMatch(prediction.matches);
+    if (match && !pumaMatchesById.has(match.id)) {
+      pumaMatchesById.set(match.id, match);
+    }
+  }
+
+  const pumaMatches = Array.from(pumaMatchesById.values());
   const resolvedPumaMatches = pumaMatches.filter(
     (match) =>
       match.status === "finished" &&
@@ -213,14 +264,10 @@ export default async function AdminPumaMatchKpisPage() {
       match.away_score !== null
   );
 
-  const pumaPredictions = safePredictions.filter((prediction) =>
-    pumaMatchesById.has(prediction.match_id)
-  );
-
   const rowsByUser = new Map<string, UserPumaKpiRow>();
 
   for (const prediction of pumaPredictions) {
-    const match = pumaMatchesById.get(prediction.match_id);
+    const match = normalizeJoinedMatch(prediction.matches);
     if (!match) continue;
 
     const profile = profilesById.get(prediction.user_id);
@@ -419,7 +466,7 @@ export default async function AdminPumaMatchKpisPage() {
       </section>
 
       <section className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        Diagnóstico: {formatNumber(safePredictions.length)} predicciones totales · {formatNumber(safeMatches.length)} partidos totales · {formatNumber(pumaMatches.length)} partidos marcados como PUMA · {formatNumber(pumaPredictionsWithoutProfile)} PUMA predicciones sin perfil asociado.
+        Diagnóstico: {formatNumber(allPredictionsCount ?? 0)} predicciones totales · {formatNumber(allMatchesCount ?? 0)} partidos totales · {formatNumber(explicitPumaMatches.length)} partidos con is_puma_match = true · {formatNumber(pumaPredictions.length)} predicciones unidas a PUMA matches · {formatNumber(pumaPredictionsWithoutProfile)} PUMA predicciones sin perfil asociado.
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -478,7 +525,7 @@ export default async function AdminPumaMatchKpisPage() {
               {userRows.length === 0 ? (
                 <tr>
                   <td className="px-4 py-5 text-slate-500" colSpan={7}>
-                    Todavía no hay predicciones en PUMA matches. Revisa el diagnóstico superior para confirmar si hay partidos marcados como PUMA.
+                    Todavía no hay predicciones en PUMA matches. Revisa el diagnóstico superior para confirmar si hay partidos con is_puma_match = true.
                   </td>
                 </tr>
               ) : (

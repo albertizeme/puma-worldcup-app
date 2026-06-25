@@ -245,24 +245,23 @@ export default async function AdminPumaMatchKpisPage() {
 
     current.pumaPredictions += 1;
 
-    const hasPrediction =
-      prediction.home_score_pred !== null && prediction.away_score_pred !== null;
+    const predictedHome = prediction.home_score_pred;
+    const predictedAway = prediction.away_score_pred;
+    const actualHome = match.home_score;
+    const actualAway = match.away_score;
+    const hasPrediction = predictedHome !== null && predictedAway !== null;
     const isResolved =
-      match.status === "finished" &&
-      match.home_score !== null &&
-      match.away_score !== null;
+      match.status === "finished" && actualHome !== null && actualAway !== null;
 
     if (hasPrediction && isResolved) {
       current.resolvedPumaPredictions += 1;
 
-      const isExact =
-        prediction.home_score_pred === match.home_score &&
-        prediction.away_score_pred === match.away_score;
+      const isExact = predictedHome === actualHome && predictedAway === actualAway;
 
       const isTendency =
         !isExact &&
-        getResultSign(prediction.home_score_pred, prediction.away_score_pred) ===
-          getResultSign(match.home_score, match.away_score);
+        getResultSign(predictedHome, predictedAway) ===
+          getResultSign(actualHome, actualAway);
 
       if (isExact) current.exactHits += 1;
       if (isTendency) current.tendencyHits += 1;

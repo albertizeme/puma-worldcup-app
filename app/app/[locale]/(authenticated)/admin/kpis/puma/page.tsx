@@ -28,6 +28,11 @@ type PredictionRow = {
   away_score_pred: number | null;
 };
 
+type TeamRow = {
+  name: string | null;
+  is_puma_team: boolean | null;
+};
+
 type UserPumaKpiRow = {
   userId: string;
   name: string;
@@ -167,6 +172,10 @@ function getDisplayName(userId: string, profile?: ProfileRow) {
   return profile?.display_name || profile?.email || `Usuario ${userId.slice(0, 8)}`;
 }
 
+function getTeamKey(name: string | null) {
+  return name?.trim().toLowerCase() ?? "";
+}
+
 function isResolvedMatch(match: MatchRow) {
   return (
     match.status === "finished" &&
@@ -180,7 +189,8 @@ export default async function AdminPumaMatchKpisPage() {
 
   const [
     { data: profiles, error: profilesError },
-    { data: pumaMatchesData, error: pumaMatchesError },
+    { data: allMatchesData, error: allMatchesDataError },
+    { data: pumaTeamsData, error: pumaTeamsError },
     { count: allPredictionsCount, error: allPredictionsCountError },
     { count: allMatchesCount, error: allMatchesCountError },
     { count: pumaTrueCount, error: pumaTrueCountError },
@@ -192,8 +202,11 @@ export default async function AdminPumaMatchKpisPage() {
       .select("id, display_name, email, role, is_active"),
     supabase
       .from("matches")
-      .select("id, home_team, away_team, status, is_puma_match, home_score, away_score")
-      .is("is_puma_match", true),
+      .select("id, home_team, away_team, status, is_puma_match, home_score, away_score"),
+    supabase
+      .from("teams")
+      .select("name, is_puma_team")
+      .is("is_puma_team", true),
     supabase
       .from("predictions")
       .select("id", { count: "exact", head: true }),
@@ -218,8 +231,12 @@ export default async function AdminPumaMatchKpisPage() {
     throw new Error(`Error cargando usuarios: ${profilesError.message}`);
   }
 
-  if (pumaMatchesError) {
-    throw new Error(`Error cargando partidos PUMA: ${pumaMatchesError.message}`);
+  if (allMatchesDataError) {
+    throw new Error(`Error cargando partidos: ${allMatchesDataError.message}`);
+  }
+
+  if (pumaTeamsError) {
+    throw new Error(`Error cargando equipos PUMA: ${pumaTeamsError.message}`);
   }
 
   if (allPredictionsCountError) {
@@ -243,7 +260,31 @@ export default async function AdminPumaMatchKpisPage() {
   }
 
   const safeProfiles = (profiles as ProfileRow[] | null) ?? [];
-  const pumaMatches = (pumaMatchesData as MatchRow[] | null) ?? [];
+  const allMatches = (allMatchesData as MatchRow[] | null) ?? [];
+  const pumaTeams = (pumaTeamsData as TeamRow[] | null) ?? [];
+  const pumaTeamNames = new Set(
+    pumaTeams.map((team) => getTeamKey(team.name)).filter(Boolean)
+  );
+
+  const flagPumaMatches = allMatches.filter(
+    (match) => match.is_puma_match === true
+  );
+  const teamPumaMatches = allMatches.filter(
+    (match) =>
+      pumaTeamNames.has(getTeamKey(match.home_team)) ||
+      pumaTeamNames.has(getTeamKey(match.away_team))
+  );
+  const pumaMatchesById = new Map<string, MatchRow>();
+
+  for (const match of flagPumaMatches) {
+    pumaMatchesById.set(match.id, match);
+  }
+
+  for (const match of teamPumaMatches) {
+    pumaMatchesById.set(match.id, match);
+  }
+
+  const pumaMatches = Array.from(pumaMatchesById.values());
   const pumaMatchIds = pumaMatches.map((match) => match.id);
 
   const { data: pumaPredictionsData, error: pumaPredictionsError } =
@@ -260,7 +301,6 @@ export default async function AdminPumaMatchKpisPage() {
 
   const pumaPredictions = (pumaPredictionsData as PredictionRow[] | null) ?? [];
   const profilesById = new Map(safeProfiles.map((profile) => [profile.id, profile]));
-  const pumaMatchesById = new Map(pumaMatches.map((match) => [match.id, match]));
   const activeUsers = safeProfiles.filter(
     (profile) => profile.role !== "admin" && profile.is_active !== false
   ).length;
@@ -403,8 +443,8 @@ export default async function AdminPumaMatchKpisPage() {
             </h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
               Mide como estan prediciendo los usuarios en partidos marcados como
-              PUMA. Las tasas de acierto solo usan PUMA matches finalizados con
-              marcador informado.
+              PUMA. Cuenta partidos marcados con is_puma_match o con algun equipo
+              PUMA segun la tabla teams.
             </p>
           </div>
           <div className="rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-800">
@@ -414,7 +454,7 @@ export default async function AdminPumaMatchKpisPage() {
       </section>
 
       <section className="rounded-[1.25rem] border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-        Flags en matches: <strong>true {formatNumber(pumaTrueCount ?? 0)}</strong> · false {formatNumber(pumaFalseCount ?? 0)} · null {formatNumber(pumaNullCount ?? 0)}. Si true es 0, Supabase no tiene ningun partido marcado como PUMA en este entorno.
+        Flags en matches: <strong>true {formatNumber(pumaTrueCount ?? 0)}</strong> · false {formatNumber(pumaFalseCount ?? 0)} · null {formatNumber(pumaNullCount ?? 0)}. Equipos PUMA: <strong>{formatNumber(pumaTeams.length)}</strong>. PUMA matches por equipos: <strong>{formatNumber(teamPumaMatches.length)}</strong>.
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -448,7 +488,7 @@ export default async function AdminPumaMatchKpisPage() {
         <StatCard
           label="PUMA matches"
           value={formatNumber(pumaMatches.length)}
-          hint={`${formatNumber(resolvedPumaMatches.length)} finalizados con resultado`}
+          hint={`${formatNumber(flagPumaMatches.length)} por flag · ${formatNumber(teamPumaMatches.length)} por equipo`}
         />
         <StatCard
           label="PUMA predicciones"
@@ -471,7 +511,7 @@ export default async function AdminPumaMatchKpisPage() {
       </section>
 
       <section className="rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        Diagnostico: {formatNumber(allPredictionsCount ?? 0)} predicciones totales · {formatNumber(allMatchesCount ?? 0)} partidos totales · {formatNumber(pumaMatches.length)} partidos con is_puma_match = true · {formatNumber(pumaPredictions.length)} predicciones con match_id en PUMA matches · {formatNumber(pumaPredictionsWithoutProfile)} PUMA predicciones sin perfil asociado.
+        Diagnostico: {formatNumber(allPredictionsCount ?? 0)} predicciones totales · {formatNumber(allMatchesCount ?? 0)} partidos totales · {formatNumber(pumaMatches.length)} PUMA matches combinados · {formatNumber(pumaPredictions.length)} predicciones con match_id en PUMA matches · {formatNumber(pumaPredictionsWithoutProfile)} PUMA predicciones sin perfil asociado.
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -530,7 +570,7 @@ export default async function AdminPumaMatchKpisPage() {
               {userRows.length === 0 ? (
                 <tr>
                   <td className="px-4 py-5 text-slate-500" colSpan={7}>
-                    Todavia no hay predicciones en PUMA matches. Revisa el diagnostico superior: si true es 0, hay que marcar partidos como PUMA en Supabase/Admin.
+                    Todavia no hay predicciones en PUMA matches. Revisa el diagnostico superior para confirmar si hay equipos PUMA y partidos asociados.
                   </td>
                 </tr>
               ) : (

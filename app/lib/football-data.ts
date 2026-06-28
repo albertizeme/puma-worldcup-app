@@ -14,6 +14,11 @@ type FootballDataScorePair = {
   away: number | null;
 };
 
+type CompleteFootballDataScorePair = {
+  home: number;
+  away: number;
+};
+
 export type FootballDataMatch = {
   id: number;
   utcDate: string;
@@ -109,9 +114,10 @@ export function mapFootballDataStatus(
   return null;
 }
 
-function hasScorePair(value: FootballDataScorePair | null | undefined) {
-  return value?.home !== null && value?.home !== undefined &&
-    value?.away !== null && value?.away !== undefined;
+function hasScorePair(
+  value: FootballDataScorePair | null | undefined
+): value is CompleteFootballDataScorePair {
+  return typeof value?.home === "number" && typeof value.away === "number";
 }
 
 export function getFootballDataRegularTimeScore(match: FootballDataMatch) {

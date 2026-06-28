@@ -9,6 +9,11 @@ export type FootballDataMatchStatus =
   | "CANCELLED"
   | "AWARDED";
 
+type FootballDataScorePair = {
+  home: number | null;
+  away: number | null;
+};
+
 export type FootballDataMatch = {
   id: number;
   utcDate: string;
@@ -27,14 +32,11 @@ export type FootballDataMatch = {
     tla?: string | null;
   };
   score: {
-    fullTime: {
-      home: number | null;
-      away: number | null;
-    };
-    regularTime?: {
-      home: number | null;
-      away: number | null;
-    } | null;
+    duration?: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT" | string | null;
+    fullTime: FootballDataScorePair;
+    regularTime?: FootballDataScorePair | null;
+    extraTime?: FootballDataScorePair | null;
+    penalties?: FootballDataScorePair | null;
   };
 };
 
@@ -105,6 +107,41 @@ export function mapFootballDataStatus(
   }
 
   return null;
+}
+
+function hasScorePair(value: FootballDataScorePair | null | undefined) {
+  return value?.home !== null && value?.home !== undefined &&
+    value?.away !== null && value?.away !== undefined;
+}
+
+export function getFootballDataRegularTimeScore(match: FootballDataMatch) {
+  const score = match.score;
+
+  if (hasScorePair(score.regularTime)) {
+    return {
+      home: score.regularTime.home,
+      away: score.regularTime.away,
+    };
+  }
+
+  if (!hasScorePair(score.fullTime)) {
+    return { home: null, away: null };
+  }
+
+  let home = score.fullTime.home;
+  let away = score.fullTime.away;
+
+  if (hasScorePair(score.extraTime)) {
+    home -= score.extraTime.home;
+    away -= score.extraTime.away;
+  }
+
+  if (hasScorePair(score.penalties)) {
+    home -= score.penalties.home;
+    away -= score.penalties.away;
+  }
+
+  return { home, away };
 }
 
 export async function getWorldCupMatches() {
